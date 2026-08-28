@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import path from 'node:path';
 import type { ContextPack, ContextFile, ProjectMeta, Rule, ContextMode } from '@codeatlas/core';
 import type { RankedResult } from '@codeatlas/ranking';
 import { TokenCounter } from '@codeatlas/token-counter';
@@ -144,6 +145,6 @@ export class ContextEngine {
   }
 
   private resolveAbsPath(relativePath: string): string {
-    return `${this.options.repositoryRoot}/${relativePath}`.replace(/\\/g, '/');
+    return path.join(this.options.repositoryRoot, relativePath).replace(/\\/g, '/');
   }
 }

@@ -52,13 +52,13 @@ CodeAtlas performs the following actions:
 - Traverses the directory tree, honoring `.gitignore` and `.atlasignore`.
 - Discovers supported source files (`.ts`, `.tsx`, `.js`, `.jsx`, `.py`, `.php`, `.rs`, `.go`, `.html`, `.css`).
 - Parses AST structures in parallel via Tree-sitter workers.
-- Records symbols, line metrics, SHA-256 hashes, and import bindings in `.atlas/codeatlas.db`.
+- Records symbols, line metrics, SHA-256 hashes, and import bindings in `.atlas/atlas.db`.
 
 ```
 [INFO] Discovered 152 source files.
 [INFO] Parsing AST structures... Done in 240ms.
 [INFO] Extracted 418 symbols and 382 dependency links.
-[SUCCESS] Workspace indexed into .atlas/codeatlas.db
+[SUCCESS] Workspace indexed into .atlas/atlas.db
 ```
 
 ---

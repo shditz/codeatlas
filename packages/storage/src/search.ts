@@ -20,11 +20,17 @@ export class SearchRepository {
   }
 
   removeFile(fileId: number): void {
-    this.db.run(
-      "INSERT INTO files_fts(files_fts, rowid, relative_path, content) VALUES ('delete', ?, '', '')",
-      fileId,
-    );
+    try {
+      this.db.run(
+        "INSERT INTO files_fts(files_fts, rowid, relative_path, content) VALUES ('delete', ?, '', '')",
+        fileId,
+      );
+    } catch {
+      // Ignore if FTS entry doesn't exist
+    }
   }
+
+
 
   indexSymbol(symbolId: number, name: string, signature: string | null): void {
     this.db.run(
@@ -36,11 +42,14 @@ export class SearchRepository {
   }
 
   removeSymbol(symbolId: number): void {
-    this.db.run(
-      "INSERT INTO symbols_fts(symbols_fts, rowid, name, signature) VALUES ('delete', ?, '', '')",
-      symbolId,
-    );
+    try {
+      this.db.run("DELETE FROM symbols_fts WHERE rowid = ?", symbolId);
+    } catch {
+      // Ignore if FTS entry doesn't exist
+    }
   }
+
+
 
   searchFiles(query: string, limit: number = 50): FtsResult[] {
     const sanitized = this.sanitizeQuery(query);
@@ -70,19 +79,27 @@ export class SearchRepository {
     }));
   }
 
-  searchSymbols(query: string, limit: number = 50): Array<{ rowid: number; rank: number }> {
+  searchSymbols(query: string, limit: number = 50): Array<{ file_id: number; relativePath: string; rank: number }> {
     const sanitized = this.sanitizeQuery(query);
     if (!sanitized) return [];
 
-    return this.db.all<{ rowid: number; rank: number }>(
-      `SELECT rowid, rank
+    const rows = this.db.all<{ file_id: number; relative_path: string; rank: number }>(
+      `SELECT s.file_id, f.relative_path, rank
        FROM symbols_fts
+       JOIN symbols s ON s.id = symbols_fts.rowid
+       JOIN files f ON f.id = s.file_id
        WHERE symbols_fts MATCH ?
        ORDER BY rank
        LIMIT ?`,
       sanitized,
       limit,
     );
+
+    return rows.map(r => ({
+      file_id: r.file_id,
+      relativePath: r.relative_path,
+      rank: r.rank,
+    }));
   }
 
   rebuildIndex(): void {
@@ -91,12 +108,14 @@ export class SearchRepository {
   }
 
   private sanitizeQuery(query: string): string {
-    return query
-      .replace(/[^\w\s-_.]/g, ' ')
+    const sanitized = query
+      .replace(/[^\w\s]/g, ' ') // Only allow word characters and spaces
       .trim()
       .split(/\s+/)
       .filter((term) => term.length > 0)
       .map((term) => `"${term}"`)
       .join(' OR ');
+      
+    return sanitized || '""';
   }
 }

@@ -74,7 +74,7 @@ export function registerInitCommand(program: Command): void {
       }
 
       console.log(chalk.green('✓') + ' Created .atlas/config.toml');
-      console.log(chalk.green('✓') + ' Created .atlas/index.db');
+      console.log(chalk.green('✓') + ' Created .atlas/atlas.db');
       console.log(chalk.green('✓') + ' Created .atlasignore');
       console.log('');
       console.log(chalk.bold('CodeAtlas initialized successfully.'));

@@ -40,17 +40,12 @@ export class RetrievalEngine {
       const symbolMatches = this.searchRepo.searchSymbols(query, limit);
       for (const sm of symbolMatches) {
         // Boost files containing matched symbols if known
-        if (sm.rowid) {
-          // If rowid maps to a file, give symbol match score
-          for (const [filePath, file] of this.filesByPath) {
-            if (file.id === sm.rowid) {
-              this.addCandidate(candidateMap, filePath, {
-                type: 'symbol',
-                score: 4.0,
-                detail: `Symbol definition match`,
-              });
-            }
-          }
+        if (sm.relativePath) {
+          this.addCandidate(candidateMap, sm.relativePath, {
+            type: 'symbol',
+            score: 4.0,
+            detail: `Symbol definition match (rank: ${(sm.rank ?? 0).toFixed(2)})`,
+          });
         }
       }
     } catch {

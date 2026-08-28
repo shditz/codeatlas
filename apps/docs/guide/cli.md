@@ -19,7 +19,7 @@ The `@codeatlas/cli` executable (`atlas`) provides command-line utilities for wo
 
 ### `atlas index`
 
-Traverses the workspace, executes Tree-sitter AST parsing on matching files, and commits metadata to `.atlas/codeatlas.db`.
+Traverses the workspace, executes Tree-sitter AST parsing on matching files, and commits metadata to `.atlas/atlas.db`.
 
 ```bash
 # Index current workspace

@@ -16,7 +16,7 @@ The official **CodeAtlas VS Code Extension** integrates AST indexing, symbol nav
 ### 2. Automatic Background Indexing
 
 - Monitors file save events in your workspace.
-- Executes incremental Tree-sitter AST diffing in the background, updating `.atlas/codeatlas.db` without blocking editor performance.
+- Executes incremental Tree-sitter AST diffing in the background, updating `.atlas/atlas.db` without blocking editor performance.
 
 ---
 

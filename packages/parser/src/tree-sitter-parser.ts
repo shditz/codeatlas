@@ -3,7 +3,7 @@ import type { SymbolInfo, ImportInfo, SymbolKind, Language } from '@codeatlas/co
 import { createLogger } from '@codeatlas/shared';
 
 const logger = createLogger('parser');
-const nodeRequire = typeof require !== 'undefined' ? require : createRequire(import.meta.url);
+const nodeRequire = typeof require !== 'undefined' ? require : createRequire(import.meta?.url ?? `file://${process.cwd()}/dummy.js`);
 
 let ParserClass: unknown = null;
 const languageGrammars: Partial<Record<Language, unknown>> = {};

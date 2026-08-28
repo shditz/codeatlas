@@ -10,6 +10,7 @@ import {
   ImportRepository,
   DependencyRepository,
   SearchRepository,
+  ProjectRepository,
 } from '@codeatlas/storage';
 import type { DependencyEdge, FileInfo } from '@codeatlas/core';
 import { Scanner, type ScanOptions } from './scanner.js';
@@ -66,14 +67,30 @@ export class Indexer {
 
     logger.info(`Starting indexing with concurrency pool of ${this.concurrency}...`);
 
-    const files = await this.scanner.collectFiles();
+    const scanResult = await this.scanner.scan();
+    const files = scanResult.files;
+
+    // Save project metadata
+    const projectRepo = new ProjectRepository(this.options.db);
+    projectRepo.update(this.options.projectId, {
+      packageManager: scanResult.project.packageManager,
+      isMonorepo: scanResult.project.isMonorepo,
+      languages: scanResult.project.languages,
+      frameworks: scanResult.project.frameworks,
+    });
+
     const existingHashes = this.fileRepo.getAllHashes(this.options.projectId);
     const existingPaths = new Set(existingHashes.keys());
     const currentPaths = new Set(files.map((f) => f.relativePath));
 
-    // Delete removed files
+    // Delete removed files and their FTS entries
     for (const existingPath of existingPaths) {
       if (!currentPaths.has(existingPath)) {
+        const existingFile = this.fileRepo.getByPath(this.options.projectId, existingPath);
+        if (existingFile?.id) {
+          this.searchRepo.removeFile(existingFile.id);
+          this.symbolRepo.deleteByFile(existingFile.id);
+        }
         this.fileRepo.delete(this.options.projectId, existingPath);
         filesDeleted++;
       }
@@ -81,6 +98,7 @@ export class Indexer {
 
     // Filter files needing update
     const pendingFiles: FileInfo[] = [];
+    const contentCache = new Map<string, string>();
     for (const file of files) {
       try {
         const content = fs.readFileSync(file.path, 'utf-8');
@@ -93,6 +111,7 @@ export class Indexer {
         }
 
         file.hash = contentHash;
+        contentCache.set(file.path, content);
         pendingFiles.push(file);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -109,7 +128,7 @@ export class Indexer {
       const parsedResults = await Promise.all(
         chunk.map(async (file) => {
           try {
-            const content = fs.readFileSync(file.path, 'utf-8');
+            const content = contentCache.get(file.path) ?? fs.readFileSync(file.path, 'utf-8');
             let parseResult: ParseResult | null = null;
 
             if (canParse(file.language)) {

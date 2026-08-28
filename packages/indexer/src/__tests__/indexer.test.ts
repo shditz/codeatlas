@@ -76,8 +76,8 @@ describe('Scanner & Indexer Integration', () => {
     const result = await scanner.scan();
 
     expect(result.detectedFiles).toBeGreaterThanOrEqual(3);
-    expect(result.detectedLanguages.has('typescript')).toBe(true);
-    expect(result.detectedLanguages.has('json')).toBe(true);
+    expect('typescript' in result.detectedLanguages).toBe(true);
+    expect('json' in result.detectedLanguages).toBe(true);
     expect(result.detectedFrameworks).toContain('react');
   });
 

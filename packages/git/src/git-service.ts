@@ -145,6 +145,17 @@ export class GitService {
     }
   }
 
+  getChurnFiles(commitLimit: number = 100): string[] {
+    if (!this.isGitRepo()) return [];
+
+    try {
+      const output = this.exec(['log', '--name-only', '--format=', '-n', String(commitLimit)]);
+      return output.split('\n').filter(Boolean);
+    } catch {
+      return [];
+    }
+  }
+
   getStagedChangedFiles(): string[] {
     if (!this.isGitRepo()) return [];
 
@@ -158,6 +169,7 @@ export class GitService {
 
   getBranchChangedFiles(baseBranch: string = 'main'): string[] {
     if (!this.isGitRepo()) return [];
+    if (baseBranch.startsWith('-')) return [];
 
     try {
       const output = this.exec(['diff', '--name-only', `${baseBranch}...HEAD`]);
@@ -190,6 +202,7 @@ export class GitService {
 
   getBranchDiff(baseBranch: string = 'main'): string {
     if (!this.isGitRepo()) return '';
+    if (baseBranch.startsWith('-')) return '';
 
     try {
       return this.exec(['diff', `${baseBranch}...HEAD`]);

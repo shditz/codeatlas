@@ -280,7 +280,7 @@ export interface ScanResult {
   project: ProjectMeta;
   detectedFiles: number;
   skippedFiles: number;
-  detectedLanguages: Map<Language, number>;
+  detectedLanguages: Record<string, number>;
   detectedFrameworks: Framework[];
   detectedPackageManager: PackageManager;
   isMonorepo: boolean;
@@ -289,6 +289,7 @@ export interface ScanResult {
   hasDocs: boolean;
   hasCI: boolean;
   duration: number;
+  files: FileInfo[];
 }
 
 export interface IndexState {

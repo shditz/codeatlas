@@ -31,7 +31,7 @@ CodeAtlas is a local-first platform that indexes your codebase into a dependency
 
 ## Overview
 
-CodeAtlas maps out your codebase by parsing source code into Abstract Syntax Trees (AST) using Tree-sitter. It stores relationships (such as function calls, module imports, and classes) in a local `.atlas/codeatlas.db` SQLite database. This creates a detailed map of your code that can be used to visualize architecture or generate accurate context packs for other tools. 
+CodeAtlas maps out your codebase by parsing source code into Abstract Syntax Trees (AST) using Tree-sitter. It stores relationships (such as function calls, module imports, and classes) in a local `.atlas/atlas.db` SQLite database. This creates a detailed map of your code that can be used to visualize architecture or generate accurate context packs for other tools. 
 
 Because it runs completely offline, your code remains 100% private.
 

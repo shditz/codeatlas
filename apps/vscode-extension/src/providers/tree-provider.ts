@@ -22,15 +22,31 @@ export class CodeAtlasOverviewProvider implements vscode.TreeDataProvider<CodeAt
   >();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
+  private fileRepo: FileRepository | null = null;
+  private symbolRepo: SymbolRepository | null = null;
+
   constructor(
     private db: AtlasDatabase | null,
     private workspaceRoot: string,
     private projectId: number = 1,
-  ) {}
+  ) {
+    this.updateRepos();
+  }
+
+  private updateRepos(): void {
+    if (this.db) {
+      this.fileRepo = new FileRepository(this.db);
+      this.symbolRepo = new SymbolRepository(this.db);
+    } else {
+      this.fileRepo = null;
+      this.symbolRepo = null;
+    }
+  }
 
   setDatabase(db: AtlasDatabase | null, projectId: number = 1): void {
     this.db = db;
     this.projectId = projectId;
+    this.updateRepos();
     this.refresh();
   }
 
@@ -58,8 +74,10 @@ export class CodeAtlasOverviewProvider implements vscode.TreeDataProvider<CodeAt
       ];
     }
 
-    const fileRepo = new FileRepository(this.db);
-    const symbolRepo = new SymbolRepository(this.db);
+    if (!this.fileRepo || !this.symbolRepo) {
+      return [];
+    }
+    const { fileRepo, symbolRepo } = this;
 
     if (!element) {
       // Root items

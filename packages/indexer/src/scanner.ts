@@ -104,7 +104,7 @@ export class Scanner {
   async scan(): Promise<ScanResult> {
     const startTime = Date.now();
     const files: FileInfo[] = [];
-    const languageCounts = new Map<Language, number>();
+    const languageCounts: Record<string, number> = {};
     let skippedFiles = 0;
 
     logger.info(`Scanning ${this.options.root}`);
@@ -160,7 +160,7 @@ export class Scanner {
       };
 
       files.push(fileInfo);
-      languageCounts.set(language, (languageCounts.get(language) ?? 0) + 1);
+      languageCounts[language] = (languageCounts[language] ?? 0) + 1;
     });
 
     const frameworks = this.detectFrameworks(this.options.root);
@@ -176,7 +176,7 @@ export class Scanner {
       project: {
         name: path.basename(this.options.root),
         root: normalizePath(this.options.root),
-        languages: [...languageCounts.keys()],
+        languages: Object.keys(languageCounts) as Language[],
         frameworks,
         packageManager,
         fileCount: files.length,
@@ -196,6 +196,7 @@ export class Scanner {
       hasDocs: this.hasDirectory(this.options.root, 'docs'),
       hasCI: this.hasDirectory(this.options.root, '.github/workflows'),
       duration,
+      files,
     };
   }
 

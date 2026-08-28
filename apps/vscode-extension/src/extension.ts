@@ -8,6 +8,7 @@ import {
   SymbolRepository,
   DependencyRepository,
   SearchRepository,
+  ProjectRepository,
 } from '@codeatlas/storage';
 import { Indexer, RepositoryWatcher } from '@codeatlas/indexer';
 import { ContextEngine } from '@codeatlas/context';
@@ -214,17 +215,20 @@ export function activate(context: vscode.ExtensionContext): void {
               candidate: candidate,
             }));
 
+            const projectRepo = new ProjectRepository(db);
+            const projectRecord = projectRepo.getById(projectId);
+
             const projectMeta: ProjectMeta = {
-              name: path.basename(workspaceRoot),
+              name: projectRecord?.name || path.basename(workspaceRoot),
               root: workspaceRoot,
-              languages: ['typescript'],
-              frameworks: [],
-              packageManager: 'pnpm',
+              languages: (projectRecord?.languages as any) || ['typescript'],
+              frameworks: (projectRecord?.frameworks as any) || [],
+              packageManager: (projectRecord?.packageManager as any) || 'pnpm',
               fileCount: files.length,
               symbolCount: symbols.length,
               dependencyCount: deps.length,
-              isMonorepo: false,
-              workspaces: [],
+              isMonorepo: projectRecord?.isMonorepo ?? false,
+              workspaces: projectRecord?.workspaces || [],
             };
 
             const pack = contextEngine.build({
@@ -266,7 +270,7 @@ export function activate(context: vscode.ExtensionContext): void {
             value: 'main',
           })) || 'main';
 
-        const changed = await gitService.getBranchChangedFiles(baseBranch);
+        const changed = gitService.getBranchChangedFiles(baseBranch);
         vscode.window.showInformationMessage(
           `CodeAtlas: Found ${changed.length} changed files vs ${baseBranch}.`,
         );
@@ -401,6 +405,16 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.window.showInformationMessage('CodeAtlas: Real-time watcher stopped.');
       } else {
         const dbPath = path.join(workspaceRoot, '.atlas', 'atlas.db');
+        if (!fs.existsSync(dbPath)) {
+          const action = await vscode.window.showWarningMessage(
+            'CodeAtlas: Database not found. You must index the workspace first.',
+            'Index Now'
+          );
+          if (action === 'Index Now') {
+            vscode.commands.executeCommand('codeatlas.indexWorkspace');
+          }
+          return;
+        }
         if (!db) {
           db = new AtlasDatabase(dbPath);
           runMigrations(db);

@@ -5,7 +5,7 @@ export class FileRepository {
   constructor(private db: AtlasDatabase) {}
 
   upsert(projectId: number, file: FileInfo): number {
-    const result = this.db.run(
+    this.db.run(
       `INSERT INTO files (project_id, path, relative_path, extension, language, size, hash, module, is_test, is_generated, symbol_count, import_count, export_count, content, last_modified)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(project_id, relative_path)
@@ -26,7 +26,13 @@ export class FileRepository {
       null,
       file.lastModified ?? null,
     );
-    return Number(result.lastInsertRowid);
+    // Query the actual row id — lastInsertRowid is unreliable for ON CONFLICT DO UPDATE
+    const row = this.db.get<{ id: number }>(
+      'SELECT id FROM files WHERE project_id = ? AND relative_path = ?',
+      projectId,
+      file.relativePath,
+    );
+    return row?.id ?? 0;
   }
 
   getByPath(projectId: number, relativePath: string): FileInfo | undefined {
@@ -144,7 +150,7 @@ export class SymbolRepository {
 
   getByFile(fileId: number): SymbolInfo[] {
     const rows = this.db.all<Record<string, unknown>>(
-      'SELECT * FROM symbols WHERE file_id = ?',
+      'SELECT symbols.*, files.relative_path as file_path FROM symbols JOIN files ON symbols.file_id = files.id WHERE symbols.file_id = ?',
       fileId,
     );
     return rows.map((r) => this.mapRow(r));
@@ -152,13 +158,23 @@ export class SymbolRepository {
 
   searchByName(name: string): SymbolInfo[] {
     const rows = this.db.all<Record<string, unknown>>(
-      'SELECT * FROM symbols WHERE name LIKE ?',
+      'SELECT symbols.*, files.relative_path as file_path FROM symbols JOIN files ON symbols.file_id = files.id WHERE symbols.name LIKE ?',
       `%${name}%`,
     );
     return rows.map((r) => this.mapRow(r));
   }
 
   deleteByFile(fileId: number): void {
+    // Clean up FTS entries safely
+    const symbols = this.getByFile(fileId);
+    for (const sym of symbols) {
+      try {
+        this.db.run('DELETE FROM symbols_fts WHERE rowid = ?', sym.id);
+      } catch {
+        // Ignore missing FTS entries
+      }
+    }
+    
     this.db.run('DELETE FROM symbols WHERE file_id = ?', fileId);
   }
 
@@ -187,7 +203,7 @@ export class SymbolRepository {
       id: row['id'] as number,
       name: row['name'] as string,
       kind: row['kind'] as SymbolInfo['kind'],
-      filePath: '',
+      filePath: (row['file_path'] as string) ?? '',
       line: row['line'] as number,
       endLine: row['end_line'] as number | undefined,
       column: row['column_num'] as number,
@@ -224,7 +240,7 @@ export class ImportRepository {
 
   getByFile(fileId: number): ImportInfo[] {
     const rows = this.db.all<Record<string, unknown>>(
-      'SELECT * FROM imports WHERE file_id = ?',
+      'SELECT imports.*, files.relative_path as file_path FROM imports JOIN files ON imports.file_id = files.id WHERE imports.file_id = ?',
       fileId,
     );
     return rows.map((r) => this.mapRow(r));
@@ -237,7 +253,7 @@ export class ImportRepository {
   private mapRow(row: Record<string, unknown>): ImportInfo {
     return {
       id: row['id'] as number,
-      filePath: '',
+      filePath: (row['file_path'] as string) ?? '',
       importPath: row['import_path'] as string,
       resolvedPath: row['resolved_path'] as string | undefined,
       symbols: JSON.parse(row['symbols'] as string) as string[],
@@ -370,6 +386,33 @@ export class ProjectRepository {
       name: projectName,
       root: normalizedRoot,
     };
+  }
+
+  update(id: number, meta: Partial<ProjectRecord>): void {
+    const fields: string[] = [];
+    const values: unknown[] = [];
+
+    if (meta.packageManager !== undefined) {
+      fields.push('package_manager = ?');
+      values.push(meta.packageManager);
+    }
+    if (meta.isMonorepo !== undefined) {
+      fields.push('is_monorepo = ?');
+      values.push(meta.isMonorepo ? 1 : 0);
+    }
+    if (meta.languages !== undefined) {
+      fields.push('languages = ?');
+      values.push(JSON.stringify(meta.languages));
+    }
+    if (meta.frameworks !== undefined) {
+      fields.push('frameworks = ?');
+      values.push(JSON.stringify(meta.frameworks));
+    }
+
+    if (fields.length > 0) {
+      values.push(id);
+      this.db.run(`UPDATE projects SET ${fields.join(', ')} WHERE id = ?`, ...values);
+    }
   }
 
   getById(id: number): ProjectRecord | undefined {

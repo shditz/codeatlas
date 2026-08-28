@@ -18,7 +18,7 @@ export function getConfigPath(cwd: string = process.cwd()): string {
 export function getDbPath(cwd: string = process.cwd()): string {
   const dir = getAtlasDir(cwd);
   if (fs.existsSync(path.join(dir, 'atlas.db'))) return path.join(dir, 'atlas.db');
-  if (fs.existsSync(path.join(dir, 'codeatlas.db'))) return path.join(dir, 'codeatlas.db');
+  if (fs.existsSync(path.join(dir, 'atlas.db'))) return path.join(dir, 'atlas.db');
   return path.join(dir, 'atlas.db');
 }
 

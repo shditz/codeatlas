@@ -1,4 +1,4 @@
-import type { NodeMetrics } from '@codeatlas/core';
+import type { NodeMetrics, TechnicalDebtHotspot } from '@codeatlas/core';
 import { GitService } from '@codeatlas/git';
 
 export interface FileChurnInfo {
@@ -7,16 +7,7 @@ export interface FileChurnInfo {
   lastModified?: string;
 }
 
-export interface TechnicalDebtHotspot {
-  filePath: string;
-  churnScore: number;
-  instability: number;
-  inDegree: number;
-  outDegree: number;
-  hotspotScore: number;
-  riskLevel: 'critical' | 'high' | 'medium' | 'low';
-  recommendation: string;
-}
+export type { TechnicalDebtHotspot };
 
 export class GitMetricsAnalyzer {
   private gitService: GitService;
@@ -34,18 +25,13 @@ export class GitMetricsAnalyzer {
     if (!this.isGitAvailable()) return churnMap;
 
     try {
-      const changedFiles = this.gitService.getChangedFiles(`HEAD~${commitLimit}`);
+      const changedFiles = this.gitService.getChurnFiles(commitLimit);
       for (const file of changedFiles) {
         const count = churnMap.get(file) ?? 0;
         churnMap.set(file, count + 1);
       }
     } catch {
-      // Fallback if shallow repo or fewer commits
-      const recent = this.gitService.getRecentCommits(commitLimit);
-      for (const commit of recent) {
-        // approximate churn count from commit history
-        churnMap.set(commit.hash, 1);
-      }
+      // Fallback
     }
 
     return churnMap;

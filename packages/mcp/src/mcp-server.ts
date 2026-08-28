@@ -10,6 +10,7 @@ import {
   SymbolRepository,
   DependencyRepository,
   SearchRepository,
+  ProjectRepository,
 } from '@codeatlas/storage';
 import { Scanner, Indexer } from '@codeatlas/indexer';
 import {
@@ -75,10 +76,11 @@ export interface McpPrompt {
 export class McpServer {
   private rootDir: string;
   private dbPath: string;
+  private dbInstance: { db: AtlasDatabase; projectId: number } | null = null;
 
   constructor(rootDir: string = process.cwd()) {
     this.rootDir = path.resolve(rootDir);
-    this.dbPath = path.join(this.rootDir, '.atlas', 'index.db');
+    this.dbPath = path.join(this.rootDir, '.atlas', 'atlas.db');
   }
 
   public getTools(): McpTool[] {
@@ -449,6 +451,10 @@ export class McpServer {
   }
 
   private openDb(): { db: AtlasDatabase; projectId: number } {
+    if (this.dbInstance) {
+      return this.dbInstance;
+    }
+
     const atlasDir = path.join(this.rootDir, '.atlas');
     if (!fs.existsSync(atlasDir)) {
       fs.mkdirSync(atlasDir, { recursive: true });
@@ -464,7 +470,8 @@ export class McpServer {
       project = { id: Number(res.lastInsertRowid) };
     }
 
-    return { db, projectId: project.id };
+    this.dbInstance = { db, projectId: project.id };
+    return this.dbInstance;
   }
 
   public async readResource(uri: string): Promise<string> {
@@ -473,7 +480,6 @@ export class McpServer {
         const { db, projectId } = this.openDb();
         const fileRepo = new FileRepository(db);
         const files = fileRepo.getAll(projectId);
-        db.close();
         return JSON.stringify(
           {
             root: this.rootDir,
@@ -495,7 +501,6 @@ export class McpServer {
         const { db, projectId } = this.openDb();
         const depRepo = new DependencyRepository(db);
         const deps = depRepo.getAll(projectId);
-        db.close();
         return JSON.stringify(
           { totalDependencies: deps.length, edges: deps.slice(0, 100) },
           null,
@@ -589,7 +594,6 @@ export class McpServer {
         const { db, projectId } = this.openDb();
         const indexer = new Indexer({ root: this.rootDir, db, projectId });
         const stats = await indexer.index();
-        db.close();
         return JSON.stringify(stats, null, 2);
       }
 
@@ -599,7 +603,6 @@ export class McpServer {
         const { db } = this.openDb();
         const searchRepo = new SearchRepository(db);
         const results = searchRepo.searchFiles(query, limit);
-        db.close();
         return JSON.stringify(results, null, 2);
       }
 
@@ -617,6 +620,7 @@ export class McpServer {
         const fileRepo = new FileRepository(db);
         const depRepo = new DependencyRepository(db);
         const searchRepo = new SearchRepository(db);
+        const projectRepo = new ProjectRepository(db);
 
         const files = fileRepo.getAll(projectId);
         const filesByPath = new Map<string, FileInfo>(
@@ -640,17 +644,19 @@ export class McpServer {
         const ruleEngine = new RuleEngine(this.rootDir);
         const rules = ruleEngine.discover();
 
+        const projectRecord = projectRepo.getById(projectId);
+
         const projectMeta: ProjectMeta = {
-          name: path.basename(this.rootDir),
+          name: projectRecord?.name || path.basename(this.rootDir),
           root: this.rootDir.replace(/\\/g, '/'),
-          languages: ['typescript'],
-          frameworks: [],
-          packageManager: 'pnpm',
+          languages: (projectRecord?.languages as any) || ['typescript'],
+          frameworks: (projectRecord?.frameworks as any) || [],
+          packageManager: (projectRecord?.packageManager as any) || 'pnpm',
           fileCount: files.length,
           symbolCount: 0,
           dependencyCount: deps.length,
-          isMonorepo: true,
-          workspaces: [],
+          isMonorepo: projectRecord?.isMonorepo ?? false,
+          workspaces: projectRecord?.workspaces || [],
         };
 
         const contextEngine = new ContextEngine({
@@ -665,8 +671,6 @@ export class McpServer {
           rankedResults: ranked,
           rules,
         });
-
-        db.close();
 
         return JSON.stringify(
           {
@@ -746,7 +750,6 @@ export class McpServer {
         const graph = new DependencyGraph();
         const engine = new GraphQueryEngine(graph, nodes, edges);
         const result = engine.execute(targetQuery);
-        db.close();
 
         return JSON.stringify(
           { ...result, originalQuery: queryStr, executedCypher: targetQuery },
@@ -758,9 +761,9 @@ export class McpServer {
       case 'atlas_pr_diff': {
         const baseBranch = String(args.baseBranch ?? 'main');
         const git = new GitService(this.rootDir);
-        const changedFiles = await git.getBranchChangedFiles(baseBranch);
-        const recentCommits = await git.getRecentCommits(5);
-        const diffContent = await git.getBranchDiff(baseBranch);
+        const changedFiles = git.getBranchChangedFiles(baseBranch);
+        const recentCommits = git.getRecentCommits(5);
+        const diffContent = git.getBranchDiff(baseBranch);
 
         const { db, projectId } = this.openDb();
         const depRepo = new DependencyRepository(db);
@@ -773,7 +776,6 @@ export class McpServer {
           const dependents = graph.getDependents(file, 1);
           for (const dep of dependents) affectedFiles.add(dep);
         }
-        db.close();
 
         return JSON.stringify(
           {
@@ -819,7 +821,6 @@ export class McpServer {
         const { db, projectId } = this.openDb();
         const fileRepo = new FileRepository(db);
         const files = fileRepo.getAll(projectId);
-        db.close();
 
         const filtered = files
           .map((f: FileInfo) => f.relativePath)
@@ -843,7 +844,6 @@ export class McpServer {
         const symbols = symbolRepo.count();
         const ruleEngine = new RuleEngine(this.rootDir);
         const rules = ruleEngine.discover();
-        db.close();
 
         return JSON.stringify(
           {
@@ -862,7 +862,6 @@ export class McpServer {
         const { db, projectId } = this.openDb();
         const analyzer = new CodebaseAnalyzer({ db, projectId });
         const report = analyzer.analyze();
-        db.close();
 
         if (args.cycles) {
           return JSON.stringify({ cycles: report.cycles, count: report.cycles.length }, null, 2);
