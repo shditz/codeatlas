@@ -376,6 +376,27 @@ export class Scanner {
     const workspaces: string[] = [];
 
     try {
+      const pnpmWsPath = path.join(root, 'pnpm-workspace.yaml');
+      if (fs.existsSync(pnpmWsPath)) {
+        const content = fs.readFileSync(pnpmWsPath, 'utf-8');
+        const lines = content.split('\n');
+        let inPackages = false;
+        for (const line of lines) {
+          if (line.trim() === 'packages:') {
+            inPackages = true;
+            continue;
+          }
+          if (inPackages) {
+            if (line.trim().startsWith('-')) {
+              workspaces.push(line.replace('-', '').trim().replace(/['"]/g, ''));
+            } else if (line.trim() !== '' && !line.startsWith(' ')) {
+              inPackages = false;
+            }
+          }
+        }
+        if (workspaces.length > 0) return workspaces;
+      }
+
       const pkgPath = path.join(root, 'package.json');
       if (fs.existsSync(pkgPath)) {
         const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')) as Record<string, unknown>;

@@ -1,48 +1,81 @@
-# Agent Workflow Best Practices
+# 🤖 AI Agent Workflow Best Practices
 
-Integrating CodeAtlas into CI/CD pipelines and agentic development workflows maximizes context accuracy and minimizes hallucination.
+How to get the absolute best results when pairing CodeAtlas with AI Coding Assistants (**Google Antigravity**, **Claude Code**, **Cursor**, and **Windsurf**).
 
 ---
 
-## 1. Automated Pre-Commit Rule Synchronization
+## 🌟 The Golden Formula: MCP Tools + AI Rules
 
-Ensure your `.cursorrules`, `CLAUDE.md`, and other AI rule files are kept up to date automatically on every commit:
+To make your AI agent perform at its peak, you need two things working together:
 
-```bash
-# Add to package.json scripts
-{
-  "scripts": {
-    "prepare": "atlas index && atlas rules --all"
-  }
-}
+```
+🚀 Peak AI Performance = MCP Server (The Tools) + AGENTS.md (The Motivation)
 ```
 
-Or using Git Hooks (`.husky/pre-commit`):
+1. **The Tools (MCP Server)**: Gives your AI the *ability* to query AST symbols and dependencies.
+2. **The Motivation (`AGENTS.md` / `.cursorrules`)**: Gives your AI explicit *instructions* to always check CodeAtlas before making assumptions or guessing file paths.
 
+---
+
+## 🔄 The 4-Step Daily Workflow
+
+### Step 1: Initialize & Generate Rules (Once per Project)
+In your project root:
 ```bash
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
+atlas init
 atlas index
-atlas rules --all
-git add .cursorrules CLAUDE.md .windsurfrules DEVIN.md
+atlas rules generate all
 ```
+This creates tailored instruction files (like `AGENTS.md` or `.cursorrules`) that teach your AI about your TypeScript conventions, monorepo workspaces, and architectural boundaries.
 
 ---
 
-## 2. GitHub Actions Integration
+### Step 2: Context-Driven Prompting
+When asking an AI agent to build a feature, avoid vague prompts that force the AI to search blindly.
 
-Use the official CodeAtlas GitHub Action (`@codeatlas-ai/github-action`) to validate PR architectural constraints and generate context digests for AI reviewers:
+**❌ The Slow Way (Blind AI Search):**
+> *"Please add a discount coupon feature to the checkout page."*
+> *(AI reads 50 random files, burns tokens, and might edit the wrong service).*
+
+**✅ The CodeAtlas Way (Precision Context):**
+> *"Use `atlas_get_context` to fetch the context pack for 'discount coupon checkout', read the relevant files, and implement the feature."*
+> *(AI retrieves the exact 4 files involved, understands their type interfaces, and implements the feature cleanly in 1 shot).*
+
+---
+
+### Step 3: Architecture Self-Audit (Pre-Completion)
+Before your AI agent marks a task as complete, instruct it to run an architectural audit:
+
+**Prompt to AI:**
+> *"Run `atlas_analyze` (or `atlas analyze` in the terminal). Make sure your changes did not introduce any circular dependencies or dead code."*
+
+If the AI accidentally created an import loop (e.g. `auth.ts` imports `user.ts` which imports `auth.ts`), `atlas analyze` flags it immediately and the AI refactors it before you ever commit!
+
+---
+
+### Step 4: Pre-Commit Blast Radius Check
+Before submitting a Pull Request, run:
+
+```bash
+atlas diff
+```
+CodeAtlas will show you the **Blast Radius** of your changes—listing every other component or package in your project that depends on the files you just changed.
+
+---
+
+## 🛡️ CI/CD Integration (GitHub Actions)
+
+Add CodeAtlas as an automated quality gate in `.github/workflows/codeatlas.yml`:
 
 ```yaml
-name: CodeAtlas Architecture Check
+name: CodeAtlas Architecture Gate
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, master]
 
 jobs:
-  verify-architecture:
+  audit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,16 +83,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: pnpm install
-      - run: pnpm exec atlas index
-      - run: pnpm exec atlas rules --all --check
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build & Index CodeAtlas
+        run: |
+          npx @codeatlas-ai/cli index
+          npx @codeatlas-ai/cli doctor
+
+      - name: Fail on Circular Dependencies
+        run: npx @codeatlas-ai/cli analyze --fail-on-cycles
 ```
-
----
-
-## 3. Pairing with Autonomous Coding Agents
-
-When working with autonomous agents (Devin, OpenHands, Antigravity, SWE-agent):
-
-1. **Pre-Seed Context**: Provide the agent with the output of `atlas context --task "Description"` to focus its attention on relevant files.
-2. **Boundary Protection**: Configure rule decoupling guidelines in `codeatlas.config.json` so the agent respects package boundaries.

@@ -61,16 +61,28 @@ jobs:
         run: |
           mkdir -p apps/vscode-extension/webview/dist
           cp -r apps/webview/dist/* apps/vscode-extension/webview/dist/
+          EXT_VERSION=$(node -p "require('./apps/vscode-extension/package.json').version")
           cd apps/vscode-extension
-          npx --yes @vscode/vsce package --no-dependencies -o ../../codeatlas-vscode-0.1.1.vsix
-          cp ../../codeatlas-vscode-0.1.1.vsix ../../codeatlas-vscode.vsix
+          npx --yes @vscode/vsce package --no-dependencies -o "../../codeatlas-vscode-${EXT_VERSION}.vsix"
+          cd ../..
+          cp "codeatlas-vscode-${EXT_VERSION}.vsix" codeatlas-vscode.vsix
 
       - name: Upload VS Code Extension (.vsix) to GitHub Releases
         run: |
-          gh release upload v0.1.0 codeatlas-vscode-0.1.1.vsix codeatlas-vscode.vsix --clobber || true
+          EXT_VERSION=$(node -p "require('./apps/vscode-extension/package.json').version")
+          VSIX_FILE="codeatlas-vscode-${EXT_VERSION}.vsix"
+
+          gh release upload "v${EXT_VERSION}" "${VSIX_FILE}" codeatlas-vscode.vsix --clobber || true
+          gh release upload "codeatlas-vscode@${EXT_VERSION}" "${VSIX_FILE}" codeatlas-vscode.vsix --clobber || true
+
           for tag in $(git tag --points-at HEAD); do
-            gh release upload "$tag" codeatlas-vscode-0.1.1.vsix codeatlas-vscode.vsix --clobber || true
+            gh release upload "$tag" "${VSIX_FILE}" codeatlas-vscode.vsix --clobber || true
           done
+
+          LATEST_TAG=$(gh release view --json tagName -q .tagName 2>/dev/null || echo "")
+          if [ -n "$LATEST_TAG" ]; then
+            gh release upload "$LATEST_TAG" "${VSIX_FILE}" codeatlas-vscode.vsix --clobber || true
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

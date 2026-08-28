@@ -1,60 +1,77 @@
-# Configuration Reference
+# ⚙️ Configuration Reference (`.atlas/config.toml`)
 
-Configure CodeAtlas indexing, rule exporting, and graph visualizer settings via `codeatlas.config.json` placed in your repository root.
+CodeAtlas configuration is stored in clean **TOML** format inside `.atlas/config.toml`. It is automatically created when you run `atlas init`.
 
 ---
 
-## Schema Overview
+## 📄 Complete Example Configuration
 
-```json
-{
-  "$schema": "https://raw.githubusercontent.com/shditz/codeatlas/main/schema.json",
-  "include": ["src/**/*", "packages/**/*", "apps/**/*"],
-  "exclude": ["**/node_modules/**", "**/dist/**", "**/.git/**", "**/vendor/**", "**/coverage/**"],
-  "maxFileSizeKB": 2048,
-  "rules": {
-    "autoExportOnIndex": true,
-    "defaultTargets": ["cursor", "claude", "devin", "windsurf"],
-    "includeArchitectureMap": true,
-    "includeTypingStandards": true
-  },
-  "graph": {
-    "defaultDimension": "3D",
-    "autoRotate": true,
-    "particleSpeed": 0.005
-  }
-}
+```toml
+[project]
+name = "MyAwesomeProject"
+
+[index]
+follow_symlinks = false
+include_tests = true
+max_file_size = 1048576 # 1 MB maximum per file
+
+[ranking]
+lexical_weight = 0.25
+symbol_weight = 0.20
+path_weight = 0.15
+dependency_weight = 0.15
+rule_weight = 0.10
+recency_weight = 0.10
+module_weight = 0.05
+
+[context]
+max_tokens = 12000
+default_mode = "full" # Options: "full", "signature", "summary", "digest"
+
+[security]
+scan_secrets = true
+exclude_patterns = [".env", "*.pem", "*.key", "id_rsa*"]
+
+[ai]
+provider = "none" # Options: "openai", "anthropic", "gemini", "ollama", "none"
+model = "gpt-4o"
 ```
 
 ---
 
-## Property Specifications
+## 🛠️ Configuration Sections
 
-### `include`
+### `[project]`
+- **`name`** *(string)*: Project name (defaults to repository folder name).
 
-- **Type**: `string[]`
-- **Default**: `["**/*"]`
-- Glob patterns specifying files and directories to parse during index operations.
+### `[index]`
+- **`follow_symlinks`** *(boolean, default: `false`)*: Whether to follow symbolic links during file traversal.
+- **`include_tests`** *(boolean, default: `true`)*: Whether to parse test files (`*.test.ts`, `*.spec.ts`, etc.).
+- **`max_file_size`** *(number, default: `1048576`)*: Maximum file size in bytes to index. Files larger than this (e.g. huge minified bundles) will be skipped safely.
 
-### `exclude`
+### `[context]`
+- **`max_tokens`** *(number, default: `12000`)*: Default token budget when packing context for LLMs.
+- **`default_mode`** *(string, default: `"full"`)*: Default compression level:
+  - `"full"`: Complete file contents.
+  - `"signature"`: AST skeletons containing only class, function, and interface signatures (saves up to 80% tokens).
+  - `"summary"`: High-level overview of files and symbols.
+  - `"digest"`: Ultra-compact token summary.
 
-- **Type**: `string[]`
-- **Default**: `["**/node_modules/**", "**/dist/**", "**/.git/**"]`
-- Glob patterns specifying paths to ignore during traversal.
+### `[security]`
+- **`scan_secrets`** *(boolean, default: `true`)*: Detects potential API keys or secrets before exporting context.
+- **`exclude_patterns`** *(array of strings)*: Glob patterns of sensitive files to never include in context packs.
 
-### `maxFileSizeKB`
+---
 
-- **Type**: `number`
-- **Default**: `1024`
-- Upper limit for individual source file sizes to prevent out-of-memory errors on minified bundles.
+## 🚫 Ignoring Files (`.atlasignore`)
 
-### `rules.autoExportOnIndex`
+You can also create a `.atlasignore` file in your repository root to ignore specific paths (using standard `.gitignore` syntax):
 
-- **Type**: `boolean`
-- **Default**: `false`
-- When set to `true`, `atlas index` will automatically recompile and export all rule files.
-
-### `rules.defaultTargets`
-
-- **Type**: `string[]`
-- List of default target formats to generate when executing `atlas rules`. Supported values: `cursor`, `windsurf`, `claude`, `devin`, `roo`, `aider`, `agents`.
+```gitignore
+# Ignore build outputs and temporary files
+dist/
+build/
+coverage/
+*.min.js
+legacy-scripts/
+```

@@ -17,6 +17,8 @@ const DEFAULT_ENTRY_PATTERNS = [
   /\.config\.[a-z0-9]+$/i,
   /rc\.[a-z0-9]+$/i,
   /\.d\.ts$/i,
+  /\/commands\/[a-zA-Z0-9_-]+\.[a-z0-9]+$/i,
+  /extension\.[a-z0-9]+$/i,
 ];
 
 export class DeadCodeDetector {

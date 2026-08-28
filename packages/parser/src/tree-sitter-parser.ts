@@ -1,12 +1,39 @@
 import { createRequire } from 'node:module';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import type { SymbolInfo, ImportInfo, SymbolKind, Language } from '@codeatlas-ai/core';
 import { createLogger } from '@codeatlas-ai/shared';
 
 const logger = createLogger('parser');
-const nodeRequire =
-  typeof require !== 'undefined'
-    ? require
-    : createRequire(import.meta?.url ?? `file://${process.cwd()}/dummy.js`);
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function safeRequire(moduleName: string): any {
+  const candidateUrls: string[] = [
+    typeof import.meta?.url === 'string' ? import.meta.url : '',
+    pathToFileURL(path.resolve(process.cwd(), 'dummy.js')).href,
+    pathToFileURL(path.resolve(process.cwd(), 'apps/cli/dummy.js')).href,
+    pathToFileURL(path.resolve(process.cwd(), 'packages/parser/dummy.js')).href,
+  ].filter(Boolean);
+
+  if (typeof require !== 'undefined') {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require(moduleName);
+    } catch {
+      // try next
+    }
+  }
+
+  for (const url of candidateUrls) {
+    try {
+      const req = createRequire(url);
+      return req(moduleName);
+    } catch {
+      // try next
+    }
+  }
+  throw new Error(`Cannot resolve module '${moduleName}'`);
+}
 
 let ParserClass: unknown = null;
 const languageGrammars: Partial<Record<Language, unknown>> = {};
@@ -14,7 +41,7 @@ const languageGrammars: Partial<Record<Language, unknown>> = {};
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getParserClass(): any {
   if (!ParserClass) {
-    ParserClass = nodeRequire('tree-sitter');
+    ParserClass = safeRequire('tree-sitter');
   }
   return ParserClass;
 }
@@ -27,35 +54,94 @@ function getLanguage(lang: Language): unknown {
   let grammar: unknown = null;
   switch (lang) {
     case 'typescript': {
-      const mod = nodeRequire('tree-sitter-typescript');
-      grammar = mod.typescript ?? mod.default ?? mod;
+      try {
+        const mod = safeRequire('tree-sitter-typescript');
+        grammar = mod.typescript ?? mod.default ?? mod;
+      } catch {
+        grammar = null;
+      }
       break;
     }
     case 'javascript': {
-      const mod = nodeRequire('tree-sitter-javascript');
-      grammar = mod.default ?? mod;
+      try {
+        const mod = safeRequire('tree-sitter-javascript');
+        grammar = mod.default ?? mod;
+      } catch {
+        grammar = null;
+      }
       break;
     }
     case 'python': {
-      const mod = nodeRequire('tree-sitter-python');
-      grammar = mod.default ?? mod;
+      try {
+        const mod = safeRequire('tree-sitter-python');
+        grammar = mod.default ?? mod;
+      } catch {
+        grammar = null;
+      }
       break;
     }
     case 'go': {
-      const mod = nodeRequire('tree-sitter-go');
-      grammar = mod.default ?? mod;
+      try {
+        const mod = safeRequire('tree-sitter-go');
+        grammar = mod.default ?? mod;
+      } catch {
+        grammar = null;
+      }
       break;
     }
     case 'rust': {
-      const mod = nodeRequire('tree-sitter-rust');
-      grammar = mod.default ?? mod;
+      try {
+        const mod = safeRequire('tree-sitter-rust');
+        grammar = mod.default ?? mod;
+      } catch {
+        grammar = null;
+      }
+      break;
+    }
+    case 'php': {
+      try {
+        const mod = safeRequire('tree-sitter-php');
+        grammar = mod.php ?? mod.default ?? mod;
+      } catch {
+        grammar = null;
+      }
+      break;
+    }
+    case 'java': {
+      try {
+        const mod = safeRequire('tree-sitter-java');
+        grammar = mod.default ?? mod;
+      } catch {
+        grammar = null;
+      }
+      break;
+    }
+    case 'csharp': {
+      try {
+        const mod = safeRequire('tree-sitter-c-sharp');
+        grammar = mod.default ?? mod;
+      } catch {
+        grammar = null;
+      }
+      break;
+    }
+    case 'cpp':
+    case 'c': {
+      try {
+        const mod = safeRequire('tree-sitter-cpp');
+        grammar = mod.default ?? mod;
+      } catch {
+        grammar = null;
+      }
       break;
     }
     default:
-      throw new Error(`Unsupported tree-sitter language: ${lang}`);
+      grammar = null;
   }
 
-  languageGrammars[lang] = grammar;
+  if (grammar) {
+    languageGrammars[lang] = grammar;
+  }
   return grammar;
 }
 
@@ -88,44 +174,80 @@ export async function parseFile(
   const errors: string[] = [];
 
   try {
-    if (['typescript', 'javascript', 'python', 'go', 'rust'].includes(language)) {
-      const ParserConstructor = getParserClass();
-      const lang = getLanguage(language);
+    let treeParsed = false;
+    const treeSitterSupported = ['typescript', 'javascript', 'python', 'go', 'rust', 'php'];
 
-      const parser = new ParserConstructor();
-      parser.setLanguage(lang);
+    if (treeSitterSupported.includes(language)) {
+      try {
+        const lang = getLanguage(language);
+        if (lang) {
+          const ParserConstructor = getParserClass();
+          const parser = new ParserConstructor();
+          parser.setLanguage(lang);
 
-      const tree = parser.parse(content);
-      const root = tree.rootNode as unknown as AstNode;
+          const tree = parser.parse(content);
+          const root = tree.rootNode as unknown as AstNode;
 
+          switch (language) {
+            case 'typescript':
+            case 'javascript':
+              extractTypeScriptSymbols(root, filePath, symbols, exportedNames, null);
+              extractTypeScriptImports(root, filePath, imports);
+              treeParsed = true;
+              break;
+
+            case 'python':
+              extractPythonSymbols(root, filePath, symbols, exportedNames, null);
+              extractPythonImports(root, filePath, imports);
+              treeParsed = true;
+              break;
+
+            case 'go':
+              extractGoSymbols(root, filePath, symbols, exportedNames, null);
+              extractGoImports(root, filePath, imports);
+              treeParsed = true;
+              break;
+
+            case 'rust':
+              extractRustSymbols(root, filePath, symbols, exportedNames, null);
+              extractRustImports(root, filePath, imports);
+              treeParsed = true;
+              break;
+
+            case 'php':
+              extractPhpSymbolsTreeSitter(root, filePath, symbols, exportedNames, null);
+              extractPhpImportsTreeSitter(root, filePath, imports);
+              treeParsed = true;
+              break;
+          }
+
+          if (tree.rootNode.hasError) {
+            errors.push(`Parse tree contains errors for ${filePath}`);
+          }
+        }
+      } catch (tsErr) {
+        logger.debug(`Tree-sitter parse fallback for ${language} in ${filePath}: ${tsErr}`);
+      }
+    }
+
+    if (!treeParsed) {
       switch (language) {
         case 'typescript':
         case 'javascript':
-          extractTypeScriptSymbols(root, filePath, symbols, exportedNames, null);
-          extractTypeScriptImports(root, filePath, imports);
+          extractTypeScriptSymbolsAndImportsRegex(content, filePath, symbols, imports, exportedNames);
           break;
-
         case 'python':
-          extractPythonSymbols(root, filePath, symbols, exportedNames, null);
-          extractPythonImports(root, filePath, imports);
+          extractPythonSymbolsAndImportsRegex(content, filePath, symbols, imports, exportedNames);
           break;
-
         case 'go':
-          extractGoSymbols(root, filePath, symbols, exportedNames, null);
-          extractGoImports(root, filePath, imports);
+          extractGoSymbolsAndImportsRegex(content, filePath, symbols, imports, exportedNames);
           break;
-
         case 'rust':
-          extractRustSymbols(root, filePath, symbols, exportedNames, null);
-          extractRustImports(root, filePath, imports);
+          extractRustSymbolsAndImportsRegex(content, filePath, symbols, imports, exportedNames);
           break;
-      }
-
-      if (tree.rootNode.hasError) {
-        errors.push(`Parse tree contains errors for ${filePath}`);
-      }
-    } else {
-      switch (language) {
+        case 'php':
+          extractPhpSymbolsAndImports(content, filePath, symbols, imports, exportedNames);
+          break;
         case 'csharp':
           extractCSharpSymbolsAndImports(content, filePath, symbols, imports, exportedNames);
           break;
@@ -1143,3 +1265,559 @@ function extractSwiftSymbolsAndImports(
     }
   }
 }
+
+function extractPhpSymbolsTreeSitter(
+  node: AstNode,
+  filePath: string,
+  symbols: SymbolInfo[],
+  exportedNames: string[],
+  parentName: string | null,
+): void {
+  for (const child of node.namedChildren) {
+    switch (child.type) {
+      case 'function_definition': {
+        const name = child.childForFieldName('name')?.text ?? '';
+        if (name) {
+          const isExported = !name.startsWith('_');
+          symbols.push(makeSymbol(name, 'function', filePath, child, isExported, parentName));
+          if (isExported && !parentName) exportedNames.push(name);
+        }
+        break;
+      }
+      case 'class_declaration':
+      case 'interface_declaration':
+      case 'trait_declaration':
+      case 'enum_declaration': {
+        const name = child.childForFieldName('name')?.text ?? '';
+        if (name) {
+          const kind: SymbolKind =
+            child.type === 'interface_declaration'
+              ? 'interface'
+              : child.type === 'trait_declaration'
+                ? 'trait'
+                : child.type === 'enum_declaration'
+                  ? 'enum'
+                  : 'class';
+          symbols.push(makeSymbol(name, kind, filePath, child, true, parentName));
+          exportedNames.push(name);
+
+          const body =
+            child.childForFieldName('body') ??
+            child.namedChildren.find((c) => c.type === 'declaration_list');
+          if (body) {
+            extractPhpClassMembersTreeSitter(body, filePath, symbols, name);
+          }
+        }
+        break;
+      }
+      default:
+        if (child.namedChildren.length > 0 && !isBlockNode(child.type)) {
+          extractPhpSymbolsTreeSitter(child, filePath, symbols, exportedNames, parentName);
+        }
+        break;
+    }
+  }
+}
+
+function extractPhpClassMembersTreeSitter(
+  bodyNode: AstNode,
+  filePath: string,
+  symbols: SymbolInfo[],
+  className: string,
+): void {
+  for (const member of bodyNode.namedChildren) {
+    if (member.type === 'method_declaration') {
+      const name = member.childForFieldName('name')?.text ?? '';
+      if (name) {
+        const isPublic = !member.text.includes('private') && !member.text.includes('protected');
+        symbols.push(makeSymbol(name, 'method', filePath, member, isPublic, className));
+      }
+    }
+  }
+}
+
+function extractPhpImportsTreeSitter(
+  node: AstNode,
+  filePath: string,
+  imports: ImportInfo[],
+): void {
+  for (const child of node.namedChildren) {
+    if (child.type === 'namespace_use_declaration') {
+      for (const clause of child.namedChildren) {
+        if (clause.type === 'namespace_use_clause') {
+          const pathText = clause.text.replace(/;$/, '').trim();
+          const parts = pathText.split('\\');
+          const symbolName = parts[parts.length - 1] ?? pathText;
+          imports.push({
+            filePath,
+            importPath: pathText,
+            symbols: [symbolName],
+            isDefault: false,
+            isNamespace: false,
+            isType: false,
+          });
+        }
+      }
+    } else if (child.namedChildren.length > 0) {
+      extractPhpImportsTreeSitter(child, filePath, imports);
+    }
+  }
+}
+
+function extractPhpSymbolsAndImports(
+  content: string,
+  filePath: string,
+  symbols: SymbolInfo[],
+  imports: ImportInfo[],
+  exportedNames: string[],
+): void {
+  const lines = content.split('\n');
+  let currentClass: string | null = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i] ?? '';
+    const line = rawLine.trim();
+    if (!line || line.startsWith('//') || line.startsWith('#') || line.startsWith('/*') || line.startsWith('*')) {
+      continue;
+    }
+
+    const useMatch = line.match(/^use\s+(?:function\s+|const\s+)?([A-Za-z0-9_\\]+)(?:\s+as\s+([A-Za-z0-9_]+))?;/);
+    if (useMatch && useMatch[1]) {
+      const fullPath = useMatch[1];
+      const alias = useMatch[2];
+      const symbolName = alias || fullPath.split('\\').pop() || fullPath;
+      imports.push({
+        filePath,
+        importPath: fullPath,
+        symbols: [symbolName],
+        isDefault: false,
+        isNamespace: false,
+        isType: false,
+      });
+      continue;
+    }
+
+    const reqMatch = line.match(/^(?:require|require_once|include|include_once)\s*\(?\s*['"]([^'"]+)['"]\s*\)?;/);
+    if (reqMatch && reqMatch[1]) {
+      imports.push({
+        filePath,
+        importPath: reqMatch[1],
+        symbols: [reqMatch[1]],
+        isDefault: true,
+        isNamespace: false,
+        isType: false,
+      });
+      continue;
+    }
+
+    const typeMatch = line.match(
+      /(?:abstract|final|readonly|\s)*\b(class|interface|trait|enum)\s+([A-Za-z0-9_]+)/,
+    );
+    if (typeMatch && typeMatch[1] && typeMatch[2]) {
+      const rawKind = typeMatch[1];
+      const kind: SymbolKind =
+        rawKind === 'trait'
+          ? 'trait'
+          : rawKind === 'enum'
+            ? 'enum'
+            : rawKind === 'interface'
+              ? 'interface'
+              : 'class';
+      const name = typeMatch[2];
+      currentClass = name;
+      symbols.push({
+        name,
+        kind,
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: true,
+        signature: line,
+      });
+      exportedNames.push(name);
+      continue;
+    }
+
+    const funcMatch = line.match(
+      /(?:public|protected|private|static|final|abstract|\s)*\bfunction\s+(?:&\s*)?([A-Za-z0-9_]+)\s*\(/,
+    );
+    if (funcMatch && funcMatch[1]) {
+      const name = funcMatch[1];
+      const isPublic = !line.includes('private') && !line.includes('protected');
+      symbols.push({
+        name,
+        kind: currentClass ? 'method' : 'function',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: isPublic,
+        signature: line,
+        parentSymbol: currentClass ?? undefined,
+      });
+      if (isPublic) exportedNames.push(name);
+    }
+  }
+}
+
+function extractTypeScriptSymbolsAndImportsRegex(
+  content: string,
+  filePath: string,
+  symbols: SymbolInfo[],
+  imports: ImportInfo[],
+  exportedNames: string[],
+): void {
+  const lines = content.split('\n');
+  let currentClass: string | null = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i] ?? '';
+    const line = rawLine.trim();
+    if (!line || line.startsWith('//') || line.startsWith('/*') || line.startsWith('*')) {
+      continue;
+    }
+
+    const importNamedMatch = line.match(/^import\s+(?:type\s+)?\{([^}]+)\}\s+from\s+['"]([^'"]+)['"]/);
+    const importMatch = line.match(/^import\s+(?:type\s+)?(?:([^{}\n]+)\s+from\s+)?['"]([^'"]+)['"]/);
+    if (importNamedMatch && importNamedMatch[1] && importNamedMatch[2]) {
+      const symbolsList = importNamedMatch[1]
+        .split(',')
+        .map((s) => s.trim().split(/\s+as\s+/)[0]?.trim())
+        .filter((s): s is string => Boolean(s));
+      imports.push({
+        filePath,
+        importPath: importNamedMatch[2],
+        symbols: symbolsList,
+        isDefault: false,
+        isNamespace: false,
+        isType: line.includes('import type'),
+      });
+      continue;
+    } else if (importMatch && importMatch[2]) {
+      const defaultName = importMatch[1]?.trim();
+      imports.push({
+        filePath,
+        importPath: importMatch[2],
+        symbols: defaultName ? [defaultName] : [],
+        isDefault: Boolean(defaultName && !defaultName.startsWith('*')),
+        isNamespace: Boolean(defaultName && defaultName.startsWith('*')),
+        isType: line.includes('import type'),
+      });
+      continue;
+    }
+
+    const requireMatch = line.match(/(?:const|let|var)\s+(?:\{([^}]+)\}|([A-Za-z0-9_$]+))\s*=\s*require\(['"]([^'"]+)['"]\)/);
+    if (requireMatch && requireMatch[3]) {
+      const isDestructured = Boolean(requireMatch[1]);
+      const syms = isDestructured
+        ? requireMatch[1]!.split(',').map((s) => s.trim()).filter(Boolean)
+        : requireMatch[2]
+          ? [requireMatch[2]]
+          : [];
+      imports.push({
+        filePath,
+        importPath: requireMatch[3],
+        symbols: syms,
+        isDefault: !isDestructured,
+        isNamespace: false,
+        isType: false,
+      });
+      continue;
+    }
+
+    const typeMatch = line.match(
+      /^(?:export\s+)?(?:default\s+)?(?:abstract\s+)?(?:declare\s+)?(class|interface|type|enum)\s+([A-Za-z0-9_$]+)/,
+    );
+    if (typeMatch && typeMatch[1] && typeMatch[2]) {
+      const rawKind = typeMatch[1];
+      const kind: SymbolKind =
+        rawKind === 'class'
+          ? 'class'
+          : rawKind === 'interface'
+            ? 'interface'
+            : rawKind === 'enum'
+              ? 'enum'
+              : 'type';
+      const name = typeMatch[2];
+      const isExported = line.startsWith('export');
+      currentClass = kind === 'class' ? name : currentClass;
+      symbols.push({
+        name,
+        kind,
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: isExported,
+        signature: line,
+      });
+      if (isExported) exportedNames.push(name);
+      continue;
+    }
+
+    const funcMatch = line.match(
+      /^(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s*\*?\s*([A-Za-z0-9_$]+)\s*(?:<[^>]*>)?\s*\(/,
+    );
+    if (funcMatch && funcMatch[1]) {
+      const name = funcMatch[1];
+      const isExported = line.startsWith('export');
+      symbols.push({
+        name,
+        kind: currentClass ? 'method' : 'function',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: isExported,
+        signature: line,
+        parentSymbol: currentClass ?? undefined,
+      });
+      if (isExported) exportedNames.push(name);
+      continue;
+    }
+
+    const varMatch = line.match(
+      /^(?:export\s+)?(?:const|let|var)\s+([A-Za-z0-9_$]+)(?:\s*:\s*[^=]+)?\s*=\s*(?:async\s*)?(?:\([^)]*\)|[A-Za-z0-9_$]+)\s*=>/,
+    );
+    if (varMatch && varMatch[1]) {
+      const name = varMatch[1];
+      const isExported = line.startsWith('export');
+      symbols.push({
+        name,
+        kind: 'function',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: isExported,
+        signature: line,
+      });
+      if (isExported) exportedNames.push(name);
+      continue;
+    }
+
+    const constMatch = line.match(
+      /^(?:export\s+)?(?:const|let|var)\s+([A-Za-z0-9_$]+)/,
+    );
+    if (constMatch && constMatch[1]) {
+      const name = constMatch[1];
+      const isExported = line.startsWith('export');
+      symbols.push({
+        name,
+        kind: 'constant',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: isExported,
+        signature: line,
+      });
+      if (isExported) exportedNames.push(name);
+    }
+  }
+}
+
+function extractPythonSymbolsAndImportsRegex(
+  content: string,
+  filePath: string,
+  symbols: SymbolInfo[],
+  imports: ImportInfo[],
+  exportedNames: string[],
+): void {
+  const lines = content.split('\n');
+  let currentClass: string | null = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i] ?? '';
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) continue;
+
+    const fromMatch = line.match(/^from\s+([A-Za-z0-9_.]+)\s+import\s+([^#]+)/);
+    if (fromMatch && fromMatch[1] && fromMatch[2]) {
+      const syms = fromMatch[2].split(',').map((s) => s.trim()).filter(Boolean);
+      imports.push({
+        filePath,
+        importPath: fromMatch[1],
+        symbols: syms,
+        isDefault: false,
+        isNamespace: syms.includes('*'),
+        isType: false,
+      });
+      continue;
+    }
+
+    const impMatch = line.match(/^import\s+([A-Za-z0-9_.]+)/);
+    if (impMatch && impMatch[1]) {
+      imports.push({
+        filePath,
+        importPath: impMatch[1],
+        symbols: [impMatch[1]],
+        isDefault: true,
+        isNamespace: false,
+        isType: false,
+      });
+      continue;
+    }
+
+    const classMatch = line.match(/^class\s+([A-Za-z0-9_]+)/);
+    if (classMatch && classMatch[1]) {
+      const name = classMatch[1];
+      const isExported = !name.startsWith('_');
+      currentClass = name;
+      symbols.push({
+        name,
+        kind: 'class',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: isExported,
+        signature: line,
+      });
+      if (isExported) exportedNames.push(name);
+      continue;
+    }
+
+    const defMatch = line.match(/^(?:async\s+)?def\s+([A-Za-z0-9_]+)\s*\(/);
+    if (defMatch && defMatch[1]) {
+      const name = defMatch[1];
+      const isExported = !name.startsWith('_');
+      const isMethod = Boolean(currentClass && (rawLine.startsWith('    ') || rawLine.startsWith('\t')));
+      symbols.push({
+        name,
+        kind: isMethod ? 'method' : 'function',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: isExported,
+        signature: line,
+        parentSymbol: isMethod ? currentClass ?? undefined : undefined,
+      });
+      if (isExported && !isMethod) exportedNames.push(name);
+    }
+  }
+}
+
+function extractGoSymbolsAndImportsRegex(
+  content: string,
+  filePath: string,
+  symbols: SymbolInfo[],
+  imports: ImportInfo[],
+  exportedNames: string[],
+): void {
+  const lines = content.split('\n');
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i] ?? '';
+    const line = rawLine.trim();
+    if (!line || line.startsWith('//')) continue;
+
+    const impMatch = line.match(/^import\s+['"]([^'"]+)['"]/);
+    if (impMatch && impMatch[1]) {
+      imports.push({
+        filePath,
+        importPath: impMatch[1],
+        symbols: [impMatch[1].split('/').pop() || impMatch[1]],
+        isDefault: false,
+        isNamespace: false,
+        isType: false,
+      });
+      continue;
+    }
+
+    const typeMatch = line.match(/^type\s+([A-Za-z0-9_]+)\s+(struct|interface)/);
+    if (typeMatch && typeMatch[1] && typeMatch[2]) {
+      const name = typeMatch[1];
+      const isExported = /^[A-Z]/.test(name);
+      symbols.push({
+        name,
+        kind: typeMatch[2] === 'interface' ? 'interface' : 'struct',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: isExported,
+        signature: line,
+      });
+      if (isExported) exportedNames.push(name);
+      continue;
+    }
+
+    const funcMatch = line.match(/^func\s+(?:\([^)]+\)\s+)?([A-Za-z0-9_]+)\s*\(/);
+    if (funcMatch && funcMatch[1]) {
+      const name = funcMatch[1];
+      const isExported = /^[A-Z]/.test(name);
+      symbols.push({
+        name,
+        kind: line.includes('func (') ? 'method' : 'function',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: isExported,
+        signature: line,
+      });
+      if (isExported) exportedNames.push(name);
+    }
+  }
+}
+
+function extractRustSymbolsAndImportsRegex(
+  content: string,
+  filePath: string,
+  symbols: SymbolInfo[],
+  imports: ImportInfo[],
+  exportedNames: string[],
+): void {
+  const lines = content.split('\n');
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i] ?? '';
+    const line = rawLine.trim();
+    if (!line || line.startsWith('//')) continue;
+
+    const useMatch = line.match(/^pub(?:\([^)]+\))?\s+use\s+([^;]+);|^use\s+([^;]+);/);
+    if (useMatch) {
+      const usePath = (useMatch[1] || useMatch[2] || '').trim();
+      imports.push({
+        filePath,
+        importPath: usePath,
+        symbols: [usePath.split('::').pop() || usePath],
+        isDefault: false,
+        isNamespace: usePath.endsWith('*'),
+        isType: false,
+      });
+      continue;
+    }
+
+    const typeMatch = line.match(
+      /^(?:pub(?:\([^)]+\))?\s+)?(struct|enum|trait)\s+([A-Za-z0-9_]+)/,
+    );
+    if (typeMatch && typeMatch[1] && typeMatch[2]) {
+      const name = typeMatch[2];
+      const kind: SymbolKind =
+        typeMatch[1] === 'struct' ? 'struct' : typeMatch[1] === 'enum' ? 'enum' : 'trait';
+      const isExported = line.startsWith('pub');
+      symbols.push({
+        name,
+        kind,
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: isExported,
+        signature: line,
+      });
+      if (isExported) exportedNames.push(name);
+      continue;
+    }
+
+    const fnMatch = line.match(/^(?:pub(?:\([^)]+\))?\s+)?(?:async\s+)?fn\s+([A-Za-z0-9_]+)\s*(?:<[^>]*>)?\s*\(/);
+    if (fnMatch && fnMatch[1]) {
+      const name = fnMatch[1];
+      const isExported = line.startsWith('pub');
+      symbols.push({
+        name,
+        kind: 'function',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: isExported,
+        signature: line,
+      });
+      if (isExported) exportedNames.push(name);
+    }
+  }
+}
+

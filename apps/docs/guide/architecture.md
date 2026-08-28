@@ -44,7 +44,7 @@ sequenceDiagram
     Storage-->>CLI: Transaction Committed
 
     opt Generate Rules
-        User->>CLI: atlas rules --all
+        User->>CLI: atlas rules generate all
         CLI->>Storage: Fetch project topology & symbols
         CLI->>Rules: Compile platform templates
         Rules-->>User: Write .cursorrules, CLAUDE.md, etc.
@@ -72,7 +72,7 @@ Orchestrates language-specific grammars (`tree-sitter-typescript`, `tree-sitter-
 
 ### `@codeatlas-ai/storage`
 
-Encapsulates SQLite interactions using `better-sqlite3`. Manages database schema migrations, connection pooling, and repository query optimizations.
+Encapsulates SQLite interactions using high-performance native `node:sqlite`. Manages database schema migrations, connection pooling, and repository query optimizations.
 
 ### `@codeatlas-ai/graph`
 

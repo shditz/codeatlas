@@ -1,56 +1,53 @@
-# Core Concepts
+# 🧩 Core Concepts
 
-This section covers the underlying theoretical and engineering principles governing CodeAtlas.
-
----
-
-## 1. Concrete Syntax Trees vs. Abstract Syntax Trees (AST)
-
-Traditional text-based indexing tools (such as ripgrep or standard keyword indexers) operate strictly at the lexical byte level. While fast, they lack semantic awareness regarding code scopes, variable hoisting, type annotations, and module bindings.
-
-CodeAtlas implements a language-specific AST pipeline powered by Tree-sitter. By constructing formal grammar trees, CodeAtlas unambiguously identifies:
-
-- **Top-Level Declarations**: Distinguishing between internal helper functions and exported API surfaces.
-- **Syntactic Enclosures**: Tracking exact byte offsets, start/end line coordinates, and cyclomatic complexity.
-- **Import Statements**: Normalizing dynamic imports (`import()`), CommonJS (`require()`), and ES Module statements into a unified dependency graph.
+Understanding how CodeAtlas works under the hood will help you get the most out of your AI coding assistants.
 
 ---
 
-## 2. In-Memory and Persistent Dependency Graphs
+## 1. Abstract Syntax Tree (AST) vs Plain Text
 
-CodeAtlas models codebase topology as a directed graph $G = (V, E)$:
+Most code search tools look at your code as **dumb text**—they just search for words.
 
-- **Vertices ($V$)**: Represent entities such as directories, files, classes, interfaces, and functions.
-- **Edges ($E$)**: Represent relationships with typed attributes:
-  - `contains`: Directory-to-file structural containment.
-  - `imports`: Static or dynamic module imports.
-  - `implements` / `extends`: Object-oriented inheritance and interface contracts.
-  - `calls`: Cross-module function or method invocations.
+**CodeAtlas sees code as structure (AST):**
+Using [Tree-sitter](https://tree-sitter.github.io/tree-sitter/), CodeAtlas understands the semantic structure of your programming languages:
+- It knows `class UserService` is a class definition, not just a random sentence.
+- It extracts function parameters, return types, and interface contracts.
+- It tracks exact import and export bindings across files.
+
+---
+
+## 2. The Dependency Graph
+
+Every file in your project is a **Node**, and every `import` or `require` is an **Edge** connecting them.
 
 ```mermaid
-graph TD
-    A[Directory: /src/auth] -->|contains| B[File: authService.ts]
-    A -->|contains| C[File: tokenUtil.ts]
-    B -->|imports| C
-    B -->|imports| D[File: /src/storage/db.ts]
+flowchart LR
+    A["apps/cli/index.ts"] --> B["packages/core/index.ts"]
+    A --> C["packages/indexer/index.ts"]
+    C --> B
 ```
+
+By storing this graph in a local embedded SQLite database (`.atlas/atlas.db`), CodeAtlas can answer complex architectural questions in milliseconds:
+- *What files will break if I change this function?* (`atlas diff`)
+- *Are there any circular dependencies?* (`atlas analyze --cycles`)
+- *Which files are completely unused?* (`atlas analyze --dead-code`)
 
 ---
 
-## 3. Context Pack Compilation & Token Optimization
+## 3. Token Budgeting & AST Skeletons
 
-Language models operate under finite token budgets. Passing raw file contents rapidly exhausts context windows and degrades comprehension.
+LLMs charge money and run slower when given too much text.
 
-CodeAtlas implements a two-stage context packing engine:
+When you ask for context using `atlas context "task" --budget 4000`, CodeAtlas doesn't dump the whole repository. Instead:
+1. It uses BM25 full-text search and graph traversal to find the top most relevant files.
+2. If a file is too large, it compresses it into an **AST Skeleton**—keeping all class, method, and function signatures while stripping inner implementation details.
+3. The AI gets 100% of the type and interface context using only 20% of the token budget!
 
-### Stage 1: AST Structural Summarization
+---
 
-Function and method implementations are stripped of internal control flow while preserving signature contracts, parameter types, return values, and JSDoc/docstring annotations.
+## 4. Local-First & 100% Private
 
-### Stage 2: Relevance Scoring
-
-When preparing a context pack for a user query or agent instruction, CodeAtlas calculates composite relevance scores combining:
-
-- **Lexical BM25 Score**: Keyword frequency matched across symbol names and docstrings.
-- **Topological Distance**: Shortest path distance in the dependency graph from currently active or modified files.
-- **Recency & Scope Weight**: Prioritizing entry points and architectural boundaries.
+Your code never leaves your computer:
+- No telemetry or cloud syncing.
+- All databases and indexes live inside the `.atlas/` folder in your project.
+- Works 100% offline on air-gapped machines.

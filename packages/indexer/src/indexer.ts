@@ -259,6 +259,31 @@ export class Indexer {
     existingPaths: Set<string>,
   ): string | undefined {
     if (!importPath.startsWith('.') && !importPath.startsWith('/')) {
+      const pkgName = importPath.startsWith('@')
+        ? importPath.split('/').slice(0, 2).join('/')
+        : (importPath.split('/')[0] ?? '');
+      const shortName = pkgName.split('/').pop() || '';
+      const subPath = importPath.slice(pkgName.length).replace(/^\//, '');
+
+      const monorepoCandidates = [
+        subPath ? `packages/${shortName}/src/${subPath}.ts` : '',
+        subPath ? `packages/${shortName}/src/${subPath}.js` : '',
+        subPath ? `packages/${shortName}/src/${subPath}/index.ts` : '',
+        `packages/${shortName}/src/index.ts`,
+        `packages/${shortName}/src/index.tsx`,
+        `packages/${shortName}/src/index.js`,
+        `packages/${shortName}/index.ts`,
+        `packages/${shortName}/index.js`,
+        `apps/${shortName}/src/index.ts`,
+        `apps/${shortName}/src/index.js`,
+      ].filter(Boolean);
+
+      for (const cand of monorepoCandidates) {
+        if (existingPaths.has(cand)) {
+          return cand;
+        }
+      }
+
       return undefined;
     }
 

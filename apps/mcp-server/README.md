@@ -74,10 +74,10 @@ Add new MCP Server:
 ### 4. Claude Code CLI
 
 ```bash
-claude mcp add codeatlas atlas mcp
+claude mcp add codeatlas atlas -- mcp
 ```
 
-### 5. Antigravity 2.0 (`.gemini/config/mcp_config.json`)
+### 5. Antigravity 2.0 (`.gemini/config/mcp_config.json` or `.agents/mcp_config.json`)
 
 ```json
 {
@@ -104,6 +104,7 @@ claude mcp add codeatlas atlas mcp
 - `atlas_get_map`: Returns hierarchical directory map with exported symbols.
 - `atlas_get_rules`: Returns active coding rules and conflicts from AGENTS.md, CLAUDE.md, etc.
 - `atlas_doctor`: Diagnostics on database status, indexed files, and symbol counts.
+- `atlas_analyze`: Deep architectural audit for dead code, circular dependencies, and hotspots.
 
 ---
 

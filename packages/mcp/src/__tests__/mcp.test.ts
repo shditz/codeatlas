@@ -45,6 +45,7 @@ describe('Model Context Protocol (MCP) Server', () => {
     expect(toolNames).toContain('atlas_get_rules');
     expect(toolNames).toContain('atlas_doctor');
     expect(toolNames).toContain('atlas_analyze');
+    expect(toolNames).toContain('atlas_sql_query');
   });
 
   it('executes atlas_analyze tool successfully', async () => {
@@ -65,6 +66,46 @@ describe('Model Context Protocol (MCP) Server', () => {
     const data = JSON.parse(content[0]!.text);
     expect(data.summary).toBeDefined();
     expect(data.cycles).toBeDefined();
+  });
+
+  it('executes atlas_sql_query tool with read-only SQL', async () => {
+    const server = new McpServer();
+    const response = await server.handleMessage({
+      jsonrpc: '2.0',
+      id: 'tool-sql',
+      method: 'tools/call',
+      params: {
+        name: 'atlas_sql_query',
+        arguments: {
+          sql: "SELECT name FROM sqlite_master WHERE type = 'table'",
+        },
+      },
+    });
+
+    expect(response?.result).toBeDefined();
+    const content = (response?.result as { content: Array<{ text: string }> }).content;
+    expect(content[0]?.text).toBeDefined();
+    const data = JSON.parse(content[0]!.text);
+    expect(data.rowCount).toBeDefined();
+    expect(Array.isArray(data.rows)).toBe(true);
+  });
+
+  it('rejects forbidden write queries in atlas_sql_query', async () => {
+    const server = new McpServer();
+    const response = await server.handleMessage({
+      jsonrpc: '2.0',
+      id: 'tool-sql-forbidden',
+      method: 'tools/call',
+      params: {
+        name: 'atlas_sql_query',
+        arguments: {
+          sql: 'DROP TABLE projects',
+        },
+      },
+    });
+
+    expect(response?.error).toBeDefined();
+    expect(response?.error?.message).toContain('read-only');
   });
 
   it('lists and reads MCP resources', async () => {

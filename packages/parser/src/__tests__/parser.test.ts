@@ -298,6 +298,42 @@ public struct ProfileView {
     expect(swiftResult.symbols.map((s) => s.name)).toContain('render');
   });
 
+  it('extracts symbols and imports from PHP', async () => {
+    const phpCode = `<?php
+namespace App\\Services;
+
+use App\\Models\\User;
+use App\\Repositories\\UserRepositoryInterface as UserRepo;
+
+class UserService
+{
+    private UserRepo $repo;
+
+    public function __construct(UserRepo $repo)
+    {
+        $this->repo = $repo;
+    }
+
+    public function findUser(int $id): ?User
+    {
+        return $this->repo->find($id);
+    }
+}
+
+interface AuthService
+{
+    public function authenticate(string $token): bool;
+}
+`;
+    const result = await parseFile('app/Services/UserService.php', phpCode, 'php');
+    expect(result.errors).toHaveLength(0);
+    expect(result.imports).toHaveLength(2);
+    expect(result.imports[0]?.importPath).toBe('App\\Models\\User');
+    expect(result.symbols.map((s) => s.name)).toContain('UserService');
+    expect(result.symbols.map((s) => s.name)).toContain('AuthService');
+    expect(result.symbols.map((s) => s.name)).toContain('findUser');
+  });
+
   it('calculates cyclomatic complexity for functions with branch statements', async () => {
     const complexTs = `
       export function evaluateRisk(score: number, isVip: boolean, retries: number): string {

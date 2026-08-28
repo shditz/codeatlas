@@ -1,7 +1,7 @@
 {
   "name": "codeatlas",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Give AI a map of your codebase. Context intelligence for AI coding agents.",
   "keywords": [
     "ai",
@@ -35,6 +35,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "clean": "pnpm -r run clean && rimraf node_modules",
+    "docs:dev": "pnpm --filter @codeatlas-ai/docs docs:dev",
+    "docs:build": "pnpm --filter @codeatlas-ai/docs docs:build",
     "prepare": "pnpm build",
     "changeset": "changeset",
     "version-packages": "changeset version",

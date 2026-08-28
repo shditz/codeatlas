@@ -1,137 +1,168 @@
-# Getting Started
+# 🚀 Getting Started
 
-This guide walks you through installing CodeAtlas, configuring your workspace, indexing your repository, and utilizing AI rule generators and interactive visualizers.
+Welcome to **CodeAtlas**! This guide is designed for **beginners, junior developers, and vibe coders**. You will learn how to install CodeAtlas, scan your project, connect it to your favorite AI assistant (Claude Code, Google Antigravity, Cursor, Windsurf), and supercharge your coding workflow in less than 5 minutes.
 
 ---
 
-## Installation
+## 💡 What is CodeAtlas?
 
-CodeAtlas provides a global Command-Line Interface (`@codeatlas-ai/cli`) and an official Visual Studio Code extension.
+Imagine your codebase as a giant city. Without a map, your AI assistant is walking through every alleyway trying to find the right building—wasting your time and burning expensive tokens. 
+
+**CodeAtlas is the GPS navigation system for your AI.** It scans your project, builds a local map of all functions, classes, and imports, and tells your AI exactly where to go.
+
+---
+
+## 📦 1. Installation
 
 ### Method 1: Global NPM Install (Recommended)
+
+Open your terminal (PowerShell, Command Prompt, or Bash) and run:
 
 ```bash
 npm install -g @codeatlas-ai/cli
 ```
 
-### Method 2: Building & Installing from Source
-
-```bash
-# Clone and link CLI globally
-git clone https://github.com/shditz/codeatlas.git
-cd codeatlas
-pnpm install
-pnpm build
-pnpm --filter @codeatlas-ai/cli link --global
-```
-
-Verify your installation:
-
+Verify that it works:
 ```bash
 atlas --version
 ```
 
-### Method 3: VS Code Extension
+### Method 2: Installing from Source (For Contributors)
 
-1. Download the `.vsix` bundle from the [Releases](https://github.com/shditz/codeatlas/releases) page.
-2. In VS Code, navigate to the **Extensions** tab (`Ctrl+Shift+X` / `Cmd+Shift+X`).
-3. Click the menu (`...`) in the top-right corner of the Extensions panel.
-4. Select **Install from VSIX...** and select the downloaded file.
+```bash
+# 1. Clone repo
+git clone https://github.com/shditz/codeatlas.git
+cd codeatlas
+
+# 2. Install dependencies & build
+pnpm install
+pnpm build
+
+# 3. Link globally
+pnpm --filter @codeatlas-ai/cli link --global
+```
 
 ---
 
-## Quick-Start Workflow
+## 🏃 2. Your First CodeAtlas Project (Step-by-Step)
 
-### Step 1: Initialize Workspace Index
+Let's set up CodeAtlas on an existing project on your machine!
 
-Run `atlas index` in your repository root directory:
+### Step 1: Initialize Your Workspace
+Navigate to your project's folder and run:
 
 ```bash
-cd /path/to/my-codebase
+cd /path/to/my-project
+atlas init
+```
+
+> **What just happened?**
+> CodeAtlas created a hidden `.atlas/` folder containing your local database (`atlas.db`) and configuration file (`config.toml`). Everything is stored on your machine—no code ever leaves your computer!
+
+### Step 2: Index the Codebase
+Now tell CodeAtlas to scan and understand your code:
+
+```bash
 atlas index
 ```
 
-CodeAtlas performs the following actions:
-
-- Traverses the directory tree, honoring `.gitignore` and `.atlasignore`.
-- Discovers supported source files (`.ts`, `.tsx`, `.js`, `.jsx`, `.py`, `.php`, `.rs`, `.go`, `.html`, `.css`).
-- Parses AST structures in parallel via Tree-sitter workers.
-- Records symbols, line metrics, SHA-256 hashes, and import bindings in `.atlas/atlas.db`.
-
+You will see output like this:
 ```
-[INFO] Discovered 152 source files.
-[INFO] Parsing AST structures... Done in 240ms.
-[INFO] Extracted 418 symbols and 382 dependency links.
-[SUCCESS] Workspace indexed into .atlas/atlas.db
+14:37:14 INFO [indexer:scanner] Scan complete: 242 files in 60ms
+14:37:14 INFO [indexer] Indexing complete: 242 files, 740 symbols, 155 deps
+Index Results
+  ✓ Files indexed     242
+  ◆ Symbols          740
+  → Imports          155
+```
+
+### Step 3: Check Codebase Health
+Run the doctor diagnostic to make sure everything is healthy:
+
+```bash
+atlas doctor
+```
+
+CodeAtlas will give your repository a health score (0-100) and tell you if anything needs attention.
+
+### Step 4: Teach Your AI Coding Assistant
+Generate tailor-made instructions so your AI knows how to work with your project's tech stack:
+
+```bash
+# If using Google Antigravity
+atlas rules generate antigravity
+
+# If using Claude Code / Claude Desktop
+atlas rules generate claude
+
+# If using Cursor
+atlas rules generate cursor
+
+# Or generate for everyone at once!
+atlas rules generate all
 ```
 
 ---
 
-### Step 2: Generate AI Agent Rules
+## 🤖 3. Hooking CodeAtlas into AI Coding Agents
 
-Synchronize context and prompt instructions across all configured AI editors:
+The real magic happens when your AI Coding Assistant connects to CodeAtlas via **MCP (Model Context Protocol)**.
 
-```bash
-# Export rule sets to all supported platforms
-atlas rules --all
-```
-
-To target a specific editor:
-
-```bash
-# Export specifically for Cursor (.cursorrules)
-atlas rules --target cursor
-
-# Export specifically for Windsurf (.windsurfrules)
-atlas rules --target windsurf
-
-# Export specifically for Claude Desktop / Claude Code (CLAUDE.md)
-atlas rules --target claude
-```
-
----
-
-### Step 3: Launch the Interactive Architecture Graph
-
-Launch the local interactive visualizer in your web browser:
-
-```bash
-atlas graph --port 4200
-```
-
-Alternatively, if using the VS Code extension:
-
-- Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`).
-- Select **`CodeAtlas: Open Interactive Graph`**.
-- Inspect modules in 3D or 2D, filter by file type, and click nodes to jump directly into your source code.
-
----
-
-## Configuration Reference (`codeatlas.config.json`)
-
-To customize indexing parameters, create an optional `codeatlas.config.json` file in your repository root:
-
+### For Google Antigravity:
+1. In your project root, create a file named `.agents/mcp_config.json`:
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/shditz/codeatlas/main/schema.json",
-  "include": ["src/**/*", "packages/**/*", "apps/**/*"],
-  "exclude": ["**/node_modules/**", "**/dist/**", "**/.git/**", "**/vendor/**", "**/coverage/**"],
-  "maxFileSizeKB": 2048,
-  "rules": {
-    "autoExportOnIndex": true,
-    "defaultTargets": ["cursor", "claude", "devin"]
-  },
-  "graph": {
-    "defaultDimension": "3D",
-    "autoRotate": true
+  "mcpServers": {
+    "codeatlas": {
+      "command": "atlas",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+### For Claude Code CLI:
+Run in your terminal:
+```bash
+claude mcp add codeatlas atlas -- mcp
+```
+
+### For Claude Desktop:
+Add this to your Claude Desktop config:
+```json
+{
+  "mcpServers": {
+    "codeatlas": {
+      "command": "atlas",
+      "args": ["mcp"]
+    }
   }
 }
 ```
 
 ---
 
-## Next Steps
+## 🎯 4. Daily Cheat Sheet
 
-- Explore [System Architecture](/guide/architecture)
-- Learn about the [AST Parser Pipeline](/guide/parser)
-- View the complete [CLI Reference](/guide/cli)
+Here is how you use CodeAtlas while coding every day:
+
+- **Need context for a prompt?**
+  ```bash
+  atlas context "how does the user authentication token work?" --budget 3000
+  ```
+- **Want to audit your code for circular dependencies or dead code?**
+  ```bash
+  atlas analyze
+  ```
+- **Checking what your git changes might break?**
+  ```bash
+  atlas diff
+  ```
+
+---
+
+## ⏭️ Next Steps
+
+- Explore all 16 commands in the [CLI Reference](/guide/cli).
+- Learn about the [Agent Workflow Best Practices](/guide/agents-workflow).
+- Deep dive into the [Model Context Protocol (MCP)](/guide/mcp).

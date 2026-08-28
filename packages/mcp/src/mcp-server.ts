@@ -222,6 +222,26 @@ export class McpServer {
           },
         },
       },
+      {
+        name: 'atlas_sql_query',
+        description:
+          'Execute a read-only SQL query directly against the CodeAtlas SQLite database (.atlas/atlas.db) to query projects, files, symbols, dependencies, and search indices.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            sql: {
+              type: 'string',
+              description:
+                'Read-only SQL query string (e.g. SELECT name, kind, line FROM symbols WHERE kind = "class" LIMIT 50)',
+            },
+            limit: {
+              type: 'number',
+              description: 'Maximum number of rows to return (default: 100, max: 500)',
+            },
+          },
+          required: ['sql'],
+        },
+      },
     ];
   }
 
@@ -881,6 +901,40 @@ export class McpServer {
           );
         }
         return JSON.stringify(report, null, 2);
+      }
+
+      case 'atlas_sql_query': {
+        const sql = String(args.sql ?? '').trim();
+        if (!sql) {
+          throw new Error('Missing "sql" argument');
+        }
+
+        // Safety check: ensure query is read-only
+        const forbiddenPatterns =
+          /\b(DROP|DELETE|UPDATE|INSERT|ALTER|TRUNCATE|CREATE|REPLACE|ATTACH|DETACH)\b/i;
+        if (forbiddenPatterns.test(sql)) {
+          throw new Error('Only read-only SELECT or PRAGMA statements are permitted.');
+        }
+
+        const limit =
+          typeof args.limit === 'number' ? Math.min(Math.max(1, args.limit), 500) : 100;
+        const { db } = this.openDb();
+
+        let executableSql = sql.replace(/;+$/, '');
+        if (!/\bLIMIT\b/i.test(executableSql)) {
+          executableSql += ` LIMIT ${limit}`;
+        }
+
+        const rows = db.all<Record<string, unknown>>(executableSql);
+        return JSON.stringify(
+          {
+            sql: executableSql,
+            rowCount: rows.length,
+            rows,
+          },
+          null,
+          2,
+        );
       }
 
       default:
