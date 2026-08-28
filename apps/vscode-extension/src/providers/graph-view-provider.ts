@@ -132,21 +132,15 @@ export class GraphViewProvider {
         const dir = parts.slice(0, -1).join('/');
         const ext = name.split('.').pop()?.toLowerCase() || '';
 
-        let color = '#94a3b8'; 
-        if (f.language === 'typescript' || ext === 'ts' || ext === 'tsx')
-          color = '#38bdf8'; 
-        else if (f.language === 'javascript' || ext === 'js' || ext === 'jsx')
-          color = '#facc15'; 
-        else if (f.language === 'php' || ext === 'php')
-          color = '#a78bfa'; 
-        else if (f.language === 'python' || ext === 'py')
-          color = '#34d399'; 
-        else if (ext === 'css' || ext === 'scss' || ext === 'less')
-          color = '#f43f5e'; 
-        else if (ext === 'html' || ext === 'htm')
-          color = '#fb923c'; 
+        let color = '#94a3b8';
+        if (f.language === 'typescript' || ext === 'ts' || ext === 'tsx') color = '#38bdf8';
+        else if (f.language === 'javascript' || ext === 'js' || ext === 'jsx') color = '#facc15';
+        else if (f.language === 'php' || ext === 'php') color = '#a78bfa';
+        else if (f.language === 'python' || ext === 'py') color = '#34d399';
+        else if (ext === 'css' || ext === 'scss' || ext === 'less') color = '#f43f5e';
+        else if (ext === 'html' || ext === 'htm') color = '#fb923c';
         else if (ext === 'md' || ext === 'json' || ext === 'yaml' || ext === 'yml')
-          color = '#e2e8f0'; 
+          color = '#e2e8f0';
 
         nodeMap.set(f.relativePath, {
           id: f.relativePath,

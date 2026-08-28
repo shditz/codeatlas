@@ -152,7 +152,7 @@ export class Lexer {
   private readString(quote: string): Token {
     const startCol = this.column;
     const startLine = this.line;
-    this.advance(); 
+    this.advance();
     let value = '';
 
     while (this.pos < this.input.length && this.input[this.pos] !== quote) {

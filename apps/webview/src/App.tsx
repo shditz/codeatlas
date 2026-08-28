@@ -125,14 +125,14 @@ const dummyData: GraphData = {
 };
 
 const CLUSTER_PALETTE = [
-  '#38bdf8', 
+  '#38bdf8',
   '#a78bfa',
   '#f43f5e',
-  '#34d399', 
-  '#facc15', 
+  '#34d399',
+  '#facc15',
   '#fb923c',
-  '#e879f9', 
-  '#2dd4bf', 
+  '#e879f9',
+  '#2dd4bf',
 ];
 
 const getLanguageColor = (node: Node, colorMode: 'language' | 'cluster' = 'language'): string => {
@@ -155,9 +155,9 @@ const getLanguageColor = (node: Node, colorMode: 'language' | 'cluster' = 'langu
   if (lang === 'swift' || ext === 'swift') return '#f97316';
   if (lang === 'php' || ext === 'php') return '#a78bfa';
   if (lang === 'python' || ext === 'py') return '#34d399';
-  if (ext === 'css' || ext === 'scss' || ext === 'less') return '#f43f5e'; 
-  if (ext === 'html' || ext === 'htm') return '#fb923c'; 
-  return '#e2e8f0'; 
+  if (ext === 'css' || ext === 'scss' || ext === 'less') return '#f43f5e';
+  if (ext === 'html' || ext === 'htm') return '#fb923c';
+  return '#e2e8f0';
 };
 
 function App() {
@@ -286,7 +286,7 @@ function App() {
       if (hueChoice > 0.7) {
         starColors[i] = 0.6;
         starColors[i + 1] = 0.8;
-        starColors[i + 2] = 1.0; 
+        starColors[i + 2] = 1.0;
       } else if (hueChoice > 0.4) {
         starColors[i] = 1.0;
         starColors[i + 1] = 0.9;
