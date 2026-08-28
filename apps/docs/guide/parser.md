@@ -1,6 +1,6 @@
 # AST Parser Pipeline
 
-The `@codeatlas/parser` package is responsible for parsing arbitrary source code into structured syntactic metadata and dependency relationships.
+The `@codeatlas-ai/parser` package is responsible for parsing arbitrary source code into structured syntactic metadata and dependency relationships.
 
 ---
 
@@ -23,7 +23,7 @@ CodeAtlas provides native Tree-sitter bindings for the following languages:
 ## Extraction Process
 
 ```typescript
-import { createParser, parseSourceFile } from '@codeatlas/parser';
+import { createParser, parseSourceFile } from '@codeatlas-ai/parser';
 
 const parser = createParser({ language: 'typescript' });
 const result = await parseSourceFile(filePath, fileContent, parser);

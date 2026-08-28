@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { ContextPack, ContextFile, ProjectMeta, Rule, ContextMode } from '@codeatlas/core';
-import type { RankedResult } from '@codeatlas/ranking';
-import { TokenCounter } from '@codeatlas/token-counter';
-import { CodeCompressor } from '@codeatlas/compression';
-import { createLogger } from '@codeatlas/shared';
+import type { ContextPack, ContextFile, ProjectMeta, Rule, ContextMode } from '@codeatlas-ai/core';
+import type { RankedResult } from '@codeatlas-ai/ranking';
+import { TokenCounter } from '@codeatlas-ai/token-counter';
+import { CodeCompressor } from '@codeatlas-ai/compression';
+import { createLogger } from '@codeatlas-ai/shared';
 
 const logger = createLogger('context');
 

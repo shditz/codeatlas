@@ -41,58 +41,58 @@ importers:
 
   apps/cli:
     dependencies:
-      '@codeatlas/analytics':
+      '@codeatlas-ai/analytics':
         specifier: workspace:*
         version: link:../../packages/analytics
-      '@codeatlas/compression':
+      '@codeatlas-ai/compression':
         specifier: workspace:*
         version: link:../../packages/compression
-      '@codeatlas/context':
+      '@codeatlas-ai/context':
         specifier: workspace:*
         version: link:../../packages/context
-      '@codeatlas/core':
+      '@codeatlas-ai/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@codeatlas/exporters':
+      '@codeatlas-ai/exporters':
         specifier: workspace:*
         version: link:../../packages/exporters
-      '@codeatlas/git':
+      '@codeatlas-ai/git':
         specifier: workspace:*
         version: link:../../packages/git
-      '@codeatlas/graph':
+      '@codeatlas-ai/graph':
         specifier: workspace:*
         version: link:../../packages/graph
-      '@codeatlas/indexer':
+      '@codeatlas-ai/indexer':
         specifier: workspace:*
         version: link:../../packages/indexer
-      '@codeatlas/llm':
+      '@codeatlas-ai/llm':
         specifier: workspace:*
         version: link:../../packages/llm
-      '@codeatlas/mcp':
+      '@codeatlas-ai/mcp':
         specifier: workspace:*
         version: link:../../packages/mcp
-      '@codeatlas/nl2cypher':
+      '@codeatlas-ai/nl2cypher':
         specifier: workspace:*
         version: link:../../packages/nl2cypher
-      '@codeatlas/parser':
+      '@codeatlas-ai/parser':
         specifier: workspace:*
         version: link:../../packages/parser
-      '@codeatlas/ranking':
+      '@codeatlas-ai/ranking':
         specifier: workspace:*
         version: link:../../packages/ranking
-      '@codeatlas/retrieval':
+      '@codeatlas-ai/retrieval':
         specifier: workspace:*
         version: link:../../packages/retrieval
-      '@codeatlas/rules':
+      '@codeatlas-ai/rules':
         specifier: workspace:*
         version: link:../../packages/rules
-      '@codeatlas/shared':
+      '@codeatlas-ai/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@codeatlas/storage':
+      '@codeatlas-ai/storage':
         specifier: workspace:*
         version: link:../../packages/storage
-      '@codeatlas/token-counter':
+      '@codeatlas-ai/token-counter':
         specifier: workspace:*
         version: link:../../packages/token-counter
       chalk:
@@ -118,7 +118,7 @@ importers:
 
   apps/mcp-server:
     dependencies:
-      '@codeatlas/mcp':
+      '@codeatlas-ai/mcp':
         specifier: workspace:*
         version: link:../../packages/mcp
     devDependencies:
@@ -136,37 +136,37 @@ importers:
 
   apps/vscode-extension:
     dependencies:
-      '@codeatlas/compression':
+      '@codeatlas-ai/compression':
         specifier: workspace:*
         version: link:../../packages/compression
-      '@codeatlas/context':
+      '@codeatlas-ai/context':
         specifier: workspace:*
         version: link:../../packages/context
-      '@codeatlas/core':
+      '@codeatlas-ai/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@codeatlas/exporters':
+      '@codeatlas-ai/exporters':
         specifier: workspace:*
         version: link:../../packages/exporters
-      '@codeatlas/git':
+      '@codeatlas-ai/git':
         specifier: workspace:*
         version: link:../../packages/git
-      '@codeatlas/graph':
+      '@codeatlas-ai/graph':
         specifier: workspace:*
         version: link:../../packages/graph
-      '@codeatlas/indexer':
+      '@codeatlas-ai/indexer':
         specifier: workspace:*
         version: link:../../packages/indexer
-      '@codeatlas/retrieval':
+      '@codeatlas-ai/retrieval':
         specifier: workspace:*
         version: link:../../packages/retrieval
-      '@codeatlas/rules':
+      '@codeatlas-ai/rules':
         specifier: workspace:*
         version: link:../../packages/rules
-      '@codeatlas/shared':
+      '@codeatlas-ai/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@codeatlas/storage':
+      '@codeatlas-ai/storage':
         specifier: workspace:*
         version: link:../../packages/storage
     devDependencies:
@@ -219,61 +219,61 @@ importers:
 
   packages/analytics:
     dependencies:
-      '@codeatlas/core':
+      '@codeatlas-ai/core':
         specifier: workspace:*
         version: link:../core
-      '@codeatlas/git':
+      '@codeatlas-ai/git':
         specifier: workspace:*
         version: link:../git
-      '@codeatlas/graph':
+      '@codeatlas-ai/graph':
         specifier: workspace:*
         version: link:../graph
-      '@codeatlas/shared':
+      '@codeatlas-ai/shared':
         specifier: workspace:*
         version: link:../shared
-      '@codeatlas/storage':
+      '@codeatlas-ai/storage':
         specifier: workspace:*
         version: link:../storage
 
   packages/compression:
     dependencies:
-      '@codeatlas/core':
+      '@codeatlas-ai/core':
         specifier: workspace:*
         version: link:../core
-      '@codeatlas/shared':
+      '@codeatlas-ai/shared':
         specifier: workspace:*
         version: link:../shared
-      '@codeatlas/token-counter':
+      '@codeatlas-ai/token-counter':
         specifier: workspace:*
         version: link:../token-counter
 
   packages/context:
     dependencies:
-      '@codeatlas/compression':
+      '@codeatlas-ai/compression':
         specifier: workspace:*
         version: link:../compression
-      '@codeatlas/core':
+      '@codeatlas-ai/core':
         specifier: workspace:*
         version: link:../core
-      '@codeatlas/ranking':
+      '@codeatlas-ai/ranking':
         specifier: workspace:*
         version: link:../ranking
-      '@codeatlas/retrieval':
+      '@codeatlas-ai/retrieval':
         specifier: workspace:*
         version: link:../retrieval
-      '@codeatlas/rules':
+      '@codeatlas-ai/rules':
         specifier: workspace:*
         version: link:../rules
-      '@codeatlas/shared':
+      '@codeatlas-ai/shared':
         specifier: workspace:*
         version: link:../shared
-      '@codeatlas/token-counter':
+      '@codeatlas-ai/token-counter':
         specifier: workspace:*
         version: link:../token-counter
 
   packages/core:
     dependencies:
-      '@codeatlas/shared':
+      '@codeatlas-ai/shared':
         specifier: workspace:*
         version: link:../shared
       zod:
@@ -282,19 +282,19 @@ importers:
 
   packages/exporters:
     dependencies:
-      '@codeatlas/core':
+      '@codeatlas-ai/core':
         specifier: workspace:*
         version: link:../core
-      '@codeatlas/shared':
+      '@codeatlas-ai/shared':
         specifier: workspace:*
         version: link:../shared
 
   packages/git:
     dependencies:
-      '@codeatlas/core':
+      '@codeatlas-ai/core':
         specifier: workspace:*
         version: link:../core
-      '@codeatlas/shared':
+      '@codeatlas-ai/shared':
         specifier: workspace:*
         version: link:../shared
 
@@ -306,58 +306,58 @@ importers:
       '@actions/github':
         specifier: ^6.0.0
         version: 6.0.1
-      '@codeatlas/context':
+      '@codeatlas-ai/context':
         specifier: workspace:*
         version: link:../context
-      '@codeatlas/core':
+      '@codeatlas-ai/core':
         specifier: workspace:*
         version: link:../core
-      '@codeatlas/exporters':
+      '@codeatlas-ai/exporters':
         specifier: workspace:*
         version: link:../exporters
-      '@codeatlas/git':
+      '@codeatlas-ai/git':
         specifier: workspace:*
         version: link:../git
-      '@codeatlas/indexer':
+      '@codeatlas-ai/indexer':
         specifier: workspace:*
         version: link:../indexer
-      '@codeatlas/rules':
+      '@codeatlas-ai/rules':
         specifier: workspace:*
         version: link:../rules
-      '@codeatlas/shared':
+      '@codeatlas-ai/shared':
         specifier: workspace:*
         version: link:../shared
-      '@codeatlas/storage':
+      '@codeatlas-ai/storage':
         specifier: workspace:*
         version: link:../storage
 
   packages/graph:
     dependencies:
-      '@codeatlas/core':
+      '@codeatlas-ai/core':
         specifier: workspace:*
         version: link:../core
-      '@codeatlas/shared':
+      '@codeatlas-ai/shared':
         specifier: workspace:*
         version: link:../shared
-      '@codeatlas/storage':
+      '@codeatlas-ai/storage':
         specifier: workspace:*
         version: link:../storage
 
   packages/indexer:
     dependencies:
-      '@codeatlas/core':
+      '@codeatlas-ai/core':
         specifier: workspace:*
         version: link:../core
-      '@codeatlas/git':
+      '@codeatlas-ai/git':
         specifier: workspace:*
         version: link:../git
-      '@codeatlas/parser':
+      '@codeatlas-ai/parser':
         specifier: workspace:*
         version: link:../parser
-      '@codeatlas/shared':
+      '@codeatlas-ai/shared':
         specifier: workspace:*
         version: link:../shared
-      '@codeatlas/storage':
+      '@codeatlas-ai/storage':
         specifier: workspace:*
         version: link:../storage
       ignore:
@@ -373,85 +373,85 @@ importers:
 
   packages/llm:
     dependencies:
-      '@codeatlas/core':
+      '@codeatlas-ai/core':
         specifier: workspace:*
         version: link:../core
-      '@codeatlas/shared':
+      '@codeatlas-ai/shared':
         specifier: workspace:*
         version: link:../shared
 
   packages/mcp:
     dependencies:
-      '@codeatlas/analytics':
+      '@codeatlas-ai/analytics':
         specifier: workspace:*
         version: link:../analytics
-      '@codeatlas/compression':
+      '@codeatlas-ai/compression':
         specifier: workspace:*
         version: link:../compression
-      '@codeatlas/context':
+      '@codeatlas-ai/context':
         specifier: workspace:*
         version: link:../context
-      '@codeatlas/core':
+      '@codeatlas-ai/core':
         specifier: workspace:*
         version: link:../core
-      '@codeatlas/exporters':
+      '@codeatlas-ai/exporters':
         specifier: workspace:*
         version: link:../exporters
-      '@codeatlas/git':
+      '@codeatlas-ai/git':
         specifier: workspace:*
         version: link:../git
-      '@codeatlas/graph':
+      '@codeatlas-ai/graph':
         specifier: workspace:*
         version: link:../graph
-      '@codeatlas/indexer':
+      '@codeatlas-ai/indexer':
         specifier: workspace:*
         version: link:../indexer
-      '@codeatlas/nl2cypher':
+      '@codeatlas-ai/nl2cypher':
         specifier: workspace:*
         version: link:../nl2cypher
-      '@codeatlas/parser':
+      '@codeatlas-ai/parser':
         specifier: workspace:*
         version: link:../parser
-      '@codeatlas/ranking':
+      '@codeatlas-ai/ranking':
         specifier: workspace:*
         version: link:../ranking
-      '@codeatlas/retrieval':
+      '@codeatlas-ai/retrieval':
         specifier: workspace:*
         version: link:../retrieval
-      '@codeatlas/rules':
+      '@codeatlas-ai/rules':
         specifier: workspace:*
         version: link:../rules
-      '@codeatlas/shared':
+      '@codeatlas-ai/shared':
         specifier: workspace:*
         version: link:../shared
-      '@codeatlas/storage':
+      '@codeatlas-ai/storage':
         specifier: workspace:*
         version: link:../storage
-      '@codeatlas/token-counter':
+      '@codeatlas-ai/token-counter':
         specifier: workspace:*
         version: link:../token-counter
 
   packages/nl2cypher:
     dependencies:
-      '@codeatlas/core':
+      '@codeatlas-ai/core':
         specifier: workspace:*
         version: link:../core
-      '@codeatlas/graph':
+      '@codeatlas-ai/graph':
         specifier: workspace:*
         version: link:../graph
-      '@codeatlas/llm':
+      '@codeatlas-ai/llm':
         specifier: workspace:*
         version: link:../llm
-      '@codeatlas/shared':
+      '@codeatlas-ai/shared':
         specifier: workspace:*
         version: link:../shared
 
   packages/parser:
     dependencies:
-      '@codeatlas/core':
+      '@codeatlas-ai/core':
         specifier: workspace:*
         version: link:../core
-      '@codeatlas/shared':
+      '@codeatlas-ai/shared':
         specifier: workspace:*
         version: link:../shared
       tree-sitter:
@@ -475,37 +475,37 @@ importers:
 
   packages/ranking:
     dependencies:
-      '@codeatlas/core':
+      '@codeatlas-ai/core':
         specifier: workspace:*
         version: link:../core
-      '@codeatlas/shared':
+      '@codeatlas-ai/shared':
         specifier: workspace:*
         version: link:../shared
 
   packages/retrieval:
     dependencies:
-      '@codeatlas/core':
+      '@codeatlas-ai/core':
         specifier: workspace:*
         version: link:../core
-      '@codeatlas/graph':
+      '@codeatlas-ai/graph':
         specifier: workspace:*
         version: link:../graph
-      '@codeatlas/shared':
+      '@codeatlas-ai/shared':
         specifier: workspace:*
         version: link:../shared
-      '@codeatlas/storage':
+      '@codeatlas-ai/storage':
         specifier: workspace:*
         version: link:../storage
 
   packages/rules:
     dependencies:
-      '@codeatlas/core':
+      '@codeatlas-ai/core':
         specifier: workspace:*
         version: link:../core
-      '@codeatlas/shared':
+      '@codeatlas-ai/shared':
         specifier: workspace:*
         version: link:../shared
-      '@codeatlas/storage':
+      '@codeatlas-ai/storage':
         specifier: workspace:*
         version: link:../storage
 
@@ -517,19 +517,19 @@ importers:
 
   packages/storage:
     dependencies:
-      '@codeatlas/core':
+      '@codeatlas-ai/core':
         specifier: workspace:*
         version: link:../core
-      '@codeatlas/shared':
+      '@codeatlas-ai/shared':
         specifier: workspace:*
         version: link:../shared
 
   packages/token-counter:
     dependencies:
-      '@codeatlas/core':
+      '@codeatlas-ai/core':
         specifier: workspace:*
         version: link:../core
-      '@codeatlas/shared':
+      '@codeatlas-ai/shared':
         specifier: workspace:*
         version: link:../shared
 

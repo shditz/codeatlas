@@ -71,7 +71,7 @@ pnpm install
 pnpm build
 
 # 4. Link the CLI globally so it can be used anywhere
-pnpm --filter @codeatlas/cli link --global
+pnpm --filter @codeatlas-ai/cli link --global
 ```
 
 You can now use the `atlas` command globally in your terminal.

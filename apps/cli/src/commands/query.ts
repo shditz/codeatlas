@@ -1,15 +1,15 @@
 import type { Command } from 'commander';
 import chalk from 'chalk';
 import { ensureInitialized, openDatabase, getOrCreateProject, loadConfig } from '../utils.js';
-import { FileRepository, SymbolRepository, DependencyRepository } from '@codeatlas/storage';
+import { FileRepository, SymbolRepository, DependencyRepository } from '@codeatlas-ai/storage';
 import {
   DependencyGraph,
   GraphQueryEngine,
   type GraphNodeItem,
   type GraphEdgeItem,
-} from '@codeatlas/graph';
-import { NaturalLanguageToCypher } from '@codeatlas/nl2cypher';
-import { createLLMProvider } from '@codeatlas/llm';
+} from '@codeatlas-ai/graph';
+import { NaturalLanguageToCypher } from '@codeatlas-ai/nl2cypher';
+import { createLLMProvider } from '@codeatlas-ai/llm';
 
 export function registerQueryCommand(program: Command): void {
   program

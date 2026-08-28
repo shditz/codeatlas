@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import path from 'node:path';
 import fs from 'node:fs';
-import { FileRepository, DependencyRepository, type AtlasDatabase } from '@codeatlas/storage';
-import { DependencyGraph } from '@codeatlas/graph';
+import { FileRepository, DependencyRepository, type AtlasDatabase } from '@codeatlas-ai/storage';
+import { DependencyGraph } from '@codeatlas-ai/graph';
 
 export class GraphViewProvider {
   public static currentPanel: GraphViewProvider | undefined;

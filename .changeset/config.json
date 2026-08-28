@@ -10,8 +10,8 @@
   "ignore": [
     "codeatlas-vscode",
     "webview",
-    "@codeatlas/docs",
-    "@codeatlas/jetbrains-plugin",
-    "@codeatlas/neovim-plugin"
+    "@codeatlas-ai/docs",
+    "@codeatlas-ai/jetbrains-plugin",
+    "@codeatlas-ai/neovim-plugin"
   ]
 }

@@ -3,8 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { ContextEngine } from '../index.js';
-import type { RankedResult } from '@codeatlas/ranking';
-import type { ProjectMeta } from '@codeatlas/core';
+import type { RankedResult } from '@codeatlas-ai/ranking';
+import type { ProjectMeta } from '@codeatlas-ai/core';
 
 describe('Context Engine & Token Budget Optimization', () => {
   let tempDir: string;

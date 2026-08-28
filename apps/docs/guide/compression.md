@@ -1,6 +1,6 @@
 # Context Compression & Token Optimization
 
-The `@codeatlas/compression` package generates high-density context digests to minimize LLM token consumption while preserving critical architectural contracts.
+The `@codeatlas-ai/compression` package generates high-density context digests to minimize LLM token consumption while preserving critical architectural contracts.
 
 ---
 

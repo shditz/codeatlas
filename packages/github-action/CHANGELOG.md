@@ -1,4 +1,4 @@
-# @codeatlas/github-action
+# @codeatlas-ai/github-action
 
 ## 0.1.1
 
@@ -6,11 +6,11 @@
 
 - chore: patch bump for general refactoring and bugfixes
 - Updated dependencies
-  - @codeatlas/context@0.1.1
-  - @codeatlas/core@0.1.1
-  - @codeatlas/exporters@0.1.1
-  - @codeatlas/git@0.1.1
-  - @codeatlas/indexer@0.1.1
-  - @codeatlas/rules@0.1.1
-  - @codeatlas/shared@0.1.1
-  - @codeatlas/storage@0.1.1
+  - @codeatlas-ai/context@0.1.1
+  - @codeatlas-ai/core@0.1.1
+  - @codeatlas-ai/exporters@0.1.1
+  - @codeatlas-ai/git@0.1.1
+  - @codeatlas-ai/indexer@0.1.1
+  - @codeatlas-ai/rules@0.1.1
+  - @codeatlas-ai/shared@0.1.1
+  - @codeatlas-ai/storage@0.1.1

@@ -1,5 +1,5 @@
 {
-  "name": "@codeatlas/core",
+  "name": "@codeatlas-ai/core",
   "version": "0.1.1",
   "type": "module",
   "exports": {
@@ -20,7 +20,7 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@codeatlas/shared": "workspace:*",
+    "@codeatlas-ai/shared": "workspace:*",
     "zod": "^3.23.0"
   },
   "publishConfig": {

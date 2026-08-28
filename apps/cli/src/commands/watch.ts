@@ -1,7 +1,7 @@
 import type { Command } from 'commander';
 import chalk from 'chalk';
 import { ensureInitialized, openDatabase, getOrCreateProject } from '../utils.js';
-import { RepositoryWatcher } from '@codeatlas/indexer';
+import { RepositoryWatcher } from '@codeatlas-ai/indexer';
 
 export function registerWatchCommand(program: Command): void {
   program

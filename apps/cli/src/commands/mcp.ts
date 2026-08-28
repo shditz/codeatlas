@@ -1,5 +1,5 @@
 import type { Command } from 'commander';
-import { McpServer } from '@codeatlas/mcp';
+import { McpServer } from '@codeatlas-ai/mcp';
 import { ensureInitialized } from '../utils.js';
 
 export function registerMcpCommand(program: Command): void {

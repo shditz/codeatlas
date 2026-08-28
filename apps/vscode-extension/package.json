@@ -111,17 +111,17 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@codeatlas/core": "workspace:*",
-    "@codeatlas/shared": "workspace:*",
-    "@codeatlas/storage": "workspace:*",
-    "@codeatlas/indexer": "workspace:*",
-    "@codeatlas/git": "workspace:*",
-    "@codeatlas/rules": "workspace:*",
-    "@codeatlas/context": "workspace:*",
-    "@codeatlas/exporters": "workspace:*",
-    "@codeatlas/graph": "workspace:*",
-    "@codeatlas/compression": "workspace:*",
-    "@codeatlas/retrieval": "workspace:*"
+    "@codeatlas-ai/core": "workspace:*",
+    "@codeatlas-ai/shared": "workspace:*",
+    "@codeatlas-ai/storage": "workspace:*",
+    "@codeatlas-ai/indexer": "workspace:*",
+    "@codeatlas-ai/git": "workspace:*",
+    "@codeatlas-ai/rules": "workspace:*",
+    "@codeatlas-ai/context": "workspace:*",
+    "@codeatlas-ai/exporters": "workspace:*",
+    "@codeatlas-ai/graph": "workspace:*",
+    "@codeatlas-ai/compression": "workspace:*",
+    "@codeatlas-ai/retrieval": "workspace:*"
   },
   "devDependencies": {
     "@types/vscode": "^1.90.0"

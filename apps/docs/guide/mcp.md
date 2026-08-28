@@ -1,6 +1,6 @@
 # Model Context Protocol (MCP) Server
 
-The `@codeatlas/mcp` package implements an official Model Context Protocol (MCP) server, allowing external AI assistants (e.g., Claude Desktop, Cursor, Cline) to query codebase intelligence dynamically over standard stdio JSON-RPC.
+The `@codeatlas-ai/mcp` package implements an official Model Context Protocol (MCP) server, allowing external AI assistants (e.g., Claude Desktop, Cursor, Cline) to query codebase intelligence dynamically over standard stdio JSON-RPC.
 
 ---
 

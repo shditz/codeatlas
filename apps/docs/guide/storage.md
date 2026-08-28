@@ -1,6 +1,6 @@
 # Storage & Database Schema
 
-The `@codeatlas/storage` package manages the embedded SQLite database located at `.atlas/atlas.db` within each indexed workspace.
+The `@codeatlas-ai/storage` package manages the embedded SQLite database located at `.atlas/atlas.db` within each indexed workspace.
 
 ---
 

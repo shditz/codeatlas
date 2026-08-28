@@ -1,7 +1,7 @@
 import type { Command } from 'commander';
 import chalk from 'chalk';
 import { ensureInitialized, openDatabase, getOrCreateProject } from '../utils.js';
-import { FileRepository, SymbolRepository } from '@codeatlas/storage';
+import { FileRepository, SymbolRepository } from '@codeatlas-ai/storage';
 
 export function registerMapCommand(program: Command): void {
   program

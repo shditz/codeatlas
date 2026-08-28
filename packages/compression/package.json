@@ -1,5 +1,5 @@
 {
-  "name": "@codeatlas/compression",
+  "name": "@codeatlas-ai/compression",
   "version": "0.1.1",
   "type": "module",
   "exports": {
@@ -21,9 +21,9 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@codeatlas/core": "workspace:*",
-    "@codeatlas/shared": "workspace:*",
-    "@codeatlas/token-counter": "workspace:*"
+    "@codeatlas-ai/core": "workspace:*",
+    "@codeatlas-ai/shared": "workspace:*",
+    "@codeatlas-ai/token-counter": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

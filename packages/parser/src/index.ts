@@ -4,4 +4,4 @@ export {
   calculateAstCyclomaticComplexity,
   calculateTextCyclomaticComplexity,
 } from './tree-sitter-parser.js';
-export { detectLanguage, isParseableLanguage, canParse } from '@codeatlas/core';
+export { detectLanguage, isParseableLanguage, canParse } from '@codeatlas-ai/core';

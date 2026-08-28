@@ -1,4 +1,4 @@
-# @codeatlas/mcp-server
+# @codeatlas-ai/mcp-server
 
 > Universal Model Context Protocol (MCP) Server for CodeAtlas — providing native AST indexing, dependency graph exploration, explainable context retrieval, and architecture rules to **all AI coding agents**.
 

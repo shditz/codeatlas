@@ -1,5 +1,5 @@
 import type { AtlasDatabase } from './database.js';
-import { createLogger } from '@codeatlas/shared';
+import { createLogger } from '@codeatlas-ai/shared';
 
 const logger = createLogger('storage:migrations');
 

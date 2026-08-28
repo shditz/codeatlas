@@ -1,8 +1,8 @@
 import type { Command } from 'commander';
 import chalk from 'chalk';
-import { Indexer } from '@codeatlas/indexer';
+import { Indexer } from '@codeatlas-ai/indexer';
 import { ensureInitialized, openDatabase, getOrCreateProject, loadConfig } from '../utils.js';
-import { formatDuration } from '@codeatlas/shared';
+import { formatDuration } from '@codeatlas-ai/shared';
 
 export function registerIndexCommand(program: Command): void {
   program

@@ -32,7 +32,7 @@ git add .cursorrules CLAUDE.md .windsurfrules DEVIN.md
 
 ## 2. GitHub Actions Integration
 
-Use the official CodeAtlas GitHub Action (`@codeatlas/github-action`) to validate PR architectural constraints and generate context digests for AI reviewers:
+Use the official CodeAtlas GitHub Action (`@codeatlas-ai/github-action`) to validate PR architectural constraints and generate context digests for AI reviewers:
 
 ```yaml
 name: CodeAtlas Architecture Check

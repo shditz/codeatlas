@@ -1,8 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { RetrievalEngine } from '../index.js';
-import { AtlasDatabase, runMigrations, FileRepository, SearchRepository } from '@codeatlas/storage';
-import { DependencyGraph } from '@codeatlas/graph';
-import type { FileInfo } from '@codeatlas/core';
+import {
+  AtlasDatabase,
+  runMigrations,
+  FileRepository,
+  SearchRepository,
+} from '@codeatlas-ai/storage';
+import { DependencyGraph } from '@codeatlas-ai/graph';
+import type { FileInfo } from '@codeatlas-ai/core';
 
 describe('Multi-source Retrieval Engine', () => {
   let db: AtlasDatabase;

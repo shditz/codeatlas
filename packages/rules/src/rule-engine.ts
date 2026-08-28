@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { Rule, RuleSource, RuleConflict } from '@codeatlas/core';
-import { createLogger, hashContent } from '@codeatlas/shared';
+import type { Rule, RuleSource, RuleConflict } from '@codeatlas-ai/core';
+import { createLogger, hashContent } from '@codeatlas-ai/shared';
 
 const logger = createLogger('rules');
 

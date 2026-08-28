@@ -1,6 +1,6 @@
 import type { Command } from 'commander';
 import chalk from 'chalk';
-import { Scanner } from '@codeatlas/indexer';
+import { Scanner } from '@codeatlas-ai/indexer';
 import { ensureInitialized, openDatabase, getOrCreateProject, loadConfig } from '../utils.js';
 
 export function registerScanCommand(program: Command): void {

@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
-import type { AtlasDatabase } from '@codeatlas/storage';
-import type { FileInfo, SymbolInfo } from '@codeatlas/core';
-import { FileRepository, SymbolRepository } from '@codeatlas/storage';
-import { RuleEngine } from '@codeatlas/rules';
+import type { AtlasDatabase } from '@codeatlas-ai/storage';
+import type { FileInfo, SymbolInfo } from '@codeatlas-ai/core';
+import { FileRepository, SymbolRepository } from '@codeatlas-ai/storage';
+import { RuleEngine } from '@codeatlas-ai/rules';
 
 export class CodeAtlasTreeItem extends vscode.TreeItem {
   constructor(

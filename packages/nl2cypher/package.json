@@ -1,5 +1,5 @@
 {
-  "name": "@codeatlas/nl2cypher",
+  "name": "@codeatlas-ai/nl2cypher",
   "version": "0.1.1",
   "type": "module",
   "exports": {
@@ -20,10 +20,10 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@codeatlas/core": "workspace:*",
-    "@codeatlas/shared": "workspace:*",
-    "@codeatlas/graph": "workspace:*",
-    "@codeatlas/llm": "workspace:*"
+    "@codeatlas-ai/core": "workspace:*",
+    "@codeatlas-ai/shared": "workspace:*",
+    "@codeatlas-ai/graph": "workspace:*",
+    "@codeatlas-ai/llm": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

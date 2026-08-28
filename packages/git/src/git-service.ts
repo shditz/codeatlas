@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { createLogger, GitError } from '@codeatlas/shared';
+import { createLogger, GitError } from '@codeatlas-ai/shared';
 
 const logger = createLogger('git');
 

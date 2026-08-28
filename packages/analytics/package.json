@@ -1,5 +1,5 @@
 {
-  "name": "@codeatlas/analytics",
+  "name": "@codeatlas-ai/analytics",
   "version": "0.1.1",
   "type": "module",
   "exports": {
@@ -20,11 +20,11 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@codeatlas/core": "workspace:*",
-    "@codeatlas/git": "workspace:*",
-    "@codeatlas/shared": "workspace:*",
-    "@codeatlas/storage": "workspace:*",
-    "@codeatlas/graph": "workspace:*"
+    "@codeatlas-ai/core": "workspace:*",
+    "@codeatlas-ai/git": "workspace:*",
+    "@codeatlas-ai/shared": "workspace:*",
+    "@codeatlas-ai/storage": "workspace:*",
+    "@codeatlas-ai/graph": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

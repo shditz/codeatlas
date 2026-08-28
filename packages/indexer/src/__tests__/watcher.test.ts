@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { RepositoryWatcher } from '../index.js';
-import { AtlasDatabase, runMigrations } from '@codeatlas/storage';
+import { AtlasDatabase, runMigrations } from '@codeatlas-ai/storage';
 
 describe('RepositoryWatcher', () => {
   let tmpDir: string;

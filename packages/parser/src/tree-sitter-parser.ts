@@ -1,6 +1,6 @@
 import { createRequire } from 'node:module';
-import type { SymbolInfo, ImportInfo, SymbolKind, Language } from '@codeatlas/core';
-import { createLogger } from '@codeatlas/shared';
+import type { SymbolInfo, ImportInfo, SymbolKind, Language } from '@codeatlas-ai/core';
+import { createLogger } from '@codeatlas-ai/shared';
 
 const logger = createLogger('parser');
 const nodeRequire =

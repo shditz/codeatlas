@@ -1,7 +1,7 @@
 import type { Command } from 'commander';
 import chalk from 'chalk';
 import { ensureInitialized, openDatabase, getOrCreateProject } from '../utils.js';
-import { CodebaseAnalyzer } from '@codeatlas/analytics';
+import { CodebaseAnalyzer } from '@codeatlas-ai/analytics';
 
 export function registerAnalyzeCommand(program: Command): void {
   program

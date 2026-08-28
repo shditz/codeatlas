@@ -9,7 +9,7 @@ import {
   FileRepository,
   SymbolRepository,
   DependencyRepository,
-} from '@codeatlas/storage';
+} from '@codeatlas-ai/storage';
 
 describe('Scanner & Indexer Integration', () => {
   let tempDir: string;

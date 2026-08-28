@@ -1,4 +1,4 @@
-import { createLogger } from '@codeatlas/shared';
+import { createLogger } from '@codeatlas-ai/shared';
 
 const logger = createLogger('llm');
 

@@ -1,6 +1,6 @@
 # CLI Reference Manual
 
-The `@codeatlas/cli` executable (`atlas`) provides command-line utilities for workspace indexing, context extraction, rule generation, and architecture visualization.
+The `@codeatlas-ai/cli` executable (`atlas`) provides command-line utilities for workspace indexing, context extraction, rule generation, and architecture visualization.
 
 ---
 

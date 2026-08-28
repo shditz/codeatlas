@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { DependencyGraph } from '@codeatlas/graph';
-import type { DependencyEdge, FileInfo } from '@codeatlas/core';
+import { DependencyGraph } from '@codeatlas-ai/graph';
+import type { DependencyEdge, FileInfo } from '@codeatlas-ai/core';
 import {
   CycleDetector,
   DeadCodeDetector,

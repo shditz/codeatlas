@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createExporter } from '../index.js';
-import type { ContextPack } from '@codeatlas/core';
+import type { ContextPack } from '@codeatlas-ai/core';
 
 describe('Exporters', () => {
   const samplePack: ContextPack = {

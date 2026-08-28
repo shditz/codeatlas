@@ -1,4 +1,4 @@
-# @codeatlas/core
+# @codeatlas-ai/core
 
 ## 0.1.1
 
@@ -6,4 +6,4 @@
 
 - chore: patch bump for general refactoring and bugfixes
 - Updated dependencies
-  - @codeatlas/shared@0.1.1
+  - @codeatlas-ai/shared@0.1.1

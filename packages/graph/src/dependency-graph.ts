@@ -1,4 +1,4 @@
-import type { DependencyEdge } from '@codeatlas/core';
+import type { DependencyEdge } from '@codeatlas-ai/core';
 
 export class DependencyGraph {
   private outgoing = new Map<string, DependencyEdge[]>();

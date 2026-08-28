@@ -1,7 +1,7 @@
 import type { Command } from 'commander';
 import chalk from 'chalk';
 import { ensureInitialized } from '../utils.js';
-import { RuleEngine } from '@codeatlas/rules';
+import { RuleEngine } from '@codeatlas-ai/rules';
 
 export function registerRulesCommand(program: Command): void {
   const rules = program.command('rules').description('Manage AI rules and instructions');

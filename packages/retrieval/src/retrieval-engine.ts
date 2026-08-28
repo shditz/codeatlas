@@ -1,7 +1,7 @@
-import type { FileInfo, RetrievalCandidate, RetrievalSource } from '@codeatlas/core';
-import type { SearchRepository } from '@codeatlas/storage';
-import type { DependencyGraph } from '@codeatlas/graph';
-import { createLogger } from '@codeatlas/shared';
+import type { FileInfo, RetrievalCandidate, RetrievalSource } from '@codeatlas-ai/core';
+import type { SearchRepository } from '@codeatlas-ai/storage';
+import type { DependencyGraph } from '@codeatlas-ai/graph';
+import { createLogger } from '@codeatlas-ai/shared';
 
 const logger = createLogger('retrieval');
 

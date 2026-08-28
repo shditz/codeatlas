@@ -1,5 +1,5 @@
 {
-  "name": "@codeatlas/retrieval",
+  "name": "@codeatlas-ai/retrieval",
   "version": "0.1.1",
   "type": "module",
   "exports": {
@@ -20,10 +20,10 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@codeatlas/shared": "workspace:*",
-    "@codeatlas/core": "workspace:*",
-    "@codeatlas/storage": "workspace:*",
-    "@codeatlas/graph": "workspace:*"
+    "@codeatlas-ai/shared": "workspace:*",
+    "@codeatlas-ai/core": "workspace:*",
+    "@codeatlas-ai/storage": "workspace:*",
+    "@codeatlas-ai/graph": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

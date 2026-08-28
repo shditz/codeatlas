@@ -1,5 +1,5 @@
-import type { Language, ContextMode } from '@codeatlas/core';
-import { TokenCounter } from '@codeatlas/token-counter';
+import type { Language, ContextMode } from '@codeatlas-ai/core';
+import { TokenCounter } from '@codeatlas-ai/token-counter';
 import { generateSkeleton } from './skeleton.js';
 
 export interface CompressionResult {

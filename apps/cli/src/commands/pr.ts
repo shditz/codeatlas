@@ -3,14 +3,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import chalk from 'chalk';
 import { ensureInitialized, openDatabase, getOrCreateProject, loadConfig } from '../utils.js';
-import { FileRepository, DependencyRepository } from '@codeatlas/storage';
-import { DependencyGraph } from '@codeatlas/graph';
-import { GitService } from '@codeatlas/git';
-import { ContextEngine } from '@codeatlas/context';
-import { RuleEngine } from '@codeatlas/rules';
-import { createExporter, type ExportTarget } from '@codeatlas/exporters';
-import type { FileInfo, ProjectMeta } from '@codeatlas/core';
-import type { RankedResult } from '@codeatlas/ranking';
+import { FileRepository, DependencyRepository } from '@codeatlas-ai/storage';
+import { DependencyGraph } from '@codeatlas-ai/graph';
+import { GitService } from '@codeatlas-ai/git';
+import { ContextEngine } from '@codeatlas-ai/context';
+import { RuleEngine } from '@codeatlas-ai/rules';
+import { createExporter, type ExportTarget } from '@codeatlas-ai/exporters';
+import type { FileInfo, ProjectMeta } from '@codeatlas-ai/core';
+import type { RankedResult } from '@codeatlas-ai/ranking';
 
 export function registerPrCommand(program: Command): void {
   program

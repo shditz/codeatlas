@@ -3,14 +3,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import chalk from 'chalk';
 import { ensureInitialized, openDatabase, getOrCreateProject, loadConfig } from '../utils.js';
-import { FileRepository, SearchRepository, DependencyRepository } from '@codeatlas/storage';
-import { DependencyGraph } from '@codeatlas/graph';
-import { RetrievalEngine } from '@codeatlas/retrieval';
-import { Ranker } from '@codeatlas/ranking';
-import { ContextEngine } from '@codeatlas/context';
-import { RuleEngine } from '@codeatlas/rules';
-import { createExporter, type ExportTarget } from '@codeatlas/exporters';
-import type { FileInfo, ProjectMeta } from '@codeatlas/core';
+import { FileRepository, SearchRepository, DependencyRepository } from '@codeatlas-ai/storage';
+import { DependencyGraph } from '@codeatlas-ai/graph';
+import { RetrievalEngine } from '@codeatlas-ai/retrieval';
+import { Ranker } from '@codeatlas-ai/ranking';
+import { ContextEngine } from '@codeatlas-ai/context';
+import { RuleEngine } from '@codeatlas-ai/rules';
+import { createExporter, type ExportTarget } from '@codeatlas-ai/exporters';
+import type { FileInfo, ProjectMeta } from '@codeatlas-ai/core';
 
 export function registerExportCommand(program: Command): void {
   program

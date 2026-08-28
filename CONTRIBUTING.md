@@ -70,9 +70,9 @@ CodeAtlas is organized as a pnpm workspace:
 
 ## Code Quality Standards
 
-- **Strict Typing**: No implicit `any`. Use discriminated unions and strictly typed domain models from `@codeatlas/core`.
+- **Strict Typing**: No implicit `any`. Use discriminated unions and strictly typed domain models from `@codeatlas-ai/core`.
 - **Local-First Privacy**: Never introduce network calls or analytics that transmit user code or metadata externally.
-- **Decoupled Packages**: Packages must communicate strictly through `@codeatlas/core` abstractions.
+- **Decoupled Packages**: Packages must communicate strictly through `@codeatlas-ai/core` abstractions.
 - **High Test Coverage**: Maintain passing unit tests with Vitest across all modules.
 
 ---

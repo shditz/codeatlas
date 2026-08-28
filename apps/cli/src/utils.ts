@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { AtlasConfig } from '@codeatlas/core';
-import { defaultConfig } from '@codeatlas/core';
-import { AtlasDatabase, runMigrations } from '@codeatlas/storage';
+import type { AtlasConfig } from '@codeatlas-ai/core';
+import { defaultConfig } from '@codeatlas-ai/core';
+import { AtlasDatabase, runMigrations } from '@codeatlas-ai/storage';
 
 const ATLAS_DIR = '.atlas';
 const CONFIG_FILE = 'config.toml';

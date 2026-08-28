@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import ignore from 'ignore';
-import { createLogger, normalizePath, getExtension } from '@codeatlas/shared';
-import { detectLanguage, isTestFile, isGeneratedFile } from '@codeatlas/core';
-import type { FileInfo, Language, ScanResult, PackageManager, Framework } from '@codeatlas/core';
+import { createLogger, normalizePath, getExtension } from '@codeatlas-ai/shared';
+import { detectLanguage, isTestFile, isGeneratedFile } from '@codeatlas-ai/core';
+import type { FileInfo, Language, ScanResult, PackageManager, Framework } from '@codeatlas-ai/core';
 
 const logger = createLogger('indexer:scanner');
 

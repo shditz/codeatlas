@@ -1,5 +1,5 @@
 {
-  "name": "@codeatlas/context",
+  "name": "@codeatlas-ai/context",
   "version": "0.1.1",
   "type": "module",
   "exports": {
@@ -20,13 +20,13 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@codeatlas/shared": "workspace:*",
-    "@codeatlas/core": "workspace:*",
-    "@codeatlas/retrieval": "workspace:*",
-    "@codeatlas/ranking": "workspace:*",
-    "@codeatlas/token-counter": "workspace:*",
-    "@codeatlas/rules": "workspace:*",
-    "@codeatlas/compression": "workspace:*"
+    "@codeatlas-ai/shared": "workspace:*",
+    "@codeatlas-ai/core": "workspace:*",
+    "@codeatlas-ai/retrieval": "workspace:*",
+    "@codeatlas-ai/ranking": "workspace:*",
+    "@codeatlas-ai/token-counter": "workspace:*",
+    "@codeatlas-ai/rules": "workspace:*",
+    "@codeatlas-ai/compression": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

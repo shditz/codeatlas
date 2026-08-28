@@ -1,13 +1,13 @@
 import type { Command } from 'commander';
 import chalk from 'chalk';
 import { ensureInitialized, openDatabase, getOrCreateProject, loadConfig } from '../utils.js';
-import { FileRepository, SearchRepository, DependencyRepository } from '@codeatlas/storage';
-import { DependencyGraph } from '@codeatlas/graph';
-import { RetrievalEngine } from '@codeatlas/retrieval';
-import { Ranker } from '@codeatlas/ranking';
-import { ContextEngine } from '@codeatlas/context';
-import { RuleEngine } from '@codeatlas/rules';
-import type { FileInfo, ProjectMeta } from '@codeatlas/core';
+import { FileRepository, SearchRepository, DependencyRepository } from '@codeatlas-ai/storage';
+import { DependencyGraph } from '@codeatlas-ai/graph';
+import { RetrievalEngine } from '@codeatlas-ai/retrieval';
+import { Ranker } from '@codeatlas-ai/ranking';
+import { ContextEngine } from '@codeatlas-ai/context';
+import { RuleEngine } from '@codeatlas-ai/rules';
+import type { FileInfo, ProjectMeta } from '@codeatlas-ai/core';
 
 export function registerContextCommand(program: Command): void {
   program

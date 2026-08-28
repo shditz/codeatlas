@@ -1,8 +1,8 @@
 import type { Command } from 'commander';
 import chalk from 'chalk';
 import { ensureInitialized, openDatabase, getOrCreateProject } from '../utils.js';
-import { FileRepository, DependencyRepository } from '@codeatlas/storage';
-import { RuleEngine } from '@codeatlas/rules';
+import { FileRepository, DependencyRepository } from '@codeatlas-ai/storage';
+import { RuleEngine } from '@codeatlas-ai/rules';
 
 export function registerDoctorCommand(program: Command): void {
   program

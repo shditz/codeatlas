@@ -1,5 +1,5 @@
 {
-  "name": "@codeatlas/mcp",
+  "name": "@codeatlas-ai/mcp",
   "version": "0.1.1",
   "type": "module",
   "exports": {
@@ -20,22 +20,22 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@codeatlas/shared": "workspace:*",
-    "@codeatlas/core": "workspace:*",
-    "@codeatlas/storage": "workspace:*",
-    "@codeatlas/git": "workspace:*",
-    "@codeatlas/parser": "workspace:*",
-    "@codeatlas/indexer": "workspace:*",
-    "@codeatlas/graph": "workspace:*",
-    "@codeatlas/retrieval": "workspace:*",
-    "@codeatlas/ranking": "workspace:*",
-    "@codeatlas/token-counter": "workspace:*",
-    "@codeatlas/context": "workspace:*",
-    "@codeatlas/rules": "workspace:*",
-    "@codeatlas/exporters": "workspace:*",
-    "@codeatlas/compression": "workspace:*",
-    "@codeatlas/analytics": "workspace:*",
-    "@codeatlas/nl2cypher": "workspace:*"
+    "@codeatlas-ai/shared": "workspace:*",
+    "@codeatlas-ai/core": "workspace:*",
+    "@codeatlas-ai/storage": "workspace:*",
+    "@codeatlas-ai/git": "workspace:*",
+    "@codeatlas-ai/parser": "workspace:*",
+    "@codeatlas-ai/indexer": "workspace:*",
+    "@codeatlas-ai/graph": "workspace:*",
+    "@codeatlas-ai/retrieval": "workspace:*",
+    "@codeatlas-ai/ranking": "workspace:*",
+    "@codeatlas-ai/token-counter": "workspace:*",
+    "@codeatlas-ai/context": "workspace:*",
+    "@codeatlas-ai/rules": "workspace:*",
+    "@codeatlas-ai/exporters": "workspace:*",
+    "@codeatlas-ai/compression": "workspace:*",
+    "@codeatlas-ai/analytics": "workspace:*",
+    "@codeatlas-ai/nl2cypher": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

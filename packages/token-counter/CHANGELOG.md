@@ -1,4 +1,4 @@
-# @codeatlas/token-counter
+# @codeatlas-ai/token-counter
 
 ## 0.1.1
 
@@ -6,5 +6,5 @@
 
 - chore: patch bump for general refactoring and bugfixes
 - Updated dependencies
-  - @codeatlas/core@0.1.1
-  - @codeatlas/shared@0.1.1
+  - @codeatlas-ai/core@0.1.1
+  - @codeatlas-ai/shared@0.1.1

@@ -1,5 +1,5 @@
-import type { DependencyGraph } from '@codeatlas/graph';
-import type { FileInfo, SymbolInfo, DeadCodeItem } from '@codeatlas/core';
+import type { DependencyGraph } from '@codeatlas-ai/graph';
+import type { FileInfo, SymbolInfo, DeadCodeItem } from '@codeatlas-ai/core';
 
 export interface DeadCodeDetectorOptions {
   entryPatterns?: RegExp[];

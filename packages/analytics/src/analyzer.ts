@@ -1,18 +1,18 @@
-import { DependencyGraph } from '@codeatlas/graph';
-import type { AtlasDatabase } from '@codeatlas/storage';
+import { DependencyGraph } from '@codeatlas-ai/graph';
+import type { AtlasDatabase } from '@codeatlas-ai/storage';
 import {
   FileRepository,
   SymbolRepository,
   DependencyRepository,
   ProjectRepository,
-} from '@codeatlas/storage';
+} from '@codeatlas-ai/storage';
 import type {
   CodebaseAnalytics,
   CycleDetectionResult,
   DeadCodeItem,
   NodeMetrics,
   TechnicalDebtHotspot,
-} from '@codeatlas/core';
+} from '@codeatlas-ai/core';
 import { CycleDetector } from './cycle-detector.js';
 import { DeadCodeDetector, type DeadCodeDetectorOptions } from './dead-code-detector.js';
 import { MetricsCalculator, type GraphMetricsSummary } from './metrics.js';

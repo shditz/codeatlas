@@ -9,20 +9,20 @@ import {
   DependencyRepository,
   SearchRepository,
   ProjectRepository,
-} from '@codeatlas/storage';
-import { Indexer, RepositoryWatcher } from '@codeatlas/indexer';
-import { ContextEngine } from '@codeatlas/context';
-import { RuleEngine } from '@codeatlas/rules';
-import { createExporter } from '@codeatlas/exporters';
-import { GitService } from '@codeatlas/git';
+} from '@codeatlas-ai/storage';
+import { Indexer, RepositoryWatcher } from '@codeatlas-ai/indexer';
+import { ContextEngine } from '@codeatlas-ai/context';
+import { RuleEngine } from '@codeatlas-ai/rules';
+import { createExporter } from '@codeatlas-ai/exporters';
+import { GitService } from '@codeatlas-ai/git';
 import {
   DependencyGraph,
   GraphQueryEngine,
   type GraphNodeItem,
   type GraphEdgeItem,
-} from '@codeatlas/graph';
-import { RetrievalEngine } from '@codeatlas/retrieval';
-import type { ExportTarget, ProjectMeta, SymbolInfo } from '@codeatlas/core';
+} from '@codeatlas-ai/graph';
+import { RetrievalEngine } from '@codeatlas-ai/retrieval';
+import type { ExportTarget, ProjectMeta, SymbolInfo } from '@codeatlas-ai/core';
 import { CodeAtlasOverviewProvider, CodeAtlasRulesProvider } from './providers/tree-provider.js';
 import { GraphViewProvider } from './providers/graph-view-provider.js';
 

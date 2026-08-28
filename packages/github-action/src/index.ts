@@ -2,19 +2,19 @@ import fs from 'node:fs';
 import path from 'node:path';
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import { GitService } from '@codeatlas/git';
-import { Indexer } from '@codeatlas/indexer';
-import { ContextEngine } from '@codeatlas/context';
-import { RuleEngine } from '@codeatlas/rules';
-import { createExporter } from '@codeatlas/exporters';
+import { GitService } from '@codeatlas-ai/git';
+import { Indexer } from '@codeatlas-ai/indexer';
+import { ContextEngine } from '@codeatlas-ai/context';
+import { RuleEngine } from '@codeatlas-ai/rules';
+import { createExporter } from '@codeatlas-ai/exporters';
 import {
   AtlasDatabase,
   runMigrations,
   FileRepository,
   SymbolRepository,
   DependencyRepository,
-} from '@codeatlas/storage';
-import type { ExportTarget, ProjectMeta } from '@codeatlas/core';
+} from '@codeatlas-ai/storage';
+import type { ExportTarget, ProjectMeta } from '@codeatlas-ai/core';
 
 function getOrCreateProject(db: AtlasDatabase, cwd: string): number {
   const normalizedRoot = cwd.replace(/\\/g, '/');

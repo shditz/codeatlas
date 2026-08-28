@@ -1,5 +1,5 @@
 import type { AtlasDatabase } from './database.js';
-import type { FileInfo, SymbolInfo, ImportInfo, DependencyEdge } from '@codeatlas/core';
+import type { FileInfo, SymbolInfo, ImportInfo, DependencyEdge } from '@codeatlas-ai/core';
 
 export class FileRepository {
   constructor(private db: AtlasDatabase) {}

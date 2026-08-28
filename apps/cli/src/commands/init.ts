@@ -2,8 +2,8 @@ import type { Command } from 'commander';
 import fs from 'node:fs';
 import path from 'node:path';
 import chalk from 'chalk';
-import { defaultConfig } from '@codeatlas/core';
-import { AtlasDatabase, runMigrations } from '@codeatlas/storage';
+import { defaultConfig } from '@codeatlas-ai/core';
+import { AtlasDatabase, runMigrations } from '@codeatlas-ai/storage';
 import {
   getAtlasDir,
   getConfigPath,

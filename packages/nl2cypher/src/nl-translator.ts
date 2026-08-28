@@ -1,5 +1,5 @@
-import type { LLMProvider } from '@codeatlas/llm';
-import { Parser } from '@codeatlas/graph';
+import type { LLMProvider } from '@codeatlas-ai/llm';
+import { Parser } from '@codeatlas-ai/graph';
 import { CODEATLAS_GRAPH_SCHEMA } from './schema-prompt.js';
 import { HeuristicQueryGenerator } from './heuristics.js';
 

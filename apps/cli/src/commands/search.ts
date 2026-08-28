@@ -1,7 +1,7 @@
 import type { Command } from 'commander';
 import chalk from 'chalk';
 import { ensureInitialized, openDatabase, getOrCreateProject } from '../utils.js';
-import { SearchRepository, FileRepository } from '@codeatlas/storage';
+import { SearchRepository, FileRepository } from '@codeatlas-ai/storage';
 
 export function registerSearchCommand(program: Command): void {
   program

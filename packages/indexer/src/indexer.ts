@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import os from 'node:os';
-import { createLogger, hashContent } from '@codeatlas/shared';
-import { canParse } from '@codeatlas/core';
-import { parseFile, type ParseResult } from '@codeatlas/parser';
-import type { AtlasDatabase } from '@codeatlas/storage';
+import { createLogger, hashContent } from '@codeatlas-ai/shared';
+import { canParse } from '@codeatlas-ai/core';
+import { parseFile, type ParseResult } from '@codeatlas-ai/parser';
+import type { AtlasDatabase } from '@codeatlas-ai/storage';
 import {
   FileRepository,
   SymbolRepository,
@@ -11,8 +11,8 @@ import {
   DependencyRepository,
   SearchRepository,
   ProjectRepository,
-} from '@codeatlas/storage';
-import type { DependencyEdge, FileInfo } from '@codeatlas/core';
+} from '@codeatlas-ai/storage';
+import type { DependencyEdge, FileInfo } from '@codeatlas-ai/core';
 import { Scanner, type ScanOptions } from './scanner.js';
 
 const logger = createLogger('indexer');

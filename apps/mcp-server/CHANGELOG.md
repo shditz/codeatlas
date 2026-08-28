@@ -1,4 +1,4 @@
-# @codeatlas/mcp-server
+# @codeatlas-ai/mcp-server
 
 ## 0.1.1
 
@@ -6,4 +6,4 @@
 
 - chore: patch bump for general refactoring and bugfixes
 - Updated dependencies
-  - @codeatlas/mcp@0.1.1
+  - @codeatlas-ai/mcp@0.1.1

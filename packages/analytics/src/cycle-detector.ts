@@ -1,5 +1,5 @@
-import type { DependencyGraph } from '@codeatlas/graph';
-import type { CycleDetectionResult } from '@codeatlas/core';
+import type { DependencyGraph } from '@codeatlas-ai/graph';
+import type { CycleDetectionResult } from '@codeatlas-ai/core';
 
 export class CycleDetector {
   private graph: DependencyGraph;

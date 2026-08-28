@@ -1,5 +1,5 @@
-import type { DependencyGraph } from '@codeatlas/graph';
-import type { NodeMetrics } from '@codeatlas/core';
+import type { DependencyGraph } from '@codeatlas-ai/graph';
+import type { NodeMetrics } from '@codeatlas-ai/core';
 
 export interface GraphMetricsSummary {
   totalFiles: number;

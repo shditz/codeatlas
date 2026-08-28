@@ -1,4 +1,4 @@
-import type { ContextPack, ExportTarget } from '@codeatlas/core';
+import type { ContextPack, ExportTarget } from '@codeatlas-ai/core';
 
 export { type ExportTarget };
 

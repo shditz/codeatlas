@@ -1,4 +1,4 @@
-import type { Language } from '@codeatlas/core';
+import type { Language } from '@codeatlas-ai/core';
 
 export function generateSkeleton(code: string, language: Language): string {
   switch (language) {

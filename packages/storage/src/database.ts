@@ -1,6 +1,6 @@
 import path from 'node:path';
 import fs from 'node:fs';
-import { createLogger, StorageError } from '@codeatlas/shared';
+import { createLogger, StorageError } from '@codeatlas-ai/shared';
 
 const logger = createLogger('storage');
 

@@ -1,5 +1,5 @@
 {
-  "name": "@codeatlas/github-action",
+  "name": "@codeatlas-ai/github-action",
   "version": "0.1.1",
   "type": "module",
   "exports": {
@@ -19,14 +19,14 @@
   "dependencies": {
     "@actions/core": "^1.11.1",
     "@actions/github": "^6.0.0",
-    "@codeatlas/core": "workspace:*",
-    "@codeatlas/shared": "workspace:*",
-    "@codeatlas/storage": "workspace:*",
-    "@codeatlas/git": "workspace:*",
-    "@codeatlas/context": "workspace:*",
-    "@codeatlas/exporters": "workspace:*",
-    "@codeatlas/rules": "workspace:*",
-    "@codeatlas/indexer": "workspace:*"
+    "@codeatlas-ai/core": "workspace:*",
+    "@codeatlas-ai/shared": "workspace:*",
+    "@codeatlas-ai/storage": "workspace:*",
+    "@codeatlas-ai/git": "workspace:*",
+    "@codeatlas-ai/context": "workspace:*",
+    "@codeatlas-ai/exporters": "workspace:*",
+    "@codeatlas-ai/rules": "workspace:*",
+    "@codeatlas-ai/indexer": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

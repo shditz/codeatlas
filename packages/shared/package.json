@@ -1,5 +1,5 @@
 {
-  "name": "@codeatlas/shared",
+  "name": "@codeatlas-ai/shared",
   "version": "0.1.1",
   "type": "module",
   "exports": {

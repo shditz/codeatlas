@@ -1,6 +1,6 @@
 # Universal AI Agent Rules Exporter
 
-The `@codeatlas/rules` package automates the generation and synchronization of AI prompt guidelines and architectural context across all major AI coding platforms.
+The `@codeatlas-ai/rules` package automates the generation and synchronization of AI prompt guidelines and architectural context across all major AI coding platforms.
 
 ---
 

@@ -46,7 +46,7 @@ features:
 git clone https://github.com/shditz/codeatlas.git
 cd codeatlas
 pnpm install && pnpm build
-pnpm --filter @codeatlas/cli link --global
+pnpm --filter @codeatlas-ai/cli link --global
 ```
 
 ### 2. Index Repository

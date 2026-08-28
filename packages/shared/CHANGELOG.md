@@ -1,4 +1,4 @@
-# @codeatlas/shared
+# @codeatlas-ai/shared
 
 ## 0.1.1
 

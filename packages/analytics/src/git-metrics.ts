@@ -1,5 +1,5 @@
-import type { NodeMetrics, TechnicalDebtHotspot } from '@codeatlas/core';
-import { GitService } from '@codeatlas/git';
+import type { NodeMetrics, TechnicalDebtHotspot } from '@codeatlas-ai/core';
+import { GitService } from '@codeatlas-ai/git';
 
 export interface FileChurnInfo {
   filePath: string;

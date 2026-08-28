@@ -1,6 +1,6 @@
 # Dependency Graph Visualizer
 
-The `@codeatlas/graph` and `@codeatlas/webview` packages provide visual exploration and topological analysis of workspace files, folders, and code dependencies.
+The `@codeatlas-ai/graph` and `@codeatlas-ai/webview` packages provide visual exploration and topological analysis of workspace files, folders, and code dependencies.
 
 ---
 

@@ -1,5 +1,5 @@
 {
-  "name": "@codeatlas/ranking",
+  "name": "@codeatlas-ai/ranking",
   "version": "0.1.1",
   "type": "module",
   "exports": {
@@ -20,8 +20,8 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@codeatlas/shared": "workspace:*",
-    "@codeatlas/core": "workspace:*"
+    "@codeatlas-ai/shared": "workspace:*",
+    "@codeatlas-ai/core": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

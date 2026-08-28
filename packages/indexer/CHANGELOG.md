@@ -1,4 +1,4 @@
-# @codeatlas/indexer
+# @codeatlas-ai/indexer
 
 ## 0.1.1
 
@@ -6,8 +6,8 @@
 
 - chore: patch bump for general refactoring and bugfixes
 - Updated dependencies
-  - @codeatlas/core@0.1.1
-  - @codeatlas/git@0.1.1
-  - @codeatlas/parser@0.1.1
-  - @codeatlas/shared@0.1.1
-  - @codeatlas/storage@0.1.1
+  - @codeatlas-ai/core@0.1.1
+  - @codeatlas-ai/git@0.1.1
+  - @codeatlas-ai/parser@0.1.1
+  - @codeatlas-ai/shared@0.1.1
+  - @codeatlas-ai/storage@0.1.1

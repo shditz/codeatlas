@@ -1,8 +1,8 @@
 import readline from 'node:readline';
 import path from 'node:path';
 import fs from 'node:fs';
-import type { FileInfo, ProjectMeta, ContextFile, ContextMode } from '@codeatlas/core';
-import { defaultConfig } from '@codeatlas/core';
+import type { FileInfo, ProjectMeta, ContextFile, ContextMode } from '@codeatlas-ai/core';
+import { defaultConfig } from '@codeatlas-ai/core';
 import {
   AtlasDatabase,
   runMigrations,
@@ -11,22 +11,22 @@ import {
   DependencyRepository,
   SearchRepository,
   ProjectRepository,
-} from '@codeatlas/storage';
-import { Scanner, Indexer } from '@codeatlas/indexer';
+} from '@codeatlas-ai/storage';
+import { Scanner, Indexer } from '@codeatlas-ai/indexer';
 import {
   DependencyGraph,
   GraphQueryEngine,
   type GraphNodeItem,
   type GraphEdgeItem,
-} from '@codeatlas/graph';
-import { RetrievalEngine } from '@codeatlas/retrieval';
-import { Ranker } from '@codeatlas/ranking';
-import { ContextEngine } from '@codeatlas/context';
-import { RuleEngine } from '@codeatlas/rules';
-import { GitService } from '@codeatlas/git';
-import { CodeCompressor } from '@codeatlas/compression';
-import { CodebaseAnalyzer } from '@codeatlas/analytics';
-import { NaturalLanguageToCypher } from '@codeatlas/nl2cypher';
+} from '@codeatlas-ai/graph';
+import { RetrievalEngine } from '@codeatlas-ai/retrieval';
+import { Ranker } from '@codeatlas-ai/ranking';
+import { ContextEngine } from '@codeatlas-ai/context';
+import { RuleEngine } from '@codeatlas-ai/rules';
+import { GitService } from '@codeatlas-ai/git';
+import { CodeCompressor } from '@codeatlas-ai/compression';
+import { CodebaseAnalyzer } from '@codeatlas-ai/analytics';
+import { NaturalLanguageToCypher } from '@codeatlas-ai/nl2cypher';
 
 export interface JsonRpcRequest {
   jsonrpc: '2.0';

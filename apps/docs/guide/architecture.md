@@ -31,11 +31,11 @@ CodeAtlas/
 ```mermaid
 sequenceDiagram
     participant User as Developer / CLI / VS Code
-    participant CLI as @codeatlas/cli
-    participant Parser as @codeatlas/parser
-    participant Storage as @codeatlas/storage (SQLite)
-    participant Rules as @codeatlas/rules
-    participant Webview as @codeatlas/webview
+    participant CLI as @codeatlas-ai/cli
+    participant Parser as @codeatlas-ai/parser
+    participant Storage as @codeatlas-ai/storage (SQLite)
+    participant Rules as @codeatlas-ai/rules
+    participant Webview as @codeatlas-ai/webview
 
     User->>CLI: atlas index
     CLI->>Parser: Parse files via Tree-sitter
@@ -62,22 +62,22 @@ sequenceDiagram
 
 ## Package Responsibilities
 
-### `@codeatlas/core`
+### `@codeatlas-ai/core`
 
 The central domain layer containing zero external runtime dependencies. Defines all canonical interfaces (`Project`, `SourceFile`, `SymbolInfo`, `DependencyLink`, `RuleConfig`).
 
-### `@codeatlas/parser`
+### `@codeatlas-ai/parser`
 
 Orchestrates language-specific grammars (`tree-sitter-typescript`, `tree-sitter-javascript`, `tree-sitter-python`, `tree-sitter-php`, `tree-sitter-go`, `tree-sitter-rust`). Extracts signatures, comments, and normalized imports.
 
-### `@codeatlas/storage`
+### `@codeatlas-ai/storage`
 
 Encapsulates SQLite interactions using `better-sqlite3`. Manages database schema migrations, connection pooling, and repository query optimizations.
 
-### `@codeatlas/graph`
+### `@codeatlas-ai/graph`
 
 Maintains an in-memory graph data structure using adjacency lists. Implements algorithms for cycle detection, reachability analysis, and critical path analysis.
 
-### `@codeatlas/rules`
+### `@codeatlas-ai/rules`
 
 Generates target-specific configuration files for AI coding agents. Uses deterministic templating to combine project metadata, linter rules, and architectural guidelines.

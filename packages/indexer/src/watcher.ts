@@ -1,6 +1,6 @@
 import fs from 'node:fs';
-import { createLogger, normalizePath } from '@codeatlas/shared';
-import type { AtlasDatabase } from '@codeatlas/storage';
+import { createLogger, normalizePath } from '@codeatlas-ai/shared';
+import type { AtlasDatabase } from '@codeatlas-ai/storage';
 import { Indexer, type IndexResult } from './indexer.js';
 
 const logger = createLogger('indexer:watcher');

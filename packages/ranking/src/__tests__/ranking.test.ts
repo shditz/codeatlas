@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Ranker } from '../index.js';
-import { defaultConfig } from '@codeatlas/core';
-import type { RetrievalCandidate } from '@codeatlas/core';
+import { defaultConfig } from '@codeatlas-ai/core';
+import type { RetrievalCandidate } from '@codeatlas-ai/core';
 
 describe('Ranking Engine', () => {
   it('ranks candidates using multi-signal scoring with explanations', () => {

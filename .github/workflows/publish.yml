@@ -60,6 +60,6 @@ jobs:
       - name: Publish VS Code Extension
         if: steps.changesets.outputs.published == 'true' && env.VSCE_PAT != ''
         run: |
-          pnpm --filter @codeatlas/vscode-extension exec vsce publish --pat ${{ secrets.VSCE_PAT }}
+          pnpm --filter @codeatlas-ai/vscode-extension exec vsce publish --pat ${{ secrets.VSCE_PAT }}
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}

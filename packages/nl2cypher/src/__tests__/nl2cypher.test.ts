@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { LLMProvider, LLMOptions } from '@codeatlas/llm';
+import type { LLMProvider, LLMOptions } from '@codeatlas-ai/llm';
 import { NaturalLanguageToCypher, HeuristicQueryGenerator } from '../index.js';
 
 class MockLLMProvider implements LLMProvider {

@@ -1,4 +1,4 @@
-# @codeatlas/context
+# @codeatlas-ai/context
 
 ## 0.1.1
 
@@ -6,10 +6,10 @@
 
 - chore: patch bump for general refactoring and bugfixes
 - Updated dependencies
-  - @codeatlas/compression@0.1.1
-  - @codeatlas/core@0.1.1
-  - @codeatlas/ranking@0.1.1
-  - @codeatlas/retrieval@0.1.1
-  - @codeatlas/rules@0.1.1
-  - @codeatlas/shared@0.1.1
-  - @codeatlas/token-counter@0.1.1
+  - @codeatlas-ai/compression@0.1.1
+  - @codeatlas-ai/core@0.1.1
+  - @codeatlas-ai/ranking@0.1.1
+  - @codeatlas-ai/retrieval@0.1.1
+  - @codeatlas-ai/rules@0.1.1
+  - @codeatlas-ai/shared@0.1.1
+  - @codeatlas-ai/token-counter@0.1.1

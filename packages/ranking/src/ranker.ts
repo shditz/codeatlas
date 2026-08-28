@@ -3,8 +3,8 @@ import type {
   RankingConfig,
   RetrievalCandidate,
   RetrievalSource,
-} from '@codeatlas/core';
-import { createLogger } from '@codeatlas/shared';
+} from '@codeatlas-ai/core';
+import { createLogger } from '@codeatlas-ai/shared';
 
 const logger = createLogger('ranking');
 
