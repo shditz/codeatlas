@@ -1,0 +1,29 @@
+{
+  "name": "@codeatlas/mcp-server",
+  "version": "0.1.0",
+  "description": "Universal Model Context Protocol (MCP) Server for CodeAtlas — AI context intelligence for Cursor, Claude, Windsurf, Devin, Kimi, Antigravity, and all AI coding agents.",
+  "type": "module",
+  "bin": {
+    "codeatlas-mcp": "./dist/index.js",
+    "atlas-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@codeatlas/mcp": "workspace:*"
+  },
+  "devDependencies": {
+    "rimraf": "^6.0.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
+  }
+}

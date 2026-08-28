@@ -1,0 +1,7 @@
+# CodeAtlas ignore patterns
+.env
+.env.*
+*.pem
+*.key
+*.cert
+secrets/

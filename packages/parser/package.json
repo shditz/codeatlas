@@ -1,0 +1,33 @@
+{
+  "name": "@codeatlas/parser",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@codeatlas/core": "workspace:*",
+    "@codeatlas/shared": "workspace:*",
+    "tree-sitter": "^0.22.4",
+    "tree-sitter-go": "^0.23.0",
+    "tree-sitter-javascript": "^0.23.0",
+    "tree-sitter-python": "^0.23.0",
+    "tree-sitter-rust": "^0.23.0",
+    "tree-sitter-typescript": "^0.23.2"
+  }
+}

@@ -1,0 +1,37 @@
+name: 'CodeAtlas PR Context Intelligence'
+description: 'Automatically analyzes Pull Requests and generates token-optimized context packs for AI reviewers and coding agents.'
+author: 'CodeAtlas Contributors'
+inputs:
+  github-token:
+    description: 'GitHub token for posting comments and accessing PR metadata'
+    required: false
+    default: ${{ github.token }}
+  base-branch:
+    description: 'Base branch to compare against'
+    required: false
+    default: 'main'
+  target-agent:
+    description: 'Target AI Agent format (e.g., cursor, claude, antigravity, deepseek, trae, qwen, kimi, grok)'
+    required: false
+    default: 'cursor'
+  token-budget:
+    description: 'Maximum token budget for generated context'
+    required: false
+    default: '8000'
+  post-comment:
+    description: 'Whether to post the generated context pack as a Pull Request comment'
+    required: false
+    default: 'true'
+outputs:
+  context-file:
+    description: 'Absolute path to the generated context pack file'
+  token-usage:
+    description: 'Total tokens used in the generated context pack'
+  files-analyzed:
+    description: 'Number of changed files included in the context'
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+branding:
+  icon: 'map'
+  color: 'blue'

@@ -1,0 +1,35 @@
+{
+  "name": "@codeatlas/indexer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@codeatlas/shared": "workspace:*",
+    "@codeatlas/core": "workspace:*",
+    "@codeatlas/storage": "workspace:*",
+    "@codeatlas/parser": "workspace:*",
+    "@codeatlas/git": "workspace:*",
+    "ignore": "^5.3.0",
+    "picomatch": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/picomatch": "^3.0.0"
+  }
+}

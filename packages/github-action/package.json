@@ -1,0 +1,32 @@
+{
+  "name": "@codeatlas/github-action",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.0",
+    "@codeatlas/core": "workspace:*",
+    "@codeatlas/shared": "workspace:*",
+    "@codeatlas/storage": "workspace:*",
+    "@codeatlas/git": "workspace:*",
+    "@codeatlas/context": "workspace:*",
+    "@codeatlas/exporters": "workspace:*",
+    "@codeatlas/rules": "workspace:*",
+    "@codeatlas/indexer": "workspace:*"
+  }
+}

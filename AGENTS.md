@@ -1,0 +1,6 @@
+# CodeAtlas AI Instructions
+
+- Always write strictly-typed TypeScript with TypeScript 5.x.
+- Keep packages decoupled and communicate through domain models in `@codeatlas/core`.
+- Maintain 100% test pass rate with Vitest.
+- Follow local-first privacy principles: never upload repository code without user consent.

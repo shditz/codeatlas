@@ -1,0 +1,9 @@
+{
+  "name": "@codeatlas/neovim-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Neovim plugin for CodeAtlas context intelligence and graph querying.",
+  "scripts": {
+    "test": "echo \"No Lua test runner configured\""
+  }
+}

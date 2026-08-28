@@ -1,0 +1,21 @@
+<idea-plugin>
+    <id>com.codeatlas.intellij</id>
+    <name>CodeAtlas Context Intelligence</name>
+    <vendor email="support@codeatlas.dev" url="https://codeatlas.dev">CodeAtlas</vendor>
+
+    <description><![CDATA[
+    <b>CodeAtlas</b> gives AI coding agents a comprehensive map of your codebase.<br>
+    Includes real-time indexing, graph-based architecture analysis, and natural language query generation.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <actions>
+        <group id="CodeAtlas.Menu" text="CodeAtlas" description="CodeAtlas contextual intelligence tools" popup="true">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <action id="CodeAtlas.Index" class="com.codeatlas.actions.IndexAction" text="Index Codebase" description="Build or update CodeAtlas graph index"/>
+            <action id="CodeAtlas.Analyze" class="com.codeatlas.actions.AnalyzeAction" text="Analyze Architecture" description="Run graph analysis for dead code and circular dependencies"/>
+            <action id="CodeAtlas.Query" class="com.codeatlas.actions.QueryAction" text="Query Graph" description="Execute Cypher or natural language query on codebase"/>
+        </group>
+    </actions>
+</idea-plugin>

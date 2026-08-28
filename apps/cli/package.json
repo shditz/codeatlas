@@ -1,0 +1,43 @@
+{
+  "name": "@codeatlas/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "atlas": "./dist/index.js",
+    "codeatlas": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "atlas": "node --enable-source-maps ./dist/index.js"
+  },
+  "dependencies": {
+    "@codeatlas/shared": "workspace:*",
+    "@codeatlas/core": "workspace:*",
+    "@codeatlas/storage": "workspace:*",
+    "@codeatlas/git": "workspace:*",
+    "@codeatlas/parser": "workspace:*",
+    "@codeatlas/indexer": "workspace:*",
+    "@codeatlas/graph": "workspace:*",
+    "@codeatlas/retrieval": "workspace:*",
+    "@codeatlas/ranking": "workspace:*",
+    "@codeatlas/token-counter": "workspace:*",
+    "@codeatlas/context": "workspace:*",
+    "@codeatlas/rules": "workspace:*",
+    "@codeatlas/exporters": "workspace:*",
+    "@codeatlas/mcp": "workspace:*",
+    "@codeatlas/llm": "workspace:*",
+    "@codeatlas/compression": "workspace:*",
+    "@codeatlas/analytics": "workspace:*",
+    "@codeatlas/nl2cypher": "workspace:*",
+    "commander": "^12.1.0",
+    "chalk": "^5.3.0",
+    "ora": "^8.0.0"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "name": "@codeatlas/mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@codeatlas/shared": "workspace:*",
+    "@codeatlas/core": "workspace:*",
+    "@codeatlas/storage": "workspace:*",
+    "@codeatlas/git": "workspace:*",
+    "@codeatlas/parser": "workspace:*",
+    "@codeatlas/indexer": "workspace:*",
+    "@codeatlas/graph": "workspace:*",
+    "@codeatlas/retrieval": "workspace:*",
+    "@codeatlas/ranking": "workspace:*",
+    "@codeatlas/token-counter": "workspace:*",
+    "@codeatlas/context": "workspace:*",
+    "@codeatlas/rules": "workspace:*",
+    "@codeatlas/exporters": "workspace:*",
+    "@codeatlas/compression": "workspace:*",
+    "@codeatlas/analytics": "workspace:*",
+    "@codeatlas/nl2cypher": "workspace:*"
+  }
+}
