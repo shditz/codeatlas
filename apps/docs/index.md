@@ -42,7 +42,10 @@ features:
 ### 1. Installation
 
 ```bash
-# Clone and link globally
+# Global NPM Install
+npm install -g @codeatlas-ai/cli
+
+# Or Build from source
 git clone https://github.com/shditz/codeatlas.git
 cd codeatlas
 pnpm install && pnpm build

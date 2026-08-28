@@ -55,9 +55,13 @@ Because it runs completely offline, your code remains 100% private.
 - **pnpm**: `>= 9.0.0`
 - **Git**
 
-### Building and Installing from Source
+### Option 1: Install Globally via NPM (Recommended)
 
-CodeAtlas is a monorepo. It is not currently published to the public NPM registry. To install it, you must build it locally from source:
+```bash
+npm install -g @codeatlas-ai/cli
+```
+
+### Option 2: Build from Source
 
 ```bash
 # 1. Clone the repository
