@@ -66,7 +66,7 @@ export function registerScanCommand(program: Command): void {
       console.log('');
 
       console.log(chalk.bold('  Languages'));
-      const sorted = [...result.detectedLanguages.entries()].sort((a, b) => b[1] - a[1]);
+      const sorted = Object.entries(result.detectedLanguages || {}).sort((a, b) => b[1] - a[1]);
       for (const [lang, count] of sorted) {
         const bar = '█'.repeat(
           Math.min(Math.ceil((count / Math.max(...sorted.map((s) => s[1]))) * 20), 20),
