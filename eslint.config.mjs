@@ -12,6 +12,8 @@ export default tseslint.config(
       '**/.atlas/**',
       '**/scratch/**',
       '**/*.mjs',
+      '**/.vitepress/cache/**',
+      '**/.vitepress/dist/**',
       'apps/jetbrains-plugin/**',
     ],
   },

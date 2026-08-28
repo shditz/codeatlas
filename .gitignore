@@ -39,3 +39,8 @@ scratch/
 *.atlas.md
 .*rules
 context-pack.md
+*.vsix
+**/.vitepress/cache/**
+**/.vitepress/dist/**
+
+

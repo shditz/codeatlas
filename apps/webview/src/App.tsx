@@ -1,0 +1,737 @@
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import ForceGraph2D, { type ForceGraphMethods } from 'react-force-graph-2d';
+import ForceGraph3D from 'react-force-graph-3d';
+import * as THREE from 'three';
+import './index.css';
+
+declare function acquireVsCodeApi(): { postMessage: (msg: unknown) => void };
+
+interface Node {
+  id: string;
+  name: string;
+  path?: string;
+  type: string;
+  language?: string;
+  size?: number;
+  val?: number;
+  color?: string;
+  x?: number;
+  y?: number;
+  z?: number;
+}
+
+interface Link {
+  source: any;
+  target: any;
+  type: string;
+}
+
+interface GraphData {
+  nodes: Node[];
+  links: Link[];
+}
+
+const dummyData: GraphData = {
+  nodes: [
+    {
+      id: 'src',
+      name: 'src',
+      path: 'src',
+      type: 'dir',
+      language: 'directory',
+      val: 5,
+      color: '#c084fc',
+    },
+    {
+      id: 'src/index.ts',
+      name: 'index.ts',
+      path: 'src/index.ts',
+      type: 'file',
+      language: 'typescript',
+      size: 1420,
+      val: 4,
+      color: '#38bdf8',
+    },
+    {
+      id: 'src/utils.ts',
+      name: 'utils.ts',
+      path: 'src/utils.ts',
+      type: 'file',
+      language: 'typescript',
+      size: 840,
+      val: 3,
+      color: '#38bdf8',
+    },
+    {
+      id: 'src/components',
+      name: 'components',
+      path: 'src/components',
+      type: 'dir',
+      language: 'directory',
+      val: 5,
+      color: '#c084fc',
+    },
+    {
+      id: 'src/components/Graph.tsx',
+      name: 'Graph.tsx',
+      path: 'src/components/Graph.tsx',
+      type: 'file',
+      language: 'typescript',
+      size: 3200,
+      val: 5,
+      color: '#38bdf8',
+    },
+    {
+      id: 'src/components/Sidebar.tsx',
+      name: 'Sidebar.tsx',
+      path: 'src/components/Sidebar.tsx',
+      type: 'file',
+      language: 'typescript',
+      size: 2100,
+      val: 4,
+      color: '#38bdf8',
+    },
+    {
+      id: 'package.json',
+      name: 'package.json',
+      path: 'package.json',
+      type: 'file',
+      language: 'json',
+      size: 650,
+      val: 3,
+      color: '#e2e8f0',
+    },
+  ],
+  links: [
+    { source: 'src', target: 'src/index.ts', type: 'contains' },
+    { source: 'src', target: 'src/utils.ts', type: 'contains' },
+    { source: 'src', target: 'src/components', type: 'contains' },
+    { source: 'src/components', target: 'src/components/Graph.tsx', type: 'contains' },
+    { source: 'src/components', target: 'src/components/Sidebar.tsx', type: 'contains' },
+    { source: 'src/index.ts', target: 'src/utils.ts', type: 'import' },
+    { source: 'src/index.ts', target: 'src/components/Graph.tsx', type: 'import' },
+  ],
+};
+
+// Helper: resolve language to vibrant cosmic starlight color
+const getLanguageColor = (node: Node): string => {
+  if (node.color) return node.color;
+  const ext = (node.name || '').split('.').pop()?.toLowerCase() || '';
+  const lang = (node.language || '').toLowerCase();
+
+  if (node.type === 'dir' || lang === 'directory') return '#c084fc'; // Nebula Purple
+  if (lang === 'typescript' || ext === 'ts' || ext === 'tsx') return '#38bdf8'; // Cyan
+  if (lang === 'javascript' || ext === 'js' || ext === 'jsx') return '#facc15'; // Gold
+  if (lang === 'php' || ext === 'php') return '#a78bfa'; // Electric Violet
+  if (lang === 'python' || ext === 'py') return '#34d399'; // Emerald
+  if (ext === 'css' || ext === 'scss' || ext === 'less') return '#f43f5e'; // Rose Pink
+  if (ext === 'html' || ext === 'htm') return '#fb923c'; // Amber Orange
+  return '#e2e8f0'; // Starlight White
+};
+
+function App() {
+  const [data, setData] = useState<GraphData>(dummyData);
+  const [is3D, setIs3D] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [hoveredNode, setHoveredNode] = useState<Node | null>(null);
+  const [autoRotate, setAutoRotate] = useState(true);
+  const [filterType, setFilterType] = useState<'all' | 'file' | 'dir'>('all');
+  const [spotlightMode, setSpotlightMode] = useState(true);
+
+  const fg2DRef = useRef<ForceGraphMethods>(null);
+  const fg3DRef = useRef<any>(null);
+  const starfieldRef = useRef<THREE.Points | null>(null);
+
+  // Compute filtered nodes and synthesize sibling cluster links if only files are active
+  const filteredData = useMemo(() => {
+    let nodes = data.nodes;
+    if (filterType !== 'all') {
+      nodes = nodes.filter((n) => n.type === filterType);
+    }
+    const nodeIds = new Set(nodes.map((n) => n.id));
+    const links = data.links.filter((l) => {
+      const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
+      const targetId = typeof l.target === 'object' ? l.target.id : l.target;
+      return nodeIds.has(sourceId) && nodeIds.has(targetId);
+    });
+
+    // If filtering to 'file' only and no direct imports exist, connect files in the same directory
+    if (filterType === 'file' && links.length === 0) {
+      const dirGroups = new Map<string, string[]>();
+      for (const n of nodes) {
+        const parts = (n.path || n.id).split('/');
+        const parentDir = parts.slice(0, -1).join('/') || 'root';
+        if (!dirGroups.has(parentDir)) dirGroups.set(parentDir, []);
+        dirGroups.get(parentDir)!.push(n.id);
+      }
+
+      for (const [, fileIds] of dirGroups.entries()) {
+        for (let i = 1; i < fileIds.length; i++) {
+          links.push({
+            source: fileIds[0],
+            target: fileIds[i],
+            type: 'sibling',
+          });
+        }
+      }
+    }
+
+    return { nodes, links };
+  }, [data, filterType]);
+
+  // Spotlight & Isolated Path Sets
+  const spotlightActive = spotlightMode && (selectedNode || hoveredNode);
+  const activeFocusNode = hoveredNode || selectedNode;
+
+  const { highlightNodes, highlightLinks } = useMemo(() => {
+    const nodes = new Set<string>();
+    const links = new Set<any>();
+
+    if (activeFocusNode) {
+      nodes.add(activeFocusNode.id);
+      filteredData.links.forEach((link) => {
+        const sId = typeof link.source === 'object' ? link.source.id : link.source;
+        const tId = typeof link.target === 'object' ? link.target.id : link.target;
+        if (sId === activeFocusNode.id || tId === activeFocusNode.id) {
+          links.add(link);
+          nodes.add(sId);
+          nodes.add(tId);
+        }
+      });
+    }
+
+    return { highlightNodes: nodes, highlightLinks: links };
+  }, [activeFocusNode, filteredData.links]);
+
+  // Handle VSCode communication
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      const message = event.data;
+      if (message.command === 'setGraphData') {
+        setData(message.data);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    if (typeof acquireVsCodeApi !== 'undefined') {
+      const vscode = acquireVsCodeApi();
+      vscode.postMessage({ command: 'ready' });
+    }
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, []);
+
+  // Configure D3 Force Simulation to prevent node crowding and spreading clusters gracefully
+  useEffect(() => {
+    if (is3D && fg3DRef.current) {
+      fg3DRef.current.d3Force('charge')?.strength(-220)?.distanceMax(1200);
+      fg3DRef.current.d3Force('link')?.distance(65);
+    } else if (!is3D && fg2DRef.current) {
+      fg2DRef.current.d3Force('charge')?.strength(-220)?.distanceMax(1200);
+      fg2DRef.current.d3Force('link')?.distance(65);
+    }
+  }, [is3D, filteredData]);
+
+  // 3D Scene Initialization: Add Cosmic Starfield & Ambient Lighting
+  useEffect(() => {
+    if (!is3D || !fg3DRef.current) return;
+    const scene = fg3DRef.current.scene?.();
+    if (!scene || starfieldRef.current) return;
+
+    // Cosmic Starfield Particle Shell
+    const starGeometry = new THREE.BufferGeometry();
+    const starCount = 1800;
+    const starPositions = new Float32Array(starCount * 3);
+    const starColors = new Float32Array(starCount * 3);
+
+    for (let i = 0; i < starCount * 3; i += 3) {
+      const radius = 600 + Math.random() * 800;
+      const theta = 2 * Math.PI * Math.random();
+      const phi = Math.acos(2 * Math.random() - 1);
+
+      starPositions[i] = radius * Math.sin(phi) * Math.cos(theta);
+      starPositions[i + 1] = radius * Math.sin(phi) * Math.sin(theta);
+      starPositions[i + 2] = radius * Math.cos(phi);
+
+      // Subtle star twinkle hues (icy blue, warm amber, white)
+      const hueChoice = Math.random();
+      if (hueChoice > 0.7) {
+        starColors[i] = 0.6;
+        starColors[i + 1] = 0.8;
+        starColors[i + 2] = 1.0; // Cyan
+      } else if (hueChoice > 0.4) {
+        starColors[i] = 1.0;
+        starColors[i + 1] = 0.9;
+        starColors[i + 2] = 0.7; // Gold
+      } else {
+        starColors[i] = 0.9;
+        starColors[i + 1] = 0.9;
+        starColors[i + 2] = 0.95; // White
+      }
+    }
+
+    starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    starGeometry.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
+
+    const starMaterial = new THREE.PointsMaterial({
+      size: 2.2,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.75,
+      sizeAttenuation: true,
+    });
+
+    const starfield = new THREE.Points(starGeometry, starMaterial);
+    scene.add(starfield);
+    starfieldRef.current = starfield;
+
+    // Ambient & Point Lighting for specular shine
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+    scene.add(ambientLight);
+
+    const pointLight = new THREE.PointLight(0xffffff, 1.5, 1200);
+    pointLight.position.set(200, 300, 400);
+    scene.add(pointLight);
+  }, [is3D]);
+
+  // 3D Smooth OrbitControls Auto-rotation
+  useEffect(() => {
+    if (!is3D || !fg3DRef.current) return;
+    const controls = fg3DRef.current.controls?.();
+    if (controls) {
+      controls.autoRotate = autoRotate && !selectedNode;
+      controls.autoRotateSpeed = 0.6;
+    }
+  }, [is3D, autoRotate, selectedNode]);
+
+  // Custom 3D Celestial Node Object (Nebula folder rings + luminous star sphere)
+  const nodeThreeObject = useCallback(
+    (node: any) => {
+      const isDir = node.type === 'dir';
+      const baseColor = getLanguageColor(node);
+      const isHighlighted = !spotlightActive || highlightNodes.has(node.id);
+      const isFocus = activeFocusNode?.id === node.id;
+
+      const group = new THREE.Group();
+
+      // Star sphere core
+      const radius = Math.max(2.2, (node.val || 4) * 0.75);
+      const sphereGeometry = new THREE.SphereGeometry(radius, 16, 16);
+      const sphereMaterial = new THREE.MeshStandardMaterial({
+        color: isFocus ? 0xffffff : new THREE.Color(baseColor),
+        emissive: new THREE.Color(baseColor),
+        emissiveIntensity: isFocus ? 0.9 : isHighlighted ? 0.45 : 0.05,
+        roughness: 0.2,
+        metalness: 0.5,
+        transparent: true,
+        opacity: isHighlighted ? 0.95 : 0.15,
+      });
+
+      const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
+      group.add(sphereMesh);
+
+      // If Folder: Add Saturn-like Nebula Orbital Ring
+      if (isDir && isHighlighted) {
+        const ringGeometry = new THREE.RingGeometry(radius * 1.6, radius * 2.2, 32);
+        const ringMaterial = new THREE.MeshBasicMaterial({
+          color: new THREE.Color('#c084fc'),
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: isFocus ? 0.9 : 0.45,
+        });
+        const ringMesh = new THREE.Mesh(ringGeometry, ringMaterial);
+        ringMesh.rotation.x = Math.PI / 3;
+        group.add(ringMesh);
+      }
+
+      return group;
+    },
+    [spotlightActive, highlightNodes, activeFocusNode],
+  );
+
+  // Click node handler
+  const handleNodeClick = useCallback(
+    (node: any) => {
+      setSelectedNode(node);
+      setAutoRotate(false);
+
+      if (is3D && fg3DRef.current) {
+        const distance = 80;
+        const distRatio = 1 + distance / Math.hypot(node.x || 1, node.y || 1, node.z || 1);
+        fg3DRef.current.cameraPosition(
+          {
+            x: (node.x || 0) * distRatio,
+            y: (node.y || 0) * distRatio,
+            z: (node.z || 0) * distRatio,
+          },
+          node,
+          1800,
+        );
+      } else if (!is3D && fg2DRef.current) {
+        fg2DRef.current.centerAt(node.x, node.y, 800);
+        fg2DRef.current.zoom(2.5, 800);
+      }
+    },
+    [is3D],
+  );
+
+  // Open file in VSCode
+  const handleOpenFile = (path?: string) => {
+    if (!path) return;
+    if (typeof acquireVsCodeApi !== 'undefined') {
+      const vscode = acquireVsCodeApi();
+      vscode.postMessage({ command: 'openFile', path });
+    }
+  };
+
+  // Reset view
+  const handleResetView = () => {
+    setSelectedNode(null);
+    setAutoRotate(true);
+    if (is3D && fg3DRef.current) {
+      fg3DRef.current.cameraPosition({ x: 0, y: 0, z: 400 }, { x: 0, y: 0, z: 0 }, 1500);
+    } else if (!is3D && fg2DRef.current) {
+      fg2DRef.current.zoomToFit(1000, 40);
+    }
+  };
+
+  // Node highlight / matching search
+  const isMatch = (node: Node) => {
+    if (!searchQuery.trim()) return false;
+    return (
+      node.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (node.path && node.path.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+  };
+
+  // Custom 2D Node Canvas Renderer with Starlight Bloom & Spotlight Dimming
+  const draw2DNode = useCallback(
+    (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+      const isSelected = selectedNode?.id === node.id;
+      const isHovered = hoveredNode?.id === node.id;
+      const isSearchMatch = isMatch(node);
+      const isHighlighted = !spotlightActive || highlightNodes.has(node.id) || isSearchMatch;
+
+      const baseColor = getLanguageColor(node);
+      const r = Math.max(2.5, (node.val || 4) * 0.9);
+      const alpha = isHighlighted ? 1 : 0.15;
+
+      // Glowing Star Halo (Outer Bloom)
+      if (isHighlighted) {
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, r + (isSelected ? 6 : 3.5), 0, 2 * Math.PI, false);
+        ctx.fillStyle = isSelected ? 'rgba(255, 255, 255, 0.6)' : `${baseColor}44`;
+        ctx.fill();
+      }
+
+      // Node Core
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, r, 0, 2 * Math.PI, false);
+      ctx.fillStyle = isSelected ? '#ffffff' : baseColor;
+      ctx.globalAlpha = alpha;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Border stroke
+      ctx.strokeStyle = isSelected
+        ? '#ffffff'
+        : `rgba(255, 255, 255, ${isHighlighted ? 0.5 : 0.1})`;
+      ctx.lineWidth = isSelected ? 2 : 0.8 / globalScale;
+      ctx.stroke();
+
+      // Text Label (only if zoomed in or selected/hovered/searched/highlighted)
+      const showLabel =
+        (globalScale > 1.3 && isHighlighted) || isSelected || isHovered || isSearchMatch;
+      if (showLabel) {
+        const label = node.name;
+        const fontSize = Math.max(9 / globalScale, 3);
+        ctx.font = `${isSelected ? '600' : '400'} ${fontSize}px Inter, sans-serif`;
+        const textWidth = ctx.measureText(label).width;
+        const bckgDimensions = [textWidth + 6 / globalScale, fontSize + 4 / globalScale];
+
+        // Pill background
+        ctx.fillStyle = `rgba(10, 12, 16, ${isHighlighted ? 0.9 : 0.3})`;
+        ctx.beginPath();
+        ctx.roundRect(
+          node.x - bckgDimensions[0] / 2,
+          node.y + r + 2 / globalScale,
+          bckgDimensions[0],
+          bckgDimensions[1],
+          3 / globalScale,
+        );
+        ctx.fill();
+        ctx.strokeStyle = isSelected
+          ? '#ffffff'
+          : `rgba(255, 255, 255, ${isHighlighted ? 0.25 : 0.05})`;
+        ctx.stroke();
+
+        // Text string
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = isSelected ? '#ffffff' : `${baseColor}`;
+        ctx.globalAlpha = alpha;
+        ctx.fillText(label, node.x, node.y + r + 2 / globalScale + bckgDimensions[1] / 2);
+        ctx.globalAlpha = 1;
+      }
+    },
+    [selectedNode, hoveredNode, searchQuery, spotlightActive, highlightNodes],
+  );
+
+  return (
+    <div className="graph-container">
+      {/* Top Left Glass HUD Panel */}
+      <div className="overlay-panel">
+        <div className="panel-header">
+          <div className="pulse-indicator"></div>
+          <div>
+            <h2>CodeAtlas Map</h2>
+            <p className="subtitle">Interactive Dependency Graph</p>
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        <div className="search-box">
+          <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="11" cy="11" r="8" strokeWidth="2" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" strokeWidth="2" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search files & directories..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button className="clear-search" onClick={() => setSearchQuery('')}>
+              ×
+            </button>
+          )}
+        </div>
+
+        {/* Filter Chips */}
+        <div className="filter-chips">
+          <button
+            className={`chip ${filterType === 'all' ? 'active' : ''}`}
+            onClick={() => setFilterType('all')}
+          >
+            All
+          </button>
+          <button
+            className={`chip ${filterType === 'file' ? 'active' : ''}`}
+            onClick={() => setFilterType('file')}
+          >
+            Files
+          </button>
+          <button
+            className={`chip ${filterType === 'dir' ? 'active' : ''}`}
+            onClick={() => setFilterType('dir')}
+          >
+            Folders
+          </button>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-value">{filteredData.nodes.length}</div>
+            <div className="stat-label">Nodes</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-value">{filteredData.links.length}</div>
+            <div className="stat-label">Edges</div>
+          </div>
+        </div>
+
+        {/* View Mode Switch */}
+        <div className="toggle-container">
+          <button
+            className={`toggle-btn ${!is3D ? 'active' : ''}`}
+            onClick={() => {
+              setIs3D(false);
+              setAutoRotate(false);
+            }}
+          >
+            2D View
+          </button>
+          <button className={`toggle-btn ${is3D ? 'active' : ''}`} onClick={() => setIs3D(true)}>
+            3D View
+          </button>
+        </div>
+
+        {/* Spotlight & Rotation Toggles */}
+        <div className="action-row">
+          <button
+            className={`action-btn ${spotlightMode ? 'active' : ''}`}
+            onClick={() => setSpotlightMode(!spotlightMode)}
+            title="Highlight connected path & dim unrelated nodes on hover/click"
+          >
+            {spotlightMode ? 'Spotlight: ON' : 'Spotlight: OFF'}
+          </button>
+          {is3D && (
+            <button
+              className={`action-btn ${autoRotate ? 'active' : ''}`}
+              onClick={() => setAutoRotate(!autoRotate)}
+            >
+              {autoRotate ? 'Pause' : 'Rotate'}
+            </button>
+          )}
+        </div>
+
+        <div className="action-row" style={{ marginTop: '8px' }}>
+          <button className="action-btn" onClick={handleResetView} style={{ width: '100%' }}>
+            Reset Camera
+          </button>
+        </div>
+
+        {/* Language Color Legend */}
+        <div className="legend-box">
+          <div className="legend-title">Languages & Types</div>
+          <div className="legend-items">
+            <div className="legend-item">
+              <span className="dot" style={{ backgroundColor: '#c084fc' }}></span>Folder
+            </div>
+            <div className="legend-item">
+              <span className="dot" style={{ backgroundColor: '#a78bfa' }}></span>PHP
+            </div>
+            <div className="legend-item">
+              <span className="dot" style={{ backgroundColor: '#38bdf8' }}></span>TS/TSX
+            </div>
+            <div className="legend-item">
+              <span className="dot" style={{ backgroundColor: '#facc15' }}></span>JS/JSX
+            </div>
+            <div className="legend-item">
+              <span className="dot" style={{ backgroundColor: '#f43f5e' }}></span>CSS
+            </div>
+            <div className="legend-item">
+              <span className="dot" style={{ backgroundColor: '#fb923c' }}></span>HTML
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Selected Node Details Drawer */}
+      {selectedNode && (
+        <div className="node-inspector">
+          <div className="inspector-header">
+            <div
+              className="inspector-badge"
+              style={{
+                backgroundColor: `${getLanguageColor(selectedNode)}33`,
+                color: getLanguageColor(selectedNode),
+              }}
+            >
+              {selectedNode.type.toUpperCase()} • {selectedNode.language || 'FILE'}
+            </div>
+            <button className="close-inspector" onClick={() => setSelectedNode(null)}>
+              ×
+            </button>
+          </div>
+          <h3 className="inspector-title" style={{ color: getLanguageColor(selectedNode) }}>
+            {selectedNode.name}
+          </h3>
+          <div className="inspector-path">{selectedNode.path || selectedNode.id}</div>
+
+          <div className="inspector-details">
+            <div className="detail-row">
+              <span>Language:</span>
+              <strong>{selectedNode.language || 'Plain'}</strong>
+            </div>
+            {selectedNode.size !== undefined && selectedNode.size > 0 && (
+              <div className="detail-row">
+                <span>Size:</span>
+                <strong>{(selectedNode.size / 1024).toFixed(1)} KB</strong>
+              </div>
+            )}
+            <div className="detail-row">
+              <span>Connected Nodes:</span>
+              <strong>{highlightNodes.size > 0 ? highlightNodes.size - 1 : 0}</strong>
+            </div>
+          </div>
+
+          <div className="inspector-actions">
+            {selectedNode.type === 'file' && (
+              <button
+                className="btn-primary"
+                onClick={() => handleOpenFile(selectedNode.path || selectedNode.id)}
+              >
+                Open in Editor
+              </button>
+            )}
+            <button className="btn-secondary" onClick={() => handleNodeClick(selectedNode)}>
+              Focus Camera
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Force Graph Renderer */}
+      {is3D ? (
+        <ForceGraph3D
+          ref={fg3DRef}
+          graphData={filteredData}
+          nodeThreeObject={nodeThreeObject}
+          nodeLabel={(n: any) => `
+            <div class="node-tooltip">
+              <div class="tt-title" style="color:${getLanguageColor(n)}">${n.name}</div>
+              <div class="tt-sub">${n.path || n.id}</div>
+              <div class="tt-meta">${n.type} • ${n.language || ''}</div>
+            </div>
+          `}
+          linkColor={(l: any) => {
+            const isHighlighted = !spotlightActive || highlightLinks.has(l);
+            if (!isHighlighted) return 'rgba(255, 255, 255, 0.04)';
+            if (l.type === 'contains' || l.type === 'sibling') return 'rgba(192, 132, 252, 0.6)';
+            return 'rgba(56, 189, 248, 0.75)';
+          }}
+          linkWidth={(l: any) => (!spotlightActive || highlightLinks.has(l) ? 1.6 : 0.5)}
+          linkDirectionalParticles={(l: any) => (!spotlightActive || highlightLinks.has(l) ? 3 : 0)}
+          linkDirectionalParticleSpeed={0.005}
+          linkDirectionalParticleWidth={2.2}
+          linkDirectionalParticleColor={(l: any) =>
+            l.type === 'contains' || l.type === 'sibling' ? '#c084fc' : '#38bdf8'
+          }
+          onNodeClick={handleNodeClick}
+          onNodeHover={(n: any) => setHoveredNode(n)}
+          backgroundColor="#040508"
+        />
+      ) : (
+        <ForceGraph2D
+          ref={fg2DRef as any}
+          graphData={filteredData}
+          nodeCanvasObject={draw2DNode}
+          nodePointerAreaPaint={(node: any, color: string, ctx: CanvasRenderingContext2D) => {
+            const r = Math.max(2.5, (node.val || 4) * 0.9);
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, r + 4, 0, 2 * Math.PI, false);
+            ctx.fill();
+          }}
+          linkColor={(l: any) => {
+            const isHighlighted = !spotlightActive || highlightLinks.has(l);
+            if (!isHighlighted) return 'rgba(255, 255, 255, 0.04)';
+            if (l.type === 'contains' || l.type === 'sibling') return 'rgba(192, 132, 252, 0.5)';
+            return 'rgba(56, 189, 248, 0.7)';
+          }}
+          linkWidth={(l: any) => (!spotlightActive || highlightLinks.has(l) ? 1.5 : 0.5)}
+          linkDirectionalArrowLength={3.5}
+          linkDirectionalArrowRelPos={1}
+          linkDirectionalParticles={(l: any) => (!spotlightActive || highlightLinks.has(l) ? 2 : 0)}
+          linkDirectionalParticleSpeed={0.006}
+          linkDirectionalParticleWidth={2.2}
+          linkDirectionalParticleColor={(l: any) =>
+            l.type === 'contains' || l.type === 'sibling' ? '#c084fc' : '#38bdf8'
+          }
+          onNodeClick={handleNodeClick}
+          onNodeHover={(n: any) => setHoveredNode(n)}
+          backgroundColor="#040508"
+        />
+      )}
+    </div>
+  );
+}
+
+export default App;

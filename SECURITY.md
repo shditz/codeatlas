@@ -1,23 +1,35 @@
 # Security Policy
 
+CodeAtlas takes the security of our software and user data seriously. This document outlines our vulnerability reporting process and our foundational security principles.
+
+---
+
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability, please report it responsibly.
+If you discover a security vulnerability in CodeAtlas, please report it responsibly:
 
-**Do not open a public issue for security vulnerabilities.**
+- **Do NOT open a public GitHub issue.**
+- Report security issues privately via GitHub's [Private Vulnerability Reporting](https://github.com/shditz/codeatlas/security/advisories/new) or by emailing the maintainers directly.
+- Please provide detailed steps to reproduce the issue, including affected versions, operating system, and proof-of-concept code where applicable.
+- We aim to acknowledge receipt of vulnerability reports within 48 hours and provide remediation updates regularly.
 
-Instead, email the maintainers directly or use GitHub's private vulnerability reporting feature.
+---
 
-## Security Design
+## Core Security & Privacy Principles
 
-CodeAtlas is designed as a local-first tool:
+CodeAtlas is engineered with a strict local-first architecture:
 
-- **No source code is uploaded** to external servers by default
-- **Secret detection** filters potential credentials from context packs
-- **`.atlasignore`** provides fine-grained exclusion control
-- **No telemetry** — zero analytics or tracking by default
-- **LLM providers are optional** — the core system works without external API calls
+1. **Zero External Data Transmission**: All AST parsing, SQLite storage, graph rendering, and context pack generation execute 100% locally on your machine.
+2. **Deterministic Exclusions**: CodeAtlas automatically respects `.gitignore` and `.atlasignore` to prevent parsing of sensitive credentials, environment files (`.env`), private keys, or certificate bundles.
+3. **Secret & Credential Masking**: Automated heuristics filter known secret patterns (e.g., API tokens, AWS keys, JWT tokens) from generated context packs and exported prompt files.
+4. **No Background Telemetry**: CodeAtlas contains zero telemetry, analytics, tracking pings, or remote logging.
+5. **Sandboxed Webview**: The VS Code Extension Webview operates within a sandboxed context, enforcing strict Content Security Policies (CSP) and local resource root boundaries.
 
-## Scope
+---
 
-This policy applies to the CodeAtlas codebase and its default behavior. Third-party LLM providers configured by the user are governed by their own security policies.
+## Supported Versions
+
+| Version   | Supported |
+| --------- | --------- |
+| `0.1.x`   | Yes       |
+| `< 0.1.0` | No        |

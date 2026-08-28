@@ -1,0 +1,268 @@
+import * as vscode from 'vscode';
+import path from 'node:path';
+import fs from 'node:fs';
+import { FileRepository, DependencyRepository, type AtlasDatabase } from '@codeatlas/storage';
+
+export class GraphViewProvider {
+  public static currentPanel: GraphViewProvider | undefined;
+  private readonly _panel: vscode.WebviewPanel;
+  private readonly _extensionUri: vscode.Uri;
+  private _disposables: vscode.Disposable[] = [];
+
+  private _db: AtlasDatabase | null = null;
+  private _projectId: number = 1;
+
+  public static createOrShow(
+    extensionUri: vscode.Uri,
+    db: AtlasDatabase | null,
+    projectId: number,
+  ) {
+    const column = vscode.window.activeTextEditor
+      ? vscode.window.activeTextEditor.viewColumn
+      : undefined;
+
+    // If we already have a panel, show it.
+    if (GraphViewProvider.currentPanel) {
+      GraphViewProvider.currentPanel.setDatabase(db, projectId);
+      GraphViewProvider.currentPanel._panel.reveal(column);
+      return;
+    }
+
+    // Otherwise, create a new panel.
+    const panel = vscode.window.createWebviewPanel(
+      'codeatlasGraph',
+      'CodeAtlas: Architecture Graph',
+      column || vscode.ViewColumn.One,
+      {
+        enableScripts: true,
+        retainContextWhenHidden: true,
+        localResourceRoots: [
+          vscode.Uri.joinPath(extensionUri, '..', 'webview', 'dist'),
+          vscode.Uri.joinPath(extensionUri, 'dist'),
+        ],
+      },
+    );
+
+    GraphViewProvider.currentPanel = new GraphViewProvider(panel, extensionUri, db, projectId);
+  }
+
+  private constructor(
+    panel: vscode.WebviewPanel,
+    extensionUri: vscode.Uri,
+    db: AtlasDatabase | null,
+    projectId: number,
+  ) {
+    this._panel = panel;
+    this._extensionUri = extensionUri;
+    this._db = db;
+    this._projectId = projectId;
+
+    // Set the webview's initial html content
+    this._update();
+
+    // Listen for when the panel is disposed
+    this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
+
+    // Handle messages from the webview
+    this._panel.webview.onDidReceiveMessage(
+      (message) => {
+        switch (message.command) {
+          case 'ready':
+            this._sendGraphData();
+            return;
+          case 'openFile':
+            if (message.path) {
+              const wsFolders = vscode.workspace.workspaceFolders;
+              if (wsFolders && wsFolders.length > 0 && wsFolders[0]) {
+                const fileUri = vscode.Uri.joinPath(wsFolders[0].uri, message.path);
+                vscode.workspace.openTextDocument(fileUri).then(
+                  (doc) => {
+                    vscode.window.showTextDocument(doc, { preview: true });
+                  },
+                  (err) => {
+                    vscode.window.showErrorMessage(
+                      `Could not open ${message.path}: ${err.message}`,
+                    );
+                  },
+                );
+              }
+            }
+            return;
+        }
+      },
+      null,
+      this._disposables,
+    );
+  }
+
+  public setDatabase(db: AtlasDatabase | null, projectId: number) {
+    this._db = db;
+    this._projectId = projectId;
+    this._sendGraphData();
+  }
+
+  private _sendGraphData() {
+    if (!this._db) {
+      this._panel.webview.postMessage({
+        command: 'error',
+        text: 'Database not initialized. Please index the codebase first.',
+      });
+      return;
+    }
+
+    try {
+      const fileRepo = new FileRepository(this._db);
+      const depRepo = new DependencyRepository(this._db);
+
+      const files = fileRepo.getAll(this._projectId);
+      const deps = depRepo.getAll(this._projectId);
+
+      const nodeMap = new Map<string, any>();
+      const links: any[] = [];
+
+      for (const f of files) {
+        const parts = f.relativePath.split('/');
+        const name = parts[parts.length - 1] || f.relativePath;
+        const dir = parts.slice(0, -1).join('/');
+        const ext = name.split('.').pop()?.toLowerCase() || '';
+
+        let color = '#94a3b8'; // default starlight slate
+        if (f.language === 'typescript' || ext === 'ts' || ext === 'tsx')
+          color = '#38bdf8'; // Cyan
+        else if (f.language === 'javascript' || ext === 'js' || ext === 'jsx')
+          color = '#facc15'; // Gold
+        else if (f.language === 'php' || ext === 'php')
+          color = '#a78bfa'; // Purple/Violet
+        else if (f.language === 'python' || ext === 'py')
+          color = '#34d399'; // Emerald
+        else if (ext === 'css' || ext === 'scss' || ext === 'less')
+          color = '#f43f5e'; // Rose Pink
+        else if (ext === 'html' || ext === 'htm')
+          color = '#fb923c'; // Amber Orange
+        else if (ext === 'md' || ext === 'json' || ext === 'yaml' || ext === 'yml')
+          color = '#e2e8f0'; // Ice White
+
+        nodeMap.set(f.relativePath, {
+          id: f.relativePath,
+          name: name,
+          path: f.relativePath,
+          type: 'file',
+          language: f.language || ext || 'text',
+          size: f.size || 0,
+          val: Math.max(2, Math.min(8, Math.sqrt(f.size || 100) * 0.3)),
+          color,
+        });
+
+        // Generate folder nodes & hierarchical containment links
+        if (dir) {
+          let currentPath = '';
+          for (let i = 0; i < parts.length - 1; i++) {
+            const part = parts[i] || '';
+            const parentPath = currentPath;
+            currentPath = currentPath ? `${currentPath}/${part}` : part;
+            if (!nodeMap.has(currentPath)) {
+              nodeMap.set(currentPath, {
+                id: currentPath,
+                name: part,
+                path: currentPath,
+                type: 'dir',
+                language: 'directory',
+                size: 0,
+                val: 5,
+                color: '#c084fc',
+              });
+            }
+            if (
+              parentPath &&
+              !links.some((l) => l.source === parentPath && l.target === currentPath)
+            ) {
+              links.push({
+                source: parentPath,
+                target: currentPath,
+                type: 'contains',
+              });
+            }
+          }
+          if (!links.some((l) => l.source === dir && l.target === f.relativePath)) {
+            links.push({
+              source: dir,
+              target: f.relativePath,
+              type: 'contains',
+            });
+          }
+        }
+      }
+
+      // Add code import/reference dependencies
+      for (const d of deps) {
+        if (nodeMap.has(d.source) && nodeMap.has(d.target)) {
+          links.push({
+            source: d.source,
+            target: d.target,
+            type: d.kind || 'import',
+          });
+        }
+      }
+
+      const nodes = Array.from(nodeMap.values());
+
+      this._panel.webview.postMessage({
+        command: 'setGraphData',
+        data: { nodes, links },
+      });
+    } catch (err) {
+      console.error('Failed to get graph data:', err);
+    }
+  }
+
+  public dispose() {
+    GraphViewProvider.currentPanel = undefined;
+    this._panel.dispose();
+    while (this._disposables.length) {
+      const x = this._disposables.pop();
+      if (x) {
+        x.dispose();
+      }
+    }
+  }
+
+  private _update() {
+    const webview = this._panel.webview;
+
+    // We expect the webview React app to be built into apps/webview/dist
+    const webviewDistPath = vscode.Uri.joinPath(this._extensionUri, '..', 'webview', 'dist');
+    const indexHtmlPath = path.join(webviewDistPath.fsPath, 'index.html');
+
+    let html = '';
+    if (fs.existsSync(indexHtmlPath)) {
+      html = fs.readFileSync(indexHtmlPath, 'utf8');
+
+      // We need to replace relative paths with webview URIs
+      // <script type="module" crossorigin src="/assets/index-XXXX.js"></script>
+      // <link rel="stylesheet" crossorigin href="/assets/index-XXXX.css">
+
+      const assetUri = webview.asWebviewUri(webviewDistPath).toString();
+
+      // Update asset paths
+      html = html.replace(/(src|href)="\/assets\//g, `$1="${assetUri}/assets/`);
+    } else {
+      html = `<!DOCTYPE html>
+      <html lang="en">
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>CodeAtlas Graph</title>
+          <style>
+            body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f172a; color: white; }
+          </style>
+      </head>
+      <body>
+          <h2>Please build the webview app first.</h2>
+          <p>Run: <code>cd apps/webview && pnpm build</code></p>
+      </body>
+      </html>`;
+    }
+
+    this._panel.webview.html = html;
+  }
+}

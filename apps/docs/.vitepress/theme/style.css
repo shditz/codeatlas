@@ -1,0 +1,45 @@
+/* Customizing VitePress Default Theme for a premium feel */
+
+:root {
+  --vp-c-brand-1: #333333; /* Dark Gray */
+  --vp-c-brand-2: #000000; /* Black */
+  --vp-c-brand-3: #555555; /* Gray */
+
+  --vp-c-brand-soft: rgba(0, 0, 0, 0.05);
+}
+
+.dark {
+  --vp-c-brand-1: #e5e5e5; /* Light Gray */
+  --vp-c-brand-2: #ffffff; /* White */
+  --vp-c-brand-3: #a3a3a3; /* Medium Gray */
+  --vp-c-brand-soft: rgba(255, 255, 255, 0.1);
+
+  --vp-c-bg: #000000; /* True black */
+  --vp-c-bg-alt: #111111;
+  --vp-c-bg-elv: #222222;
+}
+
+/* Hero section customizations */
+.VPHero .name {
+  background: -webkit-linear-gradient(120deg, var(--vp-c-brand-1) 30%, var(--vp-c-brand-3));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.VPHero .image-bg {
+  background-image: linear-gradient(-45deg, var(--vp-c-brand-1) 50%, var(--vp-c-brand-3) 50%);
+  filter: blur(72px);
+  opacity: 0.2;
+}
+
+/* Card hover effects */
+.VPFeature:hover {
+  border-color: var(--vp-c-brand-2);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.dark .VPFeature:hover {
+  box-shadow: 0 10px 30px rgba(255, 255, 255, 0.05);
+}

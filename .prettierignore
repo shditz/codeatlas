@@ -1,0 +1,15 @@
+node_modules
+**/node_modules/**
+dist
+**/dist/**
+build
+**/build/**
+coverage
+**/coverage/**
+.atlas
+**/.atlas/**
+scratch
+**/scratch/**
+.vitepress
+**/.vitepress/**
+pnpm-lock.yaml

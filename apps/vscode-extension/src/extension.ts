@@ -23,6 +23,7 @@ import {
 import { RetrievalEngine } from '@codeatlas/retrieval';
 import type { ExportTarget, ProjectMeta, SymbolInfo } from '@codeatlas/core';
 import { CodeAtlasOverviewProvider, CodeAtlasRulesProvider } from './providers/tree-provider.js';
+import { GraphViewProvider } from './providers/graph-view-provider.js';
 
 let db: AtlasDatabase | null = null;
 let watcher: RepositoryWatcher | null = null;
@@ -398,6 +399,13 @@ export function activate(context: vscode.ExtensionContext): void {
         watcher.start();
         vscode.window.showInformationMessage('CodeAtlas: Real-time watcher started.');
       }
+    }),
+  );
+
+  // Command 6: Open Graph View
+  context.subscriptions.push(
+    vscode.commands.registerCommand('codeatlas.openGraphView', () => {
+      GraphViewProvider.createOrShow(context.extensionUri, db, projectId);
     }),
   );
 }

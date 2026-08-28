@@ -4,284 +4,190 @@
 
 # CodeAtlas
 
-> **Give AI a map of your codebase.**  
-> Local-first context intelligence and architecture platform for AI coding agents.
+> Local-first codebase indexer, architecture graph visualizer, and context engine for AI coding assistants.
 
 [![CI](https://github.com/shditz/codeatlas/actions/workflows/ci.yml/badge.svg)](https://github.com/shditz/codeatlas/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D22.0.0-green?logo=node.js)](https://nodejs.org/)
 [![Tests](https://img.shields.io/badge/Tests-73%2F73%20Passed-success?logo=vitest)](https://vitest.dev)
-[![Local First](https://img.shields.io/badge/Privacy-100%25%20Local-success)](https://github.com/shditz/codeatlas)
+[![Documentation](https://img.shields.io/badge/Docs-VitePress-black)](https://github.com/shditz/codeatlas)
 
 ---
 
-## 💡 What is CodeAtlas?
+## Overview
 
-**CodeAtlas** is a high-performance, privacy-first context engine and code intelligence platform. It parses software repositories locally into an SQLite knowledge graph, retrieves task-relevant files and dependencies with multi-signal semantic search, and packs progressive context tailored for LLMs and AI coding agents.
+**CodeAtlas** is an offline toolchain that analyzes software repositories and provides structured architectural context to AI coding assistants (such as Cursor, Claude, Windsurf, Devin, and Roo Code).
 
-CodeAtlas is **not** an AI chat assistant—it is the **context layer** that makes all AI coding tools (Cursor, Claude, Antigravity, Copilot, DeepSeek, Trae, Qwen, Kimi, and Grok) substantially faster, more accurate, and token-efficient.
+Instead of feeding raw, unorganized file dumps into language models, CodeAtlas parses your project's syntax tree (AST), extracts symbols and import relationships, stores them in a local SQLite database, and generates targeted context packs within strict token budgets.
+
+It also includes a built-in 2D/3D dependency graph visualizer and a Model Context Protocol (MCP) server.
 
 ---
 
-## 🚀 How It Works
+## Architecture & Data Flow
 
 ```text
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────────┐     ┌────────────────┐
-│   Source Code   │ ──> │ Tree-Sitter AST  │ ──> │ SQLite Knowledge DB │ ──> │ FTS5 + Graph   │
-│   (Local-First) │     │ & Symbol Parsing │     │ (.atlas/atlas.db)   │     │ Multi-Signal   │
-└─────────────────┘     └──────────────────┘     └─────────────────────┘     └────────────────┘
-                                                                                      │
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────────┐              │
-│    AI Coding    │ <── │ Export Formatter │ <── │ Token Optimization  │ <────────────┘
-│      Agent      │     │ (Multi-Target)   │     │ (Progressive Mode)  │
-└─────────────────┘     └──────────────────┘     └─────────────────────┘
+Source Files ──> [ Tree-sitter Parser ] ──> [ SQLite Storage (.atlas/codeatlas.db) ]
+                                                        │
+         ┌──────────────────────────────────────────────┼──────────────────────────────┐
+         ▼                                              ▼                              ▼
+[ Context Compressor ]                       [ AI Rules Exporter ]            [ Graph Visualizer ]
+Token-budgeted prompt packs                  .cursorrules, CLAUDE.md, etc.    2D / 3D Webview in VS Code
 ```
 
-1. **Scan & Parse**: Discovers project structures and parses AST symbols, imports, and exports using Tree-sitter.
-2. **Index**: Stores files, symbols, dependency edges, and full-text search indices in local SQLite (`.atlas/atlas.db`).
-3. **Retrieve**: Combines SQLite FTS5 lexical matching, path heuristics, and dependency graph expansion with architectural centrality scoring.
-4. **Progressive Compression**: Automatically allocates token budgets, delivering full source for primary targets and semantic skeletons/signatures for deep dependencies.
-5. **Multi-Agent Export**: Emits zero-conflict, formatted context packs for any target AI coding assistant.
+1. **AST Parsing**: Discovers source files and extracts functions, classes, interfaces, imports, and exports using Tree-sitter.
+2. **Local Caching**: Stores parsed metadata, symbol line ranges, content hashes, and dependency edges in an embedded SQLite database (`.atlas/codeatlas.db`).
+3. **Context Packing**: Assembles relevant file subsets and structural signature digests within user-defined token budgets using BM25 relevance scoring.
+4. **Rules Generation**: Automatically creates and synchronizes prompt rule files for various AI tools.
+5. **Graph Visualization**: Renders an interactive force-directed graph of file and folder dependencies directly in VS Code.
+6. **MCP Server**: Exposes repository structure and symbol lookup tools via the standard Model Context Protocol.
 
 ---
 
-## ✨ Key Features
+## Features
 
-### 🔍 Deep Code Intelligence
+### 1. Multi-Language AST Parsing
 
-- AST parsing for **TypeScript, JavaScript, Python, Go, and Rust**.
-- Universal full-text indexing supporting **all programming languages and file formats** (PHP, CSS, HTML, Vue, Svelte, Ruby, C++, Markdown, etc.).
-- Symbol extraction (classes, methods, functions, interfaces, types, enums, exports).
-- Comprehensive dependency graph resolution.
+- Parses Abstract Syntax Trees using Tree-sitter grammars.
+- Supported languages: **TypeScript, JavaScript, Python, PHP, Go, Rust, HTML, and CSS**.
+- Extracts top-level declarations, method signatures, parameter types, and normalized module imports.
+- Incremental indexing based on SHA-256 file hashes to skip unchanged files.
 
-### 🧠 Smart Multi-Signal Retrieval
+### 2. Universal AI Rules Exporter
 
-- **SQLite FTS5 Full-Text Search**: Fast BM25-ranked keyword retrieval across source files.
-- **Architectural Centrality Scoring**: Prioritizes core modules with high inbound dependency counts.
-- **Graph Expansion**: Recursively retrieves 1-hop and 2-hop dependencies and dependents.
-- **Symbol Matching**: Directly scores files matching query symbol signatures.
+Generates customized rule and context configuration files derived from actual project structure, linting rules, and dependency constraints:
 
-### 🎛️ Progressive Context & Token Budgeting
+| Target     | Output File       | Compatible Assistant              |
+| ---------- | ----------------- | --------------------------------- |
+| `cursor`   | `.cursorrules`    | Cursor AI Editor                  |
+| `windsurf` | `.windsurfrules`  | Codeium Windsurf                  |
+| `claude`   | `CLAUDE.md`       | Anthropic Claude Desktop & CLI    |
+| `devin`    | `DEVIN.md`        | Cognition Devin                   |
+| `roocode`  | `.roorules`       | Roo Code (VS Code Extension)      |
+| `aider`    | `.aider.atlas.md` | Aider Pair Programmer             |
+| `agents`   | `AGENTS.md`       | OpenHands, Antigravity, SWE-agent |
 
-- Configurable token budgets (e.g. 4k, 8k, 16k, 32k tokens).
-- Dynamic mode downgrade: `full` ➔ `signature` (skeleton) ➔ `digest` (summary) to fit maximum architectural depth within budget.
-- Automatic rule discovery (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, Cursor rules, Copilot instructions).
+### 3. Interactive Architecture Graph (VS Code & Browser)
 
-### 🌐 Graph Query Engine & Natural Language (NL2Cypher)
+- 2D and 3D force-directed graph view of workspace directories, files, and import links.
+- Real-time search filter for locating files and symbols.
+- Spotlight mode: highlights connected dependency paths on hover/click while dimming unrelated nodes.
+- Inspector drawer displaying file size, language, and a direct "Open in Editor" shortcut.
 
-- Query your codebase like a graph database directly inside VS Code, CLI, or MCP:
-  ```cypher
-  MATCH (f:File)-[r:IMPORTS]->(b:File) RETURN f.name, b.name
-  MATCH (s:Symbol {kind: 'function'}) RETURN s.name, s.file
-  ```
-- **Natural Language Translation**: Ask questions in plain English or Indonesian, and CodeAtlas auto-translates them to Cypher queries:
-  ```bash
-  atlas query "semua file typescript"
-  atlas query "who calls handleLogin"
-  atlas query "which files import parser"
-  ```
+### 4. Context Compression & Token Budgeting
 
-### 🔬 Deep Architecture Analytics (`atlas analyze`)
+- Replaces internal function/method implementations with interface signatures to fit large codebases into limited prompt windows.
+- BM25 lexical ranking combined with dependency graph distance to prioritize relevant files for specific coding tasks.
 
-- **Circular Dependency Detection**: Identifies single and multi-hop import cycles before they break production.
-- **Dead Code Detection**: Discovers orphaned source files and unreferenced symbols with 0 incoming dependencies.
-- **Hotspots & Coupling Metrics**: Computes Fan-in, Fan-out, Instability ($I$), and detects God Objects.
+### 5. Model Context Protocol (MCP) Server
 
-### 🔒 Local-First Privacy Guarantee
+- Standard JSON-RPC server implementing MCP tools: `get_repo_map`, `find_symbol`, `get_dependencies`, and `get_context_pack`.
+- Compatible with Claude Desktop, Cursor, and any MCP client.
 
-- **100% Offline**: All parsing, indexing, and querying run entirely on your local machine.
-- **Zero Telemetry**: No tracking, no data collection, no code leaves your device.
-- **Ignore Rules**: Honors `.gitignore` and custom `.atlasignore` patterns.
+### 6. Local-First & Privacy Guaranteed
+
+- 100% offline execution. No source code or telemetry is transmitted over the network.
+- Respects `.gitignore` and custom `.atlasignore` rules.
 
 ---
 
-## 📦 Supported Export Targets
+## Installation
 
-CodeAtlas exports structured context packs for all major AI coding platforms:
-
-| Target        | Description                    | Output Format / Destination        |
-| :------------ | :----------------------------- | :--------------------------------- |
-| `cursor`      | Cursor IDE rules & context     | `.cursorrules` / Clipboard         |
-| `claude`      | Anthropic Claude Projects      | `CLAUDE.atlas.md` / Clipboard      |
-| `antigravity` | Antigravity AI IDE / Agent     | Context Pack injection / Clipboard |
-| `copilot`     | GitHub Copilot instructions    | `.github/copilot-instructions.md`  |
-| `gemini`      | Google Gemini CLI / Studio     | `GEMINI.atlas.md` / Clipboard      |
-| `deepseek`    | DeepSeek AI coder              | `DEEPSEEK.atlas.md` / Clipboard    |
-| `trae`        | Trae IDE instructions          | `TRAE.atlas.md` / Clipboard        |
-| `qwen`        | Qwen / Tongyi Lingma           | `QWEN.atlas.md` / Clipboard        |
-| `kimi`        | Kimi / Moonshot AI             | `KIMI.atlas.md` / Clipboard        |
-| `grok`        | xAI Grok coding context        | `GROK.atlas.md` / Clipboard        |
-| `markdown`    | Generic Markdown documentation | Standard Markdown                  |
-
----
-
-## 💻 User Guide & Features
-
-### 1. 🖥️ VS Code Extension
-
-The official CodeAtlas VS Code extension provides a visual interface and integrated commands for your editor.
-
-#### Available Commands (Command Palette: `Ctrl+Shift+P` / `Cmd+Shift+P`)
-
-| Command                                      | Description                                                               | How to Use                                                             |
-| :------------------------------------------- | :------------------------------------------------------------------------ | :--------------------------------------------------------------------- |
-| **`CodeAtlas: Index / Refresh Codebase`**    | Scans the workspace, parses AST symbols, and generates `.atlas/atlas.db`. | Run once on a new workspace or after major codebase changes.           |
-| **`CodeAtlas: Export Context for AI Agent`** | Builds a smart, token-budgeted context pack matching your task.           | Run command, type task description, and select target AI agent format. |
-| **`CodeAtlas: Run Cypher Graph Query`**      | Executes relational graph queries across files and symbols.               | Choose from smart presets or type custom Cypher/NL query.              |
-| **`CodeAtlas: Generate Git PR Context`**     | Analyzes git diff against a base branch to produce PR review context.     | Select base branch (e.g. `main`), and CodeAtlas maps affected files.   |
-| **`CodeAtlas: Toggle Real-time Watcher`**    | Automatically updates the index on file save (`Ctrl+S`).                  | Run to toggle the background file watcher on/off.                      |
-
----
-
-### 2. ⌨️ Command-Line Interface (CLI)
-
-The `@codeatlas/cli` provides full headless operation for terminal workflows, automated scripts, and CI/CD pipelines.
+### CLI Installation
 
 ```bash
-# Global installation
-pnpm install -g @codeatlas/cli
+# Global installation via npm
+npm install -g @codeatlas/cli
 
-# 1. Initialize CodeAtlas in current project
-atlas init
+# Or via pnpm
+pnpm add -g @codeatlas/cli
+```
 
-# 2. Build or refresh local index
+### VS Code Extension
+
+Download the `.vsix` file from the [Releases](https://github.com/shditz/codeatlas/releases) page and install it via `Extensions -> Install from VSIX...`.
+
+---
+
+## CLI Usage
+
+```bash
+# Index current repository into .atlas/codeatlas.db
 atlas index
 
-# 3. Deep architectural analysis (dead code, cycles, hotspots)
-atlas analyze
+# Force re-indexing of all files
+atlas index --force
 
-# 4. Natural language & Cypher graph queries
-atlas query "who calls executeQuery"
-atlas query "MATCH (f:File {language: 'typescript'}) RETURN f.name"
+# Export AI rule files for all supported platforms
+atlas rules --all
 
-# 5. Generate context pack for a specific coding task
-atlas context "implement OAuth2 refresh flow" --budget 8000
+# Export rules for a specific platform
+atlas rules --target cursor
+atlas rules --target claude
 
-# 6. Realtime incremental watcher
-atlas watch
-```
+# Launch standalone graph visualizer
+atlas graph --port 4200
 
-#### CLI Command Reference
-
-| Command                | Options                                           | Description                                                       |
-| :--------------------- | :------------------------------------------------ | :---------------------------------------------------------------- |
-| `atlas init`           | `--force`                                         | Initializes `.atlas/config.toml` in the repository root.          |
-| `atlas scan`           | `--json`                                          | Detects languages, package managers, and directory structures.    |
-| `atlas index`          | `--watch`                                         | Parses files and builds `.atlas/atlas.db` SQLite knowledge graph. |
-| `atlas analyze`        | `--cycles`, `--dead-code`, `--hotspots`, `--json` | Runs deep architectural analysis (cycles, dead code, coupling).   |
-| `atlas query <query>`  | `-n, --nl`, `--json`                              | Executes Cypher queries or plain natural language graph search.   |
-| `atlas search <query>` | `--limit <n>`                                     | Performs full-text BM25 search across source code.                |
-| `atlas context <task>` | `--target <t>`, `--budget <n>`                    | Builds an optimized context pack for the specified task.          |
-| `atlas export`         | `--target <t>`, `--output <f>`                    | Writes agent instructions to target configuration files.          |
-| `atlas watch`          | —                                                 | Starts background watcher for incremental real-time indexing.     |
-| `atlas rules list`     | `--all`                                           | Displays discovered AI instruction rules.                         |
-| `atlas rules validate` | —                                                 | Checks for conflicting rules (e.g. tabs vs spaces).               |
-
----
-
-### 3. 🤖 GitHub Actions CI/CD Integration
-
-Automate codebase context generation and PR reviews in your CI/CD pipelines with `@codeatlas/github-action`:
-
-```yaml
-name: CodeAtlas PR Context
-on:
-  pull_request:
-    types: [opened, synchronize]
-
-jobs:
-  context:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: codeatlas/codeatlas/packages/github-action@main
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          base-branch: 'main'
-          target-agent: 'cursor'
-          token-budget: '8000'
-          post-comment: 'true'
+# Search symbols in the database
+atlas query "AuthService"
 ```
 
 ---
 
-### 4. 🧩 IDE Plugins: Neovim & JetBrains
+## Configuration (`codeatlas.config.json`)
 
-- **Neovim Plugin** (`apps/neovim-plugin`): Complete Lua integration with `:CodeAtlasIndex`, `:CodeAtlasAnalyze`, `:CodeAtlasQuery`, and `:CodeAtlasContext` in floating windows.
-- **JetBrains / IntelliJ Plugin** (`apps/jetbrains-plugin`): Native action group and tools menu integration for WebStorm, IntelliJ IDEA, PyCharm, and GoLand.
-
----
-
-### 5. 🔌 Model Context Protocol (MCP) Server
-
-CodeAtlas implements the **Model Context Protocol (MCP)**, enabling LLMs in Claude Desktop, Cursor, or Antigravity to autonomously query your codebase.
-
-#### Available MCP Tools
-
-- **`atlas_search`**: Performs BM25 full-text keyword retrieval across all indexed files.
-- **`atlas_get_context`**: Generates a task-relevant context pack within a token budget.
-- **`atlas_graph_query`**: Executes Cypher or natural language queries against the dependency graph.
-- **`atlas_analyze`**: Analyzes architectural health, circular dependencies, and dead code.
-- **`atlas_pr_diff`**: Analyzes git branch diffs with architectural impact mapping.
-- **`atlas_compress`**: Compresses source code into AST skeletons and signatures.
+```json
+{
+  "include": ["src/**/*", "packages/**/*", "apps/**/*"],
+  "exclude": ["**/node_modules/**", "**/dist/**", "**/.git/**", "**/vendor/**"],
+  "maxFileSizeKB": 2048,
+  "rules": {
+    "autoExportOnIndex": true,
+    "defaultTargets": ["cursor", "claude", "windsurf", "devin"]
+  }
+}
+```
 
 ---
 
-## 🏗️ Monorepo Architecture
+## Monorepo Structure
 
-```text
-codeatlas/
-├── apps/
-│   ├── cli/                 # Command-line interface (Commander.js)
-│   ├── mcp-server/          # Standalone MCP Server entrypoint
-│   ├── vscode-extension/    # Official VS Code extension
-│   ├── neovim-plugin/       # Neovim Lua plugin
-│   └── jetbrains-plugin/    # JetBrains / IntelliJ IDEA plugin
+```
+CodeAtlas/
 ├── packages/
-│   ├── core/                # Domain models, language definitions, and config
-│   ├── storage/             # SQLite storage engine, migrations, and multi-repo repos
-│   ├── parser/              # Tree-sitter AST parser
-│   ├── indexer/             # Scanner, incremental indexing, and real-time watcher
-│   ├── graph/               # Dependency graph & Cypher query engine
-│   ├── analytics/           # Deep graph analytics (cycles, dead code, coupling)
-│   ├── nl2cypher/           # Natural language to Cypher query translator
-│   ├── retrieval/           # Multi-source ranking and search engine
-│   ├── ranking/             # Multi-signal relevance scoring
-│   ├── compression/         # AST skeleton extraction & progressive compressor
-│   ├── context/             # Context pack builder and token budget allocator
-│   ├── rules/               # AI instruction rule discovery & conflict engine
-│   ├── exporters/           # Multi-agent prompt and file exporters
-│   ├── git/                 # Git differential and PR context analysis
-│   ├── github-action/       # GitHub Action for automated PR context
-│   ├── mcp/                 # MCP protocol server implementation
-│   ├── llm/                 # Multi-provider LLM connector (Local & API)
-│   ├── token-counter/       # Accurate tokenizer & token estimator
-│   └── shared/              # Logger, error definitions, and utilities
-└── docs/                    # Architecture diagrams and specifications
+│   ├── core/           Domain models and shared TypeScript interfaces
+│   ├── parser/         Tree-sitter AST extraction pipeline
+│   ├── storage/        SQLite repository layer and schema migrations
+│   ├── graph/          In-memory dependency graph and algorithms
+│   ├── rules/          AI rule generator and template engine
+│   ├── compression/    Context token budgeting and symbol summarizer
+│   ├── retrieval/      BM25 search and ranking engine
+│   └── mcp/            Model Context Protocol server
+└── apps/
+    ├── cli/            Command-line application (`atlas`)
+    ├── vscode-extension/ Official VS Code extension
+    ├── webview/        React 2D/3D graph web application
+    └── docs/           VitePress documentation site
 ```
 
 ---
 
-## 🧪 Testing & Validation
-
-CodeAtlas maintains a strict test suite powered by [Vitest](https://vitest.dev):
+## Development
 
 ```bash
-# Run full monorepo test suite
-pnpm test
-
-# Run type checks across all workspaces
-pnpm typecheck
+# Install dependencies
+pnpm install
 
 # Build all packages
 pnpm build
+
+# Run unit tests
+pnpm test
 ```
 
 ---
 
-## 📄 License
+## License
 
-CodeAtlas is licensed under the [MIT License](LICENSE).
+MIT License. Copyright (c) 2026-present CodeAtlas Contributors.
