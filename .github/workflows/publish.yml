@@ -57,9 +57,25 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish VS Code Extension
+      - name: Package VS Code Extension (.vsix)
+        run: |
+          cd apps/vscode-extension
+          npx --yes @vscode/vsce package --no-dependencies -o ../../codeatlas-vscode.vsix
+
+      - name: Upload VS Code Extension (.vsix) to GitHub Releases
+        run: |
+          # Upload vsix to the primary/initial release or newly created tags
+          gh release upload v0.1.0 codeatlas-vscode.vsix --clobber || true
+          for tag in $(git tag --points-at HEAD); do
+            gh release upload "$tag" codeatlas-vscode.vsix --clobber || true
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to VS Code Marketplace
         if: steps.changesets.outputs.published == 'true' && env.VSCE_PAT != ''
         run: |
-          pnpm --filter @codeatlas-ai/vscode-extension exec vsce publish --pat ${{ secrets.VSCE_PAT }}
+          cd apps/vscode-extension
+          npx --yes @vscode/vsce publish --pat ${{ secrets.VSCE_PAT }}
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
