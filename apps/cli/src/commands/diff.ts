@@ -139,13 +139,15 @@ export function registerDiffCommand(program: Command): void {
         );
 
         console.log(table.toString());
-        
+
         let severityColor = chalk.green;
         if (blastRadius.severity === 'CRITICAL') severityColor = chalk.bgRed.white.bold;
         else if (blastRadius.severity === 'HIGH') severityColor = chalk.red.bold;
         else if (blastRadius.severity === 'MEDIUM') severityColor = chalk.yellow.bold;
-        
-        console.log(`\n  Predicted Impact Severity: ${severityColor(` ${blastRadius.severity} `)}\n`);
+
+        console.log(
+          `\n  Predicted Impact Severity: ${severityColor(` ${blastRadius.severity} `)}\n`,
+        );
 
         const affectedFiles = new Set<string>([
           ...changedFiles,

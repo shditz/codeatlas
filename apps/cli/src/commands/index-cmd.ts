@@ -30,7 +30,9 @@ export function registerIndexCommand(program: Command): void {
       });
 
       let result;
-      const spinner = !options.json ? (await import('ora')).default('Initializing...').start() : null;
+      const spinner = !options.json
+        ? (await import('ora')).default('Initializing...').start()
+        : null;
 
       try {
         if (options.stagedOnly) {
@@ -38,7 +40,10 @@ export function registerIndexCommand(program: Command): void {
           const stagedFiles = git.getStagedChangedFiles();
           if (stagedFiles.length === 0) {
             if (spinner) spinner.info('No staged files found to index.');
-            else console.log(JSON.stringify({ filesIndexed: 0, filesSkipped: 0, duration: 0 }, null, 2));
+            else
+              console.log(
+                JSON.stringify({ filesIndexed: 0, filesSkipped: 0, duration: 0 }, null, 2),
+              );
             db.close();
             return;
           }

@@ -1,5 +1,15 @@
 # @codeatlas-ai/core
 
+## 0.3.0
+
+### Minor Changes
+
+- feat: deep enhancements for existing commands (index, scan, diff, search, doctor) and MCP capabilities.
+
+### Patch Changes
+
+- @codeatlas-ai/shared@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes

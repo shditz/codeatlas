@@ -1,5 +1,33 @@
 # @codeatlas-ai/cli
 
+## 0.3.0
+
+### Minor Changes
+
+- feat: deep enhancements for existing commands (index, scan, diff, search, doctor) and MCP capabilities.
+
+### Patch Changes
+
+- Updated dependencies
+  - @codeatlas-ai/core@0.3.0
+  - @codeatlas-ai/graph@0.3.0
+  - @codeatlas-ai/parser@0.3.0
+  - @codeatlas-ai/storage@0.3.0
+  - @codeatlas-ai/mcp@0.3.0
+  - @codeatlas-ai/analytics@0.3.0
+  - @codeatlas-ai/compression@0.3.0
+  - @codeatlas-ai/context@0.3.0
+  - @codeatlas-ai/exporters@0.3.0
+  - @codeatlas-ai/git@0.3.0
+  - @codeatlas-ai/indexer@0.3.0
+  - @codeatlas-ai/llm@0.3.0
+  - @codeatlas-ai/nl2cypher@0.3.0
+  - @codeatlas-ai/ranking@0.3.0
+  - @codeatlas-ai/retrieval@0.3.0
+  - @codeatlas-ai/rules@0.3.0
+  - @codeatlas-ai/token-counter@0.3.0
+  - @codeatlas-ai/shared@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes

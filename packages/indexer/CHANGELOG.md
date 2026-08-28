@@ -1,5 +1,16 @@
 # @codeatlas-ai/indexer
 
+## 0.3.0
+
+### Patch Changes
+
+- Updated dependencies
+  - @codeatlas-ai/core@0.3.0
+  - @codeatlas-ai/parser@0.3.0
+  - @codeatlas-ai/storage@0.3.0
+  - @codeatlas-ai/git@0.3.0
+  - @codeatlas-ai/shared@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes

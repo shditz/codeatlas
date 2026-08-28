@@ -20,7 +20,9 @@ export function registerScanCommand(program: Command): void {
         includeTests: config.index.include_tests,
       });
 
-      const spinner = !options.json ? (await import('ora')).default('Scanning repository...').start() : null;
+      const spinner = !options.json
+        ? (await import('ora')).default('Scanning repository...').start()
+        : null;
       let result;
       try {
         result = await scanner.scan();
