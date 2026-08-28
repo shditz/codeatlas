@@ -1,7 +1,7 @@
 import type { Command } from 'commander';
 import chalk from 'chalk';
 import { ensureInitialized, openDatabase, getOrCreateProject } from '../utils.js';
-import { FileRepository, DependencyRepository } from '@codeatlas-ai/storage';
+import { FileRepository, DependencyRepository, SearchRepository } from '@codeatlas-ai/storage';
 import { RuleEngine } from '@codeatlas-ai/rules';
 
 export function registerDoctorCommand(program: Command): void {
@@ -9,12 +9,52 @@ export function registerDoctorCommand(program: Command): void {
     .command('doctor')
     .description('Run health diagnostics on the project')
     .option('--json', 'Output as JSON')
-    .action(async (options: { json?: boolean }) => {
+    .option('--heal', 'Auto-heal: VACUUM database, rebuild FTS indexes, and prune orphaned data')
+    .action(async (options: { json?: boolean; heal?: boolean }) => {
       const cwd = process.cwd();
       ensureInitialized(cwd);
 
       const db = openDatabase(cwd);
       const projectId = getOrCreateProject(db, cwd);
+
+      // Auto-heal mode
+      if (options.heal) {
+        console.log(chalk.bold.cyan('\n🩺 CodeAtlas Auto-Heal\n'));
+
+        console.log(chalk.dim('  ▸ Rebuilding FTS indexes...'));
+        try {
+          const searchRepo = new SearchRepository(db);
+          searchRepo.rebuildIndex();
+          console.log(chalk.green('  ✓ FTS indexes rebuilt successfully'));
+        } catch (err) {
+          console.log(chalk.yellow(`  ! FTS rebuild skipped: ${(err as Error).message}`));
+        }
+
+        console.log(chalk.dim('  ▸ Running VACUUM to reclaim space...'));
+        try {
+          db.exec('VACUUM;');
+          console.log(chalk.green('  ✓ Database compacted'));
+        } catch (err) {
+          console.log(chalk.yellow(`  ! VACUUM skipped: ${(err as Error).message}`));
+        }
+
+        console.log(chalk.dim('  ▸ Running integrity check...'));
+        try {
+          const result = db.get<{ integrity_check: string }>('PRAGMA integrity_check;');
+          const status = (result as Record<string, unknown>)?.['integrity_check'] ?? 'unknown';
+          if (status === 'ok') {
+            console.log(chalk.green('  ✓ Database integrity: OK'));
+          } else {
+            console.log(chalk.red(`  ✗ Database integrity issue: ${status}`));
+          }
+        } catch (err) {
+          console.log(chalk.yellow(`  ! Integrity check error: ${(err as Error).message}`));
+        }
+
+        console.log(chalk.green('\n✔ Auto-heal complete.\n'));
+        db.close();
+        return;
+      }
 
       const fileRepo = new FileRepository(db);
       const depRepo = new DependencyRepository(db);
@@ -100,6 +140,25 @@ export function registerDoctorCommand(program: Command): void {
         });
       }
 
+      // Database integrity check
+      try {
+        const intResult = db.get<{ integrity_check: string }>('PRAGMA integrity_check;');
+        const intStatus = (intResult as Record<string, unknown>)?.['integrity_check'] ?? 'unknown';
+        checks.push({
+          name: 'DB Integrity',
+          status: intStatus === 'ok' ? 'pass' : 'fail',
+          score: intStatus === 'ok' ? 100 : 0,
+          message: intStatus === 'ok' ? 'SQLite integrity OK' : `Issue: ${intStatus}`,
+        });
+      } catch {
+        checks.push({
+          name: 'DB Integrity',
+          status: 'warn',
+          score: 50,
+          message: 'Could not run integrity check',
+        });
+      }
+
       const parseableFiles = files.filter(
         (f) => f.language === 'typescript' || f.language === 'javascript',
       );
@@ -147,6 +206,11 @@ export function registerDoctorCommand(program: Command): void {
         console.log(
           chalk.dim(`  ${issues.length} rule issues detected. Run: atlas rules validate`),
         );
+      }
+
+      if (overallScore < 90) {
+        console.log('');
+        console.log(chalk.dim('  💡 Tip: Run "atlas doctor --heal" to auto-repair common issues.'));
       }
 
       console.log('');

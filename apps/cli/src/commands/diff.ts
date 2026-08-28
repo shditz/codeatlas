@@ -2,6 +2,7 @@ import type { Command } from 'commander';
 import fs from 'node:fs';
 import path from 'node:path';
 import chalk from 'chalk';
+import Table from 'cli-table3';
 import { ensureInitialized, openDatabase, getOrCreateProject, loadConfig } from '../utils.js';
 import { FileRepository, DependencyRepository } from '@codeatlas-ai/storage';
 import { DependencyGraph } from '@codeatlas-ai/graph';
@@ -15,7 +16,7 @@ import type { RankedResult } from '@codeatlas-ai/ranking';
 export function registerDiffCommand(program: Command): void {
   program
     .command('diff')
-    .description('Generate targeted AI context pack based on current git diff or staged changes')
+    .description('Generate targeted AI context pack and semantic blast-radius for git changes')
     .option('--staged', 'Use staged git changes only')
     .option('--base <branch>', 'Base branch to compare against (e.g. main)')
     .option(
@@ -25,6 +26,7 @@ export function registerDiffCommand(program: Command): void {
     )
     .option('--budget <tokens>', 'Token budget')
     .option('--output <path>', 'Output file path')
+    .option('--json', 'Output blast radius and affected files as JSON')
     .action(
       async (options: {
         staged?: boolean;
@@ -32,6 +34,7 @@ export function registerDiffCommand(program: Command): void {
         target: string;
         budget?: string;
         output?: string;
+        json?: boolean;
       }) => {
         const cwd = process.cwd();
         ensureInitialized(cwd);
@@ -62,10 +65,6 @@ export function registerDiffCommand(program: Command): void {
           return;
         }
 
-        console.log(
-          chalk.bold(`Generating Context for Git Diff (${changedFiles.length} modified files)`),
-        );
-
         const config = loadConfig(cwd);
         const db = openDatabase(cwd);
         const projectId = getOrCreateProject(db, cwd);
@@ -79,13 +78,80 @@ export function registerDiffCommand(program: Command): void {
         const graph = new DependencyGraph();
         graph.addEdges(deps);
 
-        const affectedFiles = new Set<string>(changedFiles);
-        for (const file of changedFiles) {
-          const dependents = graph.getDependents(file);
-          for (const dep of dependents) {
-            affectedFiles.add(dep);
-          }
+        // Compute Blast Radius
+        const blastRadius = graph.getBlastRadius(changedFiles);
+
+        if (options.json) {
+          console.log(
+            JSON.stringify(
+              {
+                changedFiles,
+                directlyAffected: blastRadius.directlyAffected,
+                transitivelyAffected: blastRadius.transitivelyAffected,
+                totalAffected:
+                  changedFiles.length +
+                  blastRadius.directlyAffected.length +
+                  blastRadius.transitivelyAffected.length,
+              },
+              null,
+              2,
+            ),
+          );
+          db.close();
+          return;
         }
+
+        console.log(chalk.bold.cyan('\n💥 Semantic Blast Radius Analysis\n'));
+
+        const table = new Table({
+          head: [chalk.bold('Impact Level'), chalk.bold('Count'), chalk.bold('Files')],
+          colWidths: [22, 9, 50],
+          wordWrap: true,
+        });
+
+        table.push(
+          [
+            chalk.yellow('Direct Modifications'),
+            changedFiles.length.toString(),
+            changedFiles.slice(0, 5).join('\n') +
+              (changedFiles.length > 5 ? `\n... +${changedFiles.length - 5} more` : ''),
+          ],
+          [
+            chalk.red('Direct Dependents'),
+            blastRadius.directlyAffected.length.toString(),
+            blastRadius.directlyAffected.length > 0
+              ? blastRadius.directlyAffected.slice(0, 5).join('\n') +
+                (blastRadius.directlyAffected.length > 5
+                  ? `\n... +${blastRadius.directlyAffected.length - 5} more`
+                  : '')
+              : chalk.dim('(none)'),
+          ],
+          [
+            chalk.magenta('Transitive Dependents'),
+            blastRadius.transitivelyAffected.length.toString(),
+            blastRadius.transitivelyAffected.length > 0
+              ? blastRadius.transitivelyAffected.slice(0, 5).join('\n') +
+                (blastRadius.transitivelyAffected.length > 5
+                  ? `\n... +${blastRadius.transitivelyAffected.length - 5} more`
+                  : '')
+              : chalk.dim('(none)'),
+          ],
+        );
+
+        console.log(table.toString());
+        
+        let severityColor = chalk.green;
+        if (blastRadius.severity === 'CRITICAL') severityColor = chalk.bgRed.white.bold;
+        else if (blastRadius.severity === 'HIGH') severityColor = chalk.red.bold;
+        else if (blastRadius.severity === 'MEDIUM') severityColor = chalk.yellow.bold;
+        
+        console.log(`\n  Predicted Impact Severity: ${severityColor(` ${blastRadius.severity} `)}\n`);
+
+        const affectedFiles = new Set<string>([
+          ...changedFiles,
+          ...blastRadius.directlyAffected,
+          ...blastRadius.transitivelyAffected,
+        ]);
 
         const rankedResults: RankedResult[] = [];
         for (const filePath of affectedFiles) {
@@ -93,7 +159,8 @@ export function registerDiffCommand(program: Command): void {
           if (!fileInfo) continue;
 
           const isDirectChange = changedFiles.includes(filePath);
-          const score = isDirectChange ? 1.0 : 0.7;
+          const isDirectDep = blastRadius.directlyAffected.includes(filePath);
+          const score = isDirectChange ? 1.0 : isDirectDep ? 0.8 : 0.5;
 
           rankedResults.push({
             filePath,
@@ -103,7 +170,11 @@ export function registerDiffCommand(program: Command): void {
                 signal: 'dependency',
                 score,
                 weight: 1,
-                reason: isDirectChange ? 'Git modified file' : 'Direct dependent of modified file',
+                reason: isDirectChange
+                  ? 'Git modified file'
+                  : isDirectDep
+                    ? 'Direct dependent in blast radius'
+                    : 'Transitive dependent in blast radius',
               },
             ],
             candidate: {
@@ -113,7 +184,7 @@ export function registerDiffCommand(program: Command): void {
                 {
                   type: 'path' as const,
                   score,
-                  detail: isDirectChange ? 'Modified file' : 'Dependent file',
+                  detail: isDirectChange ? 'Modified file' : 'Blast radius dependent',
                 },
               ],
             },
@@ -149,7 +220,7 @@ export function registerDiffCommand(program: Command): void {
           repositoryRoot: cwd,
         });
 
-        const taskName = `Git Diff: ${changedFiles.slice(0, 3).join(', ')}${changedFiles.length > 3 ? ` +${changedFiles.length - 3} more` : ''}`;
+        const taskName = `Git Diff & Blast Radius: ${changedFiles.slice(0, 3).join(', ')}${changedFiles.length > 3 ? ` +${changedFiles.length - 3} more` : ''}`;
         const contextPack = contextEngine.build({
           task: taskName,
           project: projectMeta,
@@ -171,10 +242,10 @@ export function registerDiffCommand(program: Command): void {
           options.output ?? path.join(cwd, `diff-context.${exporter.defaultFilename()}`);
         fs.writeFileSync(outputPath, content, 'utf-8');
 
-        console.log(chalk.green(`  ✓ Exported diff context to ${path.relative(cwd, outputPath)}`));
+        console.log(chalk.green(`\n✔ Exported diff context to ${path.relative(cwd, outputPath)}`));
         console.log(
           chalk.dim(
-            `  ${contextPack.files.length} relevant files included (${contextPack.tokenUsage.toLocaleString()} tokens)`,
+            `  ${contextPack.files.length} relevant files included (${contextPack.tokenUsage.toLocaleString()} tokens)\n`,
           ),
         );
       },

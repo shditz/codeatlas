@@ -20,7 +20,15 @@ export function registerScanCommand(program: Command): void {
         includeTests: config.index.include_tests,
       });
 
-      const result = await scanner.scan();
+      const spinner = !options.json ? (await import('ora')).default('Scanning repository...').start() : null;
+      let result;
+      try {
+        result = await scanner.scan();
+        if (spinner) spinner.succeed('Scan complete');
+      } catch (err: any) {
+        if (spinner) spinner.fail(`Scan failed: ${err.message}`);
+        throw err;
+      }
 
       const db = openDatabase(cwd);
       const projectId = getOrCreateProject(db, cwd);

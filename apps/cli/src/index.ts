@@ -16,6 +16,9 @@ import { registerDiffCommand } from './commands/diff.js';
 import { registerPrCommand } from './commands/pr.js';
 import { registerQueryCommand } from './commands/query.js';
 import { registerAnalyzeCommand } from './commands/analyze.js';
+import { registerInstallHooksCommand } from './commands/install-hooks.js';
+import { registerAuditCommand } from './commands/audit-cmd.js';
+import { registerLinkCommand } from './commands/link-cmd.js';
 
 const program = new Command();
 
@@ -40,5 +43,8 @@ registerDiffCommand(program);
 registerPrCommand(program);
 registerQueryCommand(program);
 registerAnalyzeCommand(program);
+registerInstallHooksCommand(program);
+registerAuditCommand(program);
+registerLinkCommand(program);
 
 program.parse(process.argv);

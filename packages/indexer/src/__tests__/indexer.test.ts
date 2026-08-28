@@ -126,5 +126,11 @@ describe('Scanner & Indexer Integration', () => {
     const result2 = await indexer.index();
     expect(result2.filesSkipped).toBe(result.filesIndexed);
     expect(result2.filesIndexed).toBe(0);
+
+    // Test targeted indexFiles (e.g. staged changes)
+    const authPath = 'src/auth/auth.service.ts';
+    const result3 = await indexer.indexFiles([authPath]);
+    expect(result3.filesSkipped).toBe(1);
+    expect(result3.filesIndexed).toBe(0);
   });
 });

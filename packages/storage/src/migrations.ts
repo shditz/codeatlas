@@ -158,6 +158,34 @@ const MIGRATIONS: Migration[] = [
       );
     `,
   },
+  {
+    version: 2,
+    name: 'embeddings_table',
+    sql: `
+      CREATE TABLE IF NOT EXISTS embeddings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        project_id INTEGER NOT NULL,
+        file_path TEXT NOT NULL,
+        symbol_name TEXT,
+        embedding TEXT NOT NULL,
+        dimensions INTEGER NOT NULL,
+        model TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+        UNIQUE(project_id, file_path, symbol_name)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_embeddings_project ON embeddings(project_id);
+      CREATE INDEX IF NOT EXISTS idx_embeddings_file ON embeddings(file_path);
+    `,
+  },
+  {
+    version: 3,
+    name: 'add_cyclomatic_complexity',
+    sql: `
+      ALTER TABLE symbols ADD COLUMN cyclomatic_complexity INTEGER;
+    `,
+  },
 ];
 
 export function runMigrations(db: AtlasDatabase): void {

@@ -6,6 +6,13 @@ export {
   ImportRepository,
   DependencyRepository,
   ProjectRepository,
+  EmbeddingRepository,
   type ProjectRecord,
+  type EmbeddingRecord,
 } from './repositories.js';
 export { SearchRepository, type FtsResult } from './search.js';
+export {
+  FederationService,
+  type FederatedRepoInfo,
+  type CrossRepoSymbolResult,
+} from './federation.js';

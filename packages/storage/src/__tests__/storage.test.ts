@@ -7,6 +7,8 @@ import {
   DependencyRepository,
   SearchRepository,
   ProjectRepository,
+  EmbeddingRepository,
+  FederationService,
 } from '../index.js';
 
 describe('Storage & SQLite Repositories', () => {
@@ -19,12 +21,13 @@ describe('Storage & SQLite Repositories', () => {
 
   it('initializes schema and runs migrations idempotently', () => {
     const migrations = db.all<{ version: number }>('SELECT * FROM migrations');
-    expect(migrations).toHaveLength(1);
+    expect(migrations).toHaveLength(2);
     expect(migrations[0]?.version).toBe(1);
+    expect(migrations[1]?.version).toBe(2);
 
     runMigrations(db);
     const migrations2 = db.all<{ version: number }>('SELECT * FROM migrations');
-    expect(migrations2).toHaveLength(1);
+    expect(migrations2).toHaveLength(2);
   });
 
   it('performs CRUD operations on files', () => {
@@ -226,5 +229,42 @@ describe('Storage & SQLite Repositories', () => {
     expect(names).toContain('child-1');
     expect(names).toContain('child-2');
     expect(names).not.toContain('child-3');
+  });
+
+  it('manages vector embeddings with EmbeddingRepository', () => {
+    const embeddingRepo = new EmbeddingRepository(db);
+
+    const projRes = db.run('INSERT INTO projects (name, root) VALUES (?, ?)', 'test-vec', '/vec');
+    const projectId = Number(projRes.lastInsertRowid);
+
+    embeddingRepo.upsert({
+      projectId,
+      filePath: 'src/auth.service.ts',
+      symbolName: 'AuthService',
+      embedding: [0.1, 0.2, 0.3],
+      dimensions: 3,
+      model: 'local-heuristic',
+    });
+
+    expect(embeddingRepo.count(projectId)).toBe(1);
+
+    const all = embeddingRepo.getAll(projectId);
+    expect(all).toHaveLength(1);
+    expect(all[0]?.filePath).toBe('src/auth.service.ts');
+    expect(all[0]?.symbolName).toBe('AuthService');
+    expect(all[0]?.embedding).toEqual([0.1, 0.2, 0.3]);
+
+    embeddingRepo.deleteByFile(projectId, 'src/auth.service.ts');
+    expect(embeddingRepo.count(projectId)).toBe(0);
+  });
+
+  it('federates cross-repository databases with FederationService', () => {
+    const federation = new FederationService(db);
+    const attached = federation.listFederated();
+    expect(attached.length).toBeGreaterThanOrEqual(1);
+    expect(attached[0]?.name).toBe('main');
+
+    const results = federation.searchCrossRepoSymbols('Auth');
+    expect(Array.isArray(results)).toBe(true);
   });
 });

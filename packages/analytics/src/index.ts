@@ -7,3 +7,11 @@ export {
   type TechnicalDebtHotspot,
   type FileChurnInfo,
 } from './git-metrics.js';
+export {
+  TaintAnalyzer,
+  type TaintVulnerability,
+  type SecurityAuditReport,
+  type VulnerabilityType,
+  type VulnerabilitySeverity,
+  type TaintAnalyzerOptions,
+} from './taint-analyzer.js';

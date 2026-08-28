@@ -22,14 +22,23 @@ import {
   type GraphEdgeItem,
 } from '@codeatlas-ai/graph';
 import { RetrievalEngine } from '@codeatlas-ai/retrieval';
-import type { ExportTarget, ProjectMeta, SymbolInfo } from '@codeatlas-ai/core';
+import type {
+  ExportTarget,
+  ProjectMeta,
+  SymbolInfo,
+  Language,
+  Framework,
+  PackageManager,
+} from '@codeatlas-ai/core';
 import { CodeAtlasOverviewProvider, CodeAtlasRulesProvider } from './providers/tree-provider.js';
 import { GraphViewProvider } from './providers/graph-view-provider.js';
+import { CodeAtlasCodeLensProvider } from './providers/codelens-provider.js';
 
 let db: AtlasDatabase | null = null;
 let watcher: RepositoryWatcher | null = null;
 let overviewProvider: CodeAtlasOverviewProvider;
 let rulesProvider: CodeAtlasRulesProvider;
+let codelensProvider: CodeAtlasCodeLensProvider;
 let outputChannel: vscode.OutputChannel;
 
 function getOrCreateProject(database: AtlasDatabase, cwd: string): number {
@@ -70,9 +79,32 @@ export function activate(context: vscode.ExtensionContext): void {
 
   overviewProvider = new CodeAtlasOverviewProvider(db, workspaceRoot, projectId);
   rulesProvider = new CodeAtlasRulesProvider(workspaceRoot);
+  codelensProvider = new CodeAtlasCodeLensProvider(db, workspaceRoot, projectId);
 
   vscode.window.registerTreeDataProvider('codeatlas.overview', overviewProvider);
   vscode.window.registerTreeDataProvider('codeatlas.rules', rulesProvider);
+
+  context.subscriptions.push(
+    vscode.languages.registerCodeLensProvider(
+      [
+        { scheme: 'file', language: 'typescript' },
+        { scheme: 'file', language: 'typescriptreact' },
+        { scheme: 'file', language: 'javascript' },
+        { scheme: 'file', language: 'javascriptreact' },
+        { scheme: 'file', language: 'python' },
+        { scheme: 'file', language: 'go' },
+        { scheme: 'file', language: 'rust' },
+        { scheme: 'file', language: 'java' },
+        { scheme: 'file', language: 'c' },
+        { scheme: 'file', language: 'cpp' },
+        { scheme: 'file', language: 'csharp' },
+        { scheme: 'file', language: 'php' },
+        { scheme: 'file', language: 'ruby' },
+        { scheme: 'file', language: 'kotlin' },
+      ],
+      codelensProvider,
+    ),
+  );
 
   const rulesWatcher = vscode.workspace.createFileSystemWatcher(
     '**/{.cursorrules,.windsurfrules,.clinerules,.traerules,.lingmarules,.comaterules,.codegeexrules,.roorules,.augmentrules,AGENTS.md,CLAUDE.md,GEMINI.md,DEEPSEEK.md,QWEN.md,KIMI.md,GROK.md,DEVIN.md,OPENHANDS.md,REPLIT.md,AMAZONQ.md,ANTIGRAVITY.md}',
@@ -111,6 +143,7 @@ export function activate(context: vscode.ExtensionContext): void {
           const result = await indexer.index();
 
           overviewProvider.setDatabase(db, projectId);
+          codelensProvider.setDatabase(db, projectId);
           rulesProvider.refresh();
 
           if (result.errors && result.errors.length > 0) {
@@ -218,9 +251,9 @@ export function activate(context: vscode.ExtensionContext): void {
             const projectMeta: ProjectMeta = {
               name: projectRecord?.name || path.basename(workspaceRoot),
               root: workspaceRoot,
-              languages: (projectRecord?.languages as any) || ['typescript'],
-              frameworks: (projectRecord?.frameworks as any) || [],
-              packageManager: (projectRecord?.packageManager as any) || 'pnpm',
+              languages: (projectRecord?.languages as Language[]) || ['typescript'],
+              frameworks: (projectRecord?.frameworks as Framework[]) || [],
+              packageManager: (projectRecord?.packageManager as PackageManager) || 'pnpm',
               fileCount: files.length,
               symbolCount: symbols.length,
               dependencyCount: deps.length,
@@ -418,6 +451,10 @@ export function activate(context: vscode.ExtensionContext): void {
           root: workspaceRoot,
           db,
           projectId,
+          onReindex: () => {
+            overviewProvider.refresh();
+            codelensProvider.refresh();
+          },
         });
         watcher.start();
         vscode.window.showInformationMessage('CodeAtlas: Real-time watcher started.');

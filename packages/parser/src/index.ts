@@ -1,6 +1,7 @@
 export {
   parseFile,
   type ParseResult,
+  validateSourceCode,
   calculateAstCyclomaticComplexity,
   calculateTextCyclomaticComplexity,
 } from './tree-sitter-parser.js';

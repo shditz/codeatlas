@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import os from 'node:os';
-import { createLogger, hashContent } from '@codeatlas-ai/shared';
-import { canParse } from '@codeatlas-ai/core';
+import path from 'node:path';
+import { createLogger, hashContent, normalizePath, getExtension } from '@codeatlas-ai/shared';
+import { canParse, detectLanguage, isTestFile, isGeneratedFile } from '@codeatlas-ai/core';
 import { parseFile, type ParseResult } from '@codeatlas-ai/parser';
 import type { AtlasDatabase } from '@codeatlas-ai/storage';
 import {
@@ -240,6 +241,196 @@ export class Indexer {
       `Indexing complete: ${filesIndexed} indexed, ${filesSkipped} unchanged, ${filesDeleted} deleted, ${symbolsExtracted} symbols, ${dependenciesCreated} deps in ${duration}ms`,
     );
 
+    return {
+      filesIndexed,
+      filesSkipped,
+      filesUpdated,
+      filesDeleted,
+      symbolsExtracted,
+      importsExtracted,
+      dependenciesCreated,
+      errors,
+      duration,
+    };
+  }
+
+  async indexFiles(targetPaths: string[]): Promise<IndexResult> {
+    const startTime = Date.now();
+    const errors: string[] = [];
+    let filesIndexed = 0;
+    let filesSkipped = 0;
+    let filesUpdated = 0;
+    let filesDeleted = 0;
+    let symbolsExtracted = 0;
+    let importsExtracted = 0;
+    let dependenciesCreated = 0;
+
+    const root = this.options.root;
+    const normalizedPaths = targetPaths.map((p) => normalizePath(p).replace(/^\.?\//, ''));
+    const existingHashes = this.fileRepo.getAllHashes(this.options.projectId);
+    const allExistingFiles = this.fileRepo.getAll(this.options.projectId);
+    const existingPaths = new Set(allExistingFiles.map((f) => f.relativePath));
+
+    const pendingFiles: FileInfo[] = [];
+    const contentCache = new Map<string, string>();
+
+    for (const relPath of normalizedPaths) {
+      const fullPath = path.resolve(root, relPath);
+      if (!fs.existsSync(fullPath)) {
+        const existingFile = this.fileRepo.getByPath(this.options.projectId, relPath);
+        if (existingFile?.id) {
+          try {
+            this.searchRepo.removeFile(existingFile.id);
+          } catch {
+            // ignore
+          }
+          this.symbolRepo.deleteByFile(existingFile.id);
+          this.importRepo.deleteByFile(existingFile.id);
+        }
+        this.fileRepo.delete(this.options.projectId, relPath);
+        existingPaths.delete(relPath);
+        filesDeleted++;
+        continue;
+      }
+
+      try {
+        const stats = fs.statSync(fullPath);
+        if (!stats.isFile()) continue;
+
+        const content = fs.readFileSync(fullPath, 'utf-8');
+        const contentHash = hashContent(content);
+        const existingHash = existingHashes.get(relPath);
+
+        if (existingHash === contentHash) {
+          filesSkipped++;
+          continue;
+        }
+
+        const ext = getExtension(fullPath);
+        const language = detectLanguage(relPath);
+        const isTest = isTestFile(relPath);
+
+        const fileInfo: FileInfo = {
+          path: normalizePath(fullPath),
+          relativePath: relPath,
+          extension: ext,
+          language,
+          size: stats.size,
+          hash: contentHash,
+          module: relPath.split('/').slice(0, -1).join('/') || '.',
+          isTest,
+          isGenerated: isGeneratedFile(relPath),
+          symbolCount: 0,
+          importCount: 0,
+          exportCount: 0,
+          lastModified: Math.floor(stats.mtimeMs),
+        };
+
+        contentCache.set(fullPath, content);
+        pendingFiles.push(fileInfo);
+        existingPaths.add(relPath);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        errors.push(`Failed to read ${relPath}: ${msg}`);
+      }
+    }
+
+    for (let i = 0; i < pendingFiles.length; i += this.concurrency) {
+      const chunk = pendingFiles.slice(i, i + this.concurrency);
+      const parsedResults = await Promise.all(
+        chunk.map(async (file) => {
+          try {
+            const content = contentCache.get(file.path) ?? fs.readFileSync(file.path, 'utf-8');
+            let parseResult: ParseResult | null = null;
+            if (canParse(file.language)) {
+              parseResult = await parseFile(file.relativePath, content, file.language);
+            }
+            return { file, content, parseResult, error: null };
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            return { file, content: '', parseResult: null, error: msg };
+          }
+        }),
+      );
+
+      this.options.db.transaction(() => {
+        for (const { file, content, parseResult, error } of parsedResults) {
+          if (error) {
+            errors.push(`Failed to parse ${file.relativePath}: ${error}`);
+            continue;
+          }
+
+          try {
+            if (parseResult) {
+              file.symbolCount = parseResult.symbols.length;
+              file.importCount = parseResult.imports.length;
+              file.exportCount = parseResult.exportedNames.length;
+
+              const fileId = this.fileRepo.upsert(this.options.projectId, file);
+              this.symbolRepo.deleteByFile(fileId);
+              this.importRepo.deleteByFile(fileId);
+
+              if (parseResult.symbols.length > 0) {
+                this.symbolRepo.insertBatch(fileId, parseResult.symbols);
+                symbolsExtracted += parseResult.symbols.length;
+              }
+
+              if (parseResult.imports.length > 0) {
+                this.importRepo.insertBatch(fileId, parseResult.imports);
+                importsExtracted += parseResult.imports.length;
+
+                for (const imp of parseResult.imports) {
+                  const resolvedTarget = this.resolveImportPath(
+                    file.relativePath,
+                    imp.importPath,
+                    existingPaths,
+                  );
+                  if (resolvedTarget) {
+                    this.depRepo.insertBatch(this.options.projectId, [
+                      {
+                        source: file.relativePath,
+                        target: resolvedTarget,
+                        kind: 'import',
+                        symbols: imp.symbols,
+                        weight: 1.0,
+                      },
+                    ]);
+                    dependenciesCreated++;
+                  }
+                }
+              }
+
+              try {
+                this.searchRepo.removeFile(fileId);
+              } catch {
+                // ignore
+              }
+              this.searchRepo.indexFile(fileId, file.relativePath, content);
+
+              if (parseResult.errors.length > 0) {
+                errors.push(...parseResult.errors);
+              }
+              filesUpdated++;
+            } else {
+              const fileId = this.fileRepo.upsert(this.options.projectId, file);
+              try {
+                this.searchRepo.removeFile(fileId);
+              } catch {
+                // ignore
+              }
+              this.searchRepo.indexFile(fileId, file.relativePath, content);
+              filesUpdated++;
+            }
+            filesIndexed++;
+          } catch (dbErr) {
+            const msg = dbErr instanceof Error ? dbErr.message : String(dbErr);
+            errors.push(`Database error for ${file.relativePath}: ${msg}`);
+          }
+        }
+      });
+    }
+
+    const duration = Date.now() - startTime;
     return {
       filesIndexed,
       filesSkipped,

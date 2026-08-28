@@ -191,7 +191,7 @@ export async function parseFile(
           switch (language) {
             case 'typescript':
             case 'javascript':
-              extractTypeScriptSymbols(root, filePath, symbols, exportedNames, null);
+              extractTypeScriptSymbols(root, filePath, symbols, imports, exportedNames, null);
               extractTypeScriptImports(root, filePath, imports);
               treeParsed = true;
               break;
@@ -290,6 +290,7 @@ function extractTypeScriptSymbols(
   node: AstNode,
   filePath: string,
   symbols: SymbolInfo[],
+  imports: ImportInfo[],
   exportedNames: string[],
   parentName: string | null,
 ): void {
@@ -358,14 +359,42 @@ function extractTypeScriptSymbols(
       }
 
       case 'export_statement': {
-        extractTypeScriptSymbols(child, filePath, symbols, exportedNames, parentName);
+        extractTypeScriptSymbols(child, filePath, symbols, imports, exportedNames, parentName);
         extractTypeScriptExportedNames(child, exportedNames);
+
+        // Handle re-export as an implicit import so the graph links barrel files
+        const reExportSource = child.childForFieldName('source')?.text?.replace(/['"]/g, '');
+        if (reExportSource) {
+          // This is a re-export: `export { ... } from '...'` or `export * from '...'`
+          const reExportedSymbols: string[] = [];
+          for (const sub of child.namedChildren) {
+            if (sub.type === 'export_clause') {
+              for (const spec of sub.namedChildren) {
+                if (spec.type === 'export_specifier') {
+                  const alias = spec.childForFieldName('alias')?.text;
+                  const name = spec.childForFieldName('name')?.text ?? spec.text;
+                  reExportedSymbols.push(alias || name);
+                }
+              }
+            }
+          }
+          // Check for `export * from '...'` (namespace re-export)
+          const isNamespaceReExport = child.text.includes('export *');
+          imports.push({
+            filePath,
+            importPath: reExportSource,
+            symbols: reExportedSymbols,
+            isDefault: false,
+            isNamespace: isNamespaceReExport,
+            isType: child.text.includes('export type'),
+          });
+        }
         break;
       }
 
       default:
         if (child.namedChildren.length > 0 && !isBlockNode(child.type)) {
-          extractTypeScriptSymbols(child, filePath, symbols, exportedNames, parentName);
+          extractTypeScriptSymbols(child, filePath, symbols, imports, exportedNames, parentName);
         }
         break;
     }
@@ -811,11 +840,12 @@ function makeSymbol(
   exported: boolean,
   parentSymbol: string | null,
 ): SymbolInfo {
-  const firstLine = node.text.split('\n')[0] ?? '';
   let cyclomaticComplexity: number | undefined;
   if (kind === 'function' || kind === 'method') {
     cyclomaticComplexity = calculateAstCyclomaticComplexity(node);
   }
+
+  const signature = extractDeepSignature(node, kind);
 
   return {
     name,
@@ -825,10 +855,192 @@ function makeSymbol(
     endLine: node.endPosition.row + 1,
     column: node.startPosition.column,
     exported,
-    signature: firstLine.length > 200 ? firstLine.slice(0, 200) + '...' : firstLine,
+    signature,
     parentSymbol: parentSymbol ?? undefined,
     cyclomaticComplexity,
   };
+}
+
+/**
+ * Extract a deep, AI-useful signature from an AST node.
+ * For functions/methods: captures params, return type, generics, async/static modifiers.
+ * For classes: captures heritage (extends/implements) and generic type params.
+ * For interfaces/types/enums: captures the declaration header.
+ * Falls back to the first line of text (trimmed) if structural extraction fails.
+ */
+function extractDeepSignature(node: AstNode, kind: SymbolKind): string {
+  try {
+    // Collect JSDoc / leading comment if present
+    const jsdoc = extractLeadingJSDoc(node);
+
+    let sig = '';
+
+    switch (kind) {
+      case 'function':
+      case 'method':
+        sig = extractFunctionSignature(node);
+        break;
+      case 'class':
+        sig = extractClassSignature(node);
+        break;
+      case 'interface':
+        sig = extractInterfaceSignature(node);
+        break;
+      case 'type':
+        sig = extractTypeAliasSignature(node);
+        break;
+      case 'enum':
+        sig = extractEnumSignature(node);
+        break;
+      default: {
+        const firstLine = node.text.split('\n')[0] ?? '';
+        sig = firstLine.length > 200 ? firstLine.slice(0, 200) + '...' : firstLine;
+        break;
+      }
+    }
+
+    if (jsdoc && sig) {
+      return jsdoc + '\n' + sig;
+    }
+    return sig || node.text.split('\n')[0]?.slice(0, 200) || '';
+  } catch {
+    const firstLine = node.text.split('\n')[0] ?? '';
+    return firstLine.length > 200 ? firstLine.slice(0, 200) + '...' : firstLine;
+  }
+}
+
+function extractLeadingJSDoc(node: AstNode): string {
+  const parent = node.parent;
+  if (!parent) return '';
+
+  // Check for comment node immediately before this node in parent's children
+  const siblings = parent.children;
+  const myIndex = siblings.findIndex(
+    (s) =>
+      s.startPosition.row === node.startPosition.row &&
+      s.startPosition.column === node.startPosition.column,
+  );
+
+  if (myIndex > 0) {
+    const prev = siblings[myIndex - 1]!;
+    if (prev.type === 'comment' && prev.text.startsWith('/**')) {
+      const lines = prev.text.split('\n');
+      if (lines.length <= 5) {
+        return prev.text;
+      }
+      // Truncate long JSDoc to first 4 lines + closing
+      return lines.slice(0, 4).join('\n') + '\n */';
+    }
+  }
+  return '';
+}
+
+function extractFunctionSignature(node: AstNode): string {
+  const parts: string[] = [];
+
+  // Detect modifiers from parent or text
+  const text = node.text;
+  const firstLine = text.split('\n')[0] ?? '';
+
+  if (firstLine.includes('async ')) parts.push('async');
+  if (firstLine.includes('static ')) parts.push('static');
+
+  // Function keyword or arrow
+  const nameNode = node.childForFieldName('name');
+  const paramsNode = node.childForFieldName('parameters');
+  const returnTypeNode = node.childForFieldName('return_type');
+  const typeParamsNode = node.childForFieldName('type_parameters');
+
+  if (node.type === 'arrow_function' || node.type === 'function') {
+    // For const x = (...) => ... or const x = function(...)
+    const params = paramsNode?.text ?? '()';
+    const retType = returnTypeNode?.text ?? '';
+    const generics = typeParamsNode?.text ?? '';
+    parts.push(`${generics}${params}${retType ? ': ' + retType.replace(/^:\s*/, '') : ''} => ...`);
+  } else {
+    // Normal function/method declaration
+    const name = nameNode?.text ?? '';
+    const generics = typeParamsNode?.text ?? '';
+    const params = paramsNode?.text ?? '()';
+    const retType = returnTypeNode?.text ?? '';
+
+    parts.push(
+      `function ${name}${generics}${params}${retType ? ': ' + retType.replace(/^:\s*/, '') : ''}`,
+    );
+  }
+
+  const sig = parts.join(' ');
+  return sig.length > 300 ? sig.slice(0, 300) + '...' : sig;
+}
+
+function extractClassSignature(node: AstNode): string {
+  const name = node.childForFieldName('name')?.text ?? '';
+  const typeParams = node.childForFieldName('type_parameters')?.text ?? '';
+
+  // Extract heritage: extends/implements
+  const heritageparts: string[] = [];
+  for (const child of node.namedChildren) {
+    if (child.type === 'class_heritage') {
+      heritageparts.push(child.text);
+    }
+    // Some grammars use extends_clause / implements_clause
+    if (child.type === 'extends_clause' || child.type === 'extends_type_clause') {
+      heritageparts.push('extends ' + child.text.replace(/^extends\s*/, ''));
+    }
+    if (child.type === 'implements_clause') {
+      heritageparts.push('implements ' + child.text.replace(/^implements\s*/, ''));
+    }
+  }
+
+  const heritage = heritageparts.length > 0 ? ' ' + heritageparts.join(' ') : '';
+  const sig = `class ${name}${typeParams}${heritage}`;
+  return sig.length > 300 ? sig.slice(0, 300) + '...' : sig;
+}
+
+function extractInterfaceSignature(node: AstNode): string {
+  const name = node.childForFieldName('name')?.text ?? '';
+  const typeParams = node.childForFieldName('type_parameters')?.text ?? '';
+
+  // Look for extends in children
+  let extendsClause = '';
+  for (const child of node.namedChildren) {
+    if (child.type === 'extends_type_clause' || child.type === 'extends_clause') {
+      extendsClause = ' ' + child.text;
+      break;
+    }
+  }
+
+  const sig = `interface ${name}${typeParams}${extendsClause}`;
+  return sig.length > 300 ? sig.slice(0, 300) + '...' : sig;
+}
+
+function extractTypeAliasSignature(node: AstNode): string {
+  // For type aliases, capture the full declaration line
+  const firstLine = node.text.split('\n')[0] ?? '';
+  const sig = firstLine.replace(/\s*=\s*$/, '').trim();
+  return sig.length > 300 ? sig.slice(0, 300) + '...' : sig;
+}
+
+function extractEnumSignature(node: AstNode): string {
+  const name = node.childForFieldName('name')?.text ?? '';
+
+  // Extract enum member names (up to 8 for readability)
+  const body = node.childForFieldName('body');
+  const members: string[] = [];
+  if (body) {
+    for (const member of body.namedChildren) {
+      if (members.length >= 8) {
+        members.push('...');
+        break;
+      }
+      const mName = member.childForFieldName('name')?.text ?? member.text.split(/[=,\s]/)[0];
+      if (mName) members.push(mName.trim());
+    }
+  }
+
+  const memberList = members.length > 0 ? ` { ${members.join(', ')} }` : '';
+  const sig = `enum ${name}${memberList}`;
+  return sig.length > 300 ? sig.slice(0, 300) + '...' : sig;
 }
 
 function isExportedNode(node: AstNode): boolean {
@@ -1847,5 +2059,55 @@ function extractRustSymbolsAndImportsRegex(
       });
       if (isExported) exportedNames.push(name);
     }
+  }
+}
+
+export function validateSourceCode(
+  code: string,
+  language: Language,
+): { valid: boolean; errors: string[] } {
+  try {
+    const Parser = getParserClass();
+    const grammar = getLanguage(language);
+
+    if (!grammar) {
+      return { valid: true, errors: [] };
+    }
+
+    const parser = new Parser();
+    parser.setLanguage(grammar);
+    const tree = parser.parse(code);
+
+    const errors: string[] = [];
+    if (tree.rootNode && tree.rootNode.hasError) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const findErrors = (node: any) => {
+        if (node.type === 'ERROR' || node.isMissing()) {
+          const row = node.startPosition?.row ?? 0;
+          const col = node.startPosition?.column ?? 0;
+          const token = code.slice(node.startIndex, node.endIndex).trim();
+          errors.push(
+            `Syntax error at line ${row + 1}, column ${col}: unexpected token '${token}'`,
+          );
+        }
+        for (let i = 0; i < (node.childCount || 0); i++) {
+          const child = node.child(i);
+          if (child && child.hasError) {
+            findErrors(child);
+          }
+        }
+      };
+      findErrors(tree.rootNode);
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors: errors.slice(0, 10),
+    };
+  } catch (err) {
+    return {
+      valid: false,
+      errors: [err instanceof Error ? err.message : String(err)],
+    };
   }
 }

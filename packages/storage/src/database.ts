@@ -152,6 +152,21 @@ export class AtlasDatabase {
     }
   }
 
+  attach(dbPath: string, alias: string): void {
+    const normalized = dbPath.replace(/\\/g, '/');
+    this.exec(`ATTACH DATABASE '${normalized}' AS ${alias};`);
+    logger.debug(`Attached database ${dbPath} as ${alias}`);
+  }
+
+  detach(alias: string): void {
+    this.exec(`DETACH DATABASE ${alias};`);
+    logger.debug(`Detached database ${alias}`);
+  }
+
+  getAttached(): Array<{ seq: number; name: string; file: string }> {
+    return this.all<{ seq: number; name: string; file: string }>('PRAGMA database_list;');
+  }
+
   close(): void {
     this.db.close();
     logger.debug(`Closed database at ${this.dbPath}`);

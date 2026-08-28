@@ -126,8 +126,8 @@ export class SymbolRepository {
 
   insertBatch(fileId: number, symbols: SymbolInfo[]): void {
     const stmt = this.db.instance.prepare(
-      `INSERT INTO symbols (file_id, name, kind, line, end_line, column_num, exported, signature, parent_symbol)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO symbols (file_id, name, kind, line, end_line, column_num, exported, signature, parent_symbol, cyclomatic_complexity)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
 
     this.db.transaction(() => {
@@ -142,6 +142,7 @@ export class SymbolRepository {
           sym.exported ? 1 : 0,
           sym.signature ?? null,
           sym.parentSymbol ?? null,
+          sym.cyclomaticComplexity ?? null,
         );
       }
     });
@@ -208,6 +209,7 @@ export class SymbolRepository {
       exported: (row['exported'] as number) === 1,
       signature: row['signature'] as string | undefined,
       parentSymbol: row['parent_symbol'] as string | undefined,
+      cyclomaticComplexity: row['cyclomatic_complexity'] as number | undefined,
     };
   }
 }
@@ -446,6 +448,104 @@ export class ProjectRepository {
       languages: JSON.parse((row['languages'] as string) || '[]'),
       frameworks: JSON.parse((row['frameworks'] as string) || '[]'),
       workspaces: JSON.parse((row['workspaces'] as string) || '[]'),
+    };
+  }
+}
+
+export interface EmbeddingRecord {
+  id?: number;
+  projectId: number;
+  filePath: string;
+  symbolName?: string | null;
+  embedding: number[];
+  dimensions: number;
+  model: string;
+  createdAt?: string;
+}
+
+export class EmbeddingRepository {
+  constructor(private db: AtlasDatabase) {}
+
+  upsert(record: EmbeddingRecord): void {
+    this.db.run(
+      `INSERT INTO embeddings (project_id, file_path, symbol_name, embedding, dimensions, model)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT(project_id, file_path, symbol_name)
+       DO UPDATE SET embedding = excluded.embedding, dimensions = excluded.dimensions, model = excluded.model, created_at = datetime('now')`,
+      record.projectId,
+      record.filePath,
+      record.symbolName ?? null,
+      JSON.stringify(record.embedding),
+      record.dimensions,
+      record.model,
+    );
+  }
+
+  insertBatch(records: EmbeddingRecord[]): void {
+    const stmt = this.db.instance.prepare(
+      `INSERT INTO embeddings (project_id, file_path, symbol_name, embedding, dimensions, model)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT(project_id, file_path, symbol_name)
+       DO UPDATE SET embedding = excluded.embedding, dimensions = excluded.dimensions, model = excluded.model, created_at = datetime('now')`,
+    );
+
+    this.db.transaction(() => {
+      for (const rec of records) {
+        stmt.run(
+          rec.projectId,
+          rec.filePath,
+          rec.symbolName ?? null,
+          JSON.stringify(rec.embedding),
+          rec.dimensions,
+          rec.model,
+        );
+      }
+    });
+  }
+
+  getAll(projectId: number): EmbeddingRecord[] {
+    const rows = this.db.all<Record<string, unknown>>(
+      'SELECT * FROM embeddings WHERE project_id = ?',
+      projectId,
+    );
+    return rows.map((r) => this.mapRow(r));
+  }
+
+  getByFile(projectId: number, filePath: string): EmbeddingRecord[] {
+    const rows = this.db.all<Record<string, unknown>>(
+      'SELECT * FROM embeddings WHERE project_id = ? AND file_path = ?',
+      projectId,
+      filePath,
+    );
+    return rows.map((r) => this.mapRow(r));
+  }
+
+  deleteByFile(projectId: number, filePath: string): void {
+    this.db.run(
+      'DELETE FROM embeddings WHERE project_id = ? AND file_path = ?',
+      projectId,
+      filePath,
+    );
+  }
+
+  count(projectId: number): number {
+    const row = this.db.get<{ count: number }>(
+      'SELECT COUNT(*) as count FROM embeddings WHERE project_id = ?',
+      projectId,
+    );
+    return row?.count ?? 0;
+  }
+
+  private mapRow(row: Record<string, unknown>): EmbeddingRecord {
+    return {
+      id: row['id'] as number,
+      projectId: row['project_id'] as number,
+      filePath: row['file_path'] as string,
+      symbolName: (row['symbol_name'] as string) || null,
+      embedding: JSON.parse((row['embedding'] as string) || '[]'),
+      dimensions: row['dimensions'] as number,
+      model: row['model'] as string,
+      createdAt: row['created_at'] as string,
     };
   }
 }

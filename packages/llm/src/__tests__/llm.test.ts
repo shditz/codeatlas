@@ -81,4 +81,21 @@ describe('Multi-LLM Providers', () => {
     expect(provider.isAvailable()).toBe(false);
     expect(provider).toBeInstanceOf(NoopLLMProvider);
   });
+
+  it('generates local heuristic embeddings and computes cosine similarity correctly', async () => {
+    const { LocalHeuristicEmbeddingProvider, cosineSimilarity } = await import('../index.js');
+    const provider = new LocalHeuristicEmbeddingProvider();
+
+    const vecA = await provider.generateEmbedding('authentication login user password');
+    const vecB = await provider.generateEmbedding('user authentication sign in flow');
+    const vecC = await provider.generateEmbedding('database migration sqlite table column');
+
+    expect(vecA.length).toBe(128);
+    expect(vecB.length).toBe(128);
+
+    const simAB = cosineSimilarity(vecA, vecB);
+    const simAC = cosineSimilarity(vecA, vecC);
+
+    expect(simAB).toBeGreaterThan(simAC);
+  });
 });

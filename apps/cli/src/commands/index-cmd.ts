@@ -1,6 +1,7 @@
 import type { Command } from 'commander';
 import chalk from 'chalk';
 import { Indexer } from '@codeatlas-ai/indexer';
+import { GitService } from '@codeatlas-ai/git';
 import { ensureInitialized, openDatabase, getOrCreateProject, loadConfig } from '../utils.js';
 import { formatDuration } from '@codeatlas-ai/shared';
 
@@ -8,18 +9,16 @@ export function registerIndexCommand(program: Command): void {
   program
     .command('index')
     .description('Build or update the code index')
+    .option('--staged-only', 'Only index files currently staged in git')
     .option('--json', 'Output as JSON')
     .option('--verbose', 'Show detailed output')
-    .action(async (options: { json?: boolean; verbose?: boolean }) => {
+    .action(async (options: { stagedOnly?: boolean; json?: boolean; verbose?: boolean }) => {
       const cwd = process.cwd();
       ensureInitialized(cwd);
 
       const config = loadConfig(cwd);
       const db = openDatabase(cwd);
       const projectId = getOrCreateProject(db, cwd);
-
-      console.log(chalk.bold('Indexing repository...'));
-      console.log('');
 
       const indexer = new Indexer({
         root: cwd,
@@ -30,7 +29,32 @@ export function registerIndexCommand(program: Command): void {
         includeTests: config.index.include_tests,
       });
 
-      const result = await indexer.index();
+      let result;
+      const spinner = !options.json ? (await import('ora')).default('Initializing...').start() : null;
+
+      try {
+        if (options.stagedOnly) {
+          const git = new GitService(cwd);
+          const stagedFiles = git.getStagedChangedFiles();
+          if (stagedFiles.length === 0) {
+            if (spinner) spinner.info('No staged files found to index.');
+            else console.log(JSON.stringify({ filesIndexed: 0, filesSkipped: 0, duration: 0 }, null, 2));
+            db.close();
+            return;
+          }
+
+          if (spinner) spinner.text = `Indexing ${stagedFiles.length} staged file(s)...`;
+          result = await indexer.indexFiles(stagedFiles);
+        } else {
+          if (spinner) spinner.text = 'Indexing repository...';
+          result = await indexer.index();
+        }
+
+        if (spinner) spinner.succeed('Indexing complete');
+      } catch (err: any) {
+        if (spinner) spinner.fail(`Indexing failed: ${err.message}`);
+        throw err;
+      }
 
       db.close();
 

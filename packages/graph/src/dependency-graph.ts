@@ -107,6 +107,89 @@ export class DependencyGraph {
     return this.nodes.has(node);
   }
 
+  /**
+   * Compute the "blast radius" of a set of changed files.
+   * Returns all files transitively affected (dependents) up to maxDepth,
+   * organized by impact level (direct vs transitive).
+   */
+  getBlastRadius(
+    changedFiles: string[],
+    maxDepth: number = 5,
+  ): {
+    directlyAffected: string[];
+    transitivelyAffected: string[];
+    affectedByFile: Map<string, string[]>;
+    severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  } {
+    const directSet = new Set<string>();
+    const transitiveSet = new Set<string>();
+    const affectedByFile = new Map<string, string[]>();
+
+    for (const changedFile of changedFiles) {
+      const affected: string[] = [];
+
+      // Level 1: direct dependents
+      const directDeps = this.incoming.get(changedFile) ?? [];
+      for (const edge of directDeps) {
+        directSet.add(edge.source);
+        affected.push(edge.source);
+      }
+
+      // Level 2+: transitive dependents
+      const visited = new Set<string>([changedFile]);
+      const queue = directDeps.map((e) => ({ node: e.source, depth: 1 }));
+
+      while (queue.length > 0) {
+        const item = queue.shift();
+        if (!item || item.depth >= maxDepth) continue;
+        if (visited.has(item.node)) continue;
+        visited.add(item.node);
+
+        const nextDeps = this.incoming.get(item.node) ?? [];
+        for (const edge of nextDeps) {
+          if (!visited.has(edge.source)) {
+            transitiveSet.add(edge.source);
+            affected.push(edge.source);
+            queue.push({ node: edge.source, depth: item.depth + 1 });
+          }
+        }
+      }
+
+      affectedByFile.set(changedFile, [...new Set(affected)]);
+    }
+
+    // Remove files that are in directSet from transitiveSet (direct takes priority)
+    for (const f of directSet) {
+      transitiveSet.delete(f);
+    }
+    // Remove changed files themselves from both sets
+    for (const f of changedFiles) {
+      directSet.delete(f);
+      transitiveSet.delete(f);
+    }
+
+    let maxInDegree = 0;
+    for (const f of changedFiles) {
+      maxInDegree = Math.max(maxInDegree, this.incoming.get(f)?.length ?? 0);
+    }
+
+    let severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' = 'LOW';
+    if (maxInDegree >= 10 || directSet.size >= 10) {
+      severity = 'CRITICAL';
+    } else if (maxInDegree >= 5 || directSet.size >= 5) {
+      severity = 'HIGH';
+    } else if (directSet.size > 0 || transitiveSet.size > 0) {
+      severity = 'MEDIUM';
+    }
+
+    return {
+      directlyAffected: [...directSet],
+      transitivelyAffected: [...transitiveSet],
+      affectedByFile,
+      severity,
+    };
+  }
+
   clear(): void {
     this.outgoing.clear();
     this.incoming.clear();
@@ -204,6 +287,53 @@ export class DependencyGraph {
     }
 
     return finalMap;
+  }
+
+  computePageRank(damping: number = 0.85, iterations: number = 20): Map<string, number> {
+    const nodes = Array.from(this.nodes);
+    const n = nodes.length;
+    if (n === 0) return new Map();
+
+    let scores = new Map<string, number>();
+    const initialScore = 1 / n;
+    for (const node of nodes) {
+      scores.set(node, initialScore);
+    }
+
+    for (let iter = 0; iter < iterations; iter++) {
+      const nextScores = new Map<string, number>();
+      const baseScore = (1 - damping) / n;
+
+      for (const node of nodes) {
+        nextScores.set(node, baseScore);
+      }
+
+      for (const node of nodes) {
+        const currentScore = scores.get(node) ?? 0;
+        const outEdges = this.outgoing.get(node) ?? [];
+        if (outEdges.length > 0) {
+          const share = (damping * currentScore) / outEdges.length;
+          for (const edge of outEdges) {
+            nextScores.set(edge.target, (nextScores.get(edge.target) ?? 0) + share);
+          }
+        } else {
+          const share = (damping * currentScore) / n;
+          for (const target of nodes) {
+            nextScores.set(target, (nextScores.get(target) ?? 0) + share);
+          }
+        }
+      }
+
+      scores = nextScores;
+    }
+
+    return scores;
+  }
+
+  getPageRank(node: string): number | undefined {
+    if (!this.nodes.has(node)) return undefined;
+    const pageRanks = this.computePageRank();
+    return pageRanks.get(node);
   }
 }
 

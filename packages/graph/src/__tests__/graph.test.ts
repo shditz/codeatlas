@@ -113,4 +113,22 @@ describe('Dependency Graph', () => {
     expect(communities.get('pay/y.ts')).toBe(communities.get('pay/z.ts'));
     expect(communities.get('auth/a.ts')).not.toBe(communities.get('pay/x.ts'));
   });
+
+  it('computes PageRank centrality scores accurately', () => {
+    const graph = new DependencyGraph();
+
+    // Node C is imported by A, B, and D (highest in-degree centrality)
+    graph.addEdge({ source: 'A.ts', target: 'C.ts', kind: 'import', symbols: [], weight: 1 });
+    graph.addEdge({ source: 'B.ts', target: 'C.ts', kind: 'import', symbols: [], weight: 1 });
+    graph.addEdge({ source: 'D.ts', target: 'C.ts', kind: 'import', symbols: [], weight: 1 });
+    graph.addEdge({ source: 'C.ts', target: 'E.ts', kind: 'import', symbols: [], weight: 1 });
+
+    const ranks = graph.computePageRank(0.85, 20);
+
+    expect(ranks.get('C.ts')).toBeDefined();
+    expect(ranks.get('C.ts')!).toBeGreaterThan(ranks.get('A.ts')!);
+    expect(ranks.get('C.ts')!).toBeGreaterThan(ranks.get('B.ts')!);
+    expect(graph.getPageRank('C.ts')).toEqual(ranks.get('C.ts'));
+    expect(graph.getPageRank('NonExistent.ts')).toBeUndefined();
+  });
 });

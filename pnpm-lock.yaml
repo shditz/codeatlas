@@ -427,6 +427,9 @@ importers:
       '@codeatlas-ai/indexer':
         specifier: workspace:*
         version: link:../indexer
+      '@codeatlas-ai/llm':
+        specifier: workspace:*
+        version: link:../llm
       '@codeatlas-ai/nl2cypher':
         specifier: workspace:*
         version: link:../nl2cypher

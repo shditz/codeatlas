@@ -171,4 +171,109 @@ describe('Model Context Protocol (MCP) Server', () => {
     expect(response?.id).toBe('ping-1');
     expect(response?.result).toEqual({});
   });
+
+  it('rejects invalid syntax in atlas_apply_refactor without writing to disk', async () => {
+    const server = new McpServer();
+    const response = await server.handleMessage({
+      jsonrpc: '2.0',
+      id: 'refactor-1',
+      method: 'tools/call',
+      params: {
+        name: 'atlas_apply_refactor',
+        arguments: {
+          filePath: 'src/dummy.ts',
+          newContent: 'const a: string = ; // missing value syntax error',
+        },
+      },
+    });
+
+    expect(response?.result).toBeDefined();
+    const content = (response?.result as { content: Array<{ text: string }> }).content;
+    const data = JSON.parse(content[0]!.text);
+    expect(data.success).toBe(false);
+    expect(data.applied).toBe(false);
+    expect(data.errors.length).toBeGreaterThan(0);
+  });
+
+  it('executes atlas_fix_circular_dependency with decoupled suggestions', async () => {
+    const server = new McpServer();
+    const response = await server.handleMessage({
+      jsonrpc: '2.0',
+      id: 'cycle-1',
+      method: 'tools/call',
+      params: {
+        name: 'atlas_fix_circular_dependency',
+        arguments: {
+          cyclePath: ['src/a.ts', 'src/b.ts', 'src/a.ts'],
+        },
+      },
+    });
+
+    expect(response?.result).toBeDefined();
+    const content = (response?.result as { content: Array<{ text: string }> }).content;
+    const data = JSON.parse(content[0]!.text);
+    expect(data.recommendation).toBeDefined();
+    expect(Array.isArray(data.steps)).toBe(true);
+    expect(data.steps.length).toBeGreaterThan(0);
+  });
+
+  it('executes atlas_security_audit tool returning structured SAST report', async () => {
+    const server = new McpServer();
+    const response = await server.handleMessage({
+      jsonrpc: '2.0',
+      id: 'audit-1',
+      method: 'tools/call',
+      params: {
+        name: 'atlas_security_audit',
+        arguments: {},
+      },
+    });
+
+    expect(response?.result).toBeDefined();
+    const content = (response?.result as { content: Array<{ text: string }> }).content;
+    const data = JSON.parse(content[0]!.text);
+    expect(data.summary).toBeDefined();
+    expect(Array.isArray(data.vulnerabilities)).toBe(true);
+  });
+
+  it('rejects atlas_federate_repo when repo path has no CodeAtlas index', async () => {
+    const server = new McpServer();
+    const response = await server.handleMessage({
+      jsonrpc: '2.0',
+      id: 'fed-1',
+      method: 'tools/call',
+      params: {
+        name: 'atlas_federate_repo',
+        arguments: {
+          repoPath: '/non/existent/repo',
+        },
+      },
+    });
+
+    expect(response?.error).toBeDefined();
+    expect(response?.error?.message).toContain('database not found');
+  });
+
+  it('executes atlas_plan_feature tool generating actionable feature roadmap', async () => {
+    const server = new McpServer();
+    const response = await server.handleMessage({
+      jsonrpc: '2.0',
+      id: 'plan-1',
+      method: 'tools/call',
+      params: {
+        name: 'atlas_plan_feature',
+        arguments: {
+          feature: 'Add authentication JWT verification middleware',
+        },
+      },
+    });
+
+    expect(response?.result).toBeDefined();
+    const content = (response?.result as { content: Array<{ text: string }> }).content;
+    const data = JSON.parse(content[0]!.text);
+    expect(data.feature).toBe('Add authentication JWT verification middleware');
+    expect(data.status).toBe('ready');
+    expect(Array.isArray(data.recommendedWorkflow)).toBe(true);
+    expect(Array.isArray(data.primaryTouchpoints)).toBe(true);
+  });
 });

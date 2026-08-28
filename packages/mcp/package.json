@@ -35,7 +35,8 @@
     "@codeatlas-ai/exporters": "workspace:*",
     "@codeatlas-ai/compression": "workspace:*",
     "@codeatlas-ai/analytics": "workspace:*",
-    "@codeatlas-ai/nl2cypher": "workspace:*"
+    "@codeatlas-ai/nl2cypher": "workspace:*",
+    "@codeatlas-ai/llm": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

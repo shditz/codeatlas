@@ -1,8 +1,16 @@
 import readline from 'node:readline';
 import path from 'node:path';
 import fs from 'node:fs';
-import type { FileInfo, ProjectMeta, ContextFile, ContextMode } from '@codeatlas-ai/core';
-import { defaultConfig } from '@codeatlas-ai/core';
+import type {
+  FileInfo,
+  ProjectMeta,
+  ContextFile,
+  ContextMode,
+  Language,
+  Framework,
+  PackageManager,
+} from '@codeatlas-ai/core';
+import { defaultConfig, detectLanguage } from '@codeatlas-ai/core';
 import {
   AtlasDatabase,
   runMigrations,
@@ -11,6 +19,8 @@ import {
   DependencyRepository,
   SearchRepository,
   ProjectRepository,
+  EmbeddingRepository,
+  FederationService,
 } from '@codeatlas-ai/storage';
 import { Scanner, Indexer } from '@codeatlas-ai/indexer';
 import {
@@ -25,8 +35,10 @@ import { ContextEngine } from '@codeatlas-ai/context';
 import { RuleEngine } from '@codeatlas-ai/rules';
 import { GitService } from '@codeatlas-ai/git';
 import { CodeCompressor } from '@codeatlas-ai/compression';
-import { CodebaseAnalyzer } from '@codeatlas-ai/analytics';
+import { CodebaseAnalyzer, TaintAnalyzer } from '@codeatlas-ai/analytics';
 import { NaturalLanguageToCypher } from '@codeatlas-ai/nl2cypher';
+import { validateSourceCode } from '@codeatlas-ai/parser';
+import { createEmbeddingProvider, cosineSimilarity } from '@codeatlas-ai/llm';
 
 export interface JsonRpcRequest {
   jsonrpc: '2.0';
@@ -106,7 +118,7 @@ export class McpServer {
       {
         name: 'atlas_search',
         description:
-          'Full-text and symbol search across the codebase using SQLite FTS5 BM25 ranking.',
+          'Full-text, symbol, and semantic vector search across the codebase using SQLite FTS5 BM25 and embeddings.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -117,6 +129,10 @@ export class McpServer {
             limit: {
               type: 'number',
               description: 'Maximum number of results to return (default: 20)',
+            },
+            semantic: {
+              type: 'boolean',
+              description: 'Enable semantic vector embedding similarity matching',
             },
           },
           required: ['query'],
@@ -240,6 +256,95 @@ export class McpServer {
             },
           },
           required: ['sql'],
+        },
+      },
+      {
+        name: 'atlas_apply_refactor',
+        description:
+          'Safely apply code changes or refactorings with automatic Tree-Sitter AST syntax error validation before writing to disk.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            filePath: {
+              type: 'string',
+              description: 'Relative path of the file to modify or create',
+            },
+            newContent: {
+              type: 'string',
+              description: 'The updated full content of the file',
+            },
+          },
+          required: ['filePath', 'newContent'],
+        },
+      },
+      {
+        name: 'atlas_fix_circular_dependency',
+        description:
+          'Analyze an existing circular dependency loop and get architectural decoupling recommendations.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            cyclePath: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Array of file paths forming the cycle (e.g. ["a.ts", "b.ts", "a.ts"])',
+            },
+          },
+          required: ['cyclePath'],
+        },
+      },
+      {
+        name: 'atlas_security_audit',
+        description:
+          'Perform automated Static Application Security Testing (SAST) and Data-Flow Taint Analysis across the repository to detect SQL Injection, Command Injection, Code Injection, Path Traversal, and XSS risks.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            filePath: {
+              type: 'string',
+              description:
+                'Optional relative file path to audit. If omitted, audits the entire codebase.',
+            },
+          },
+        },
+      },
+      {
+        name: 'atlas_federate_repo',
+        description:
+          'Attach an external workspace repository to the active CodeAtlas database connection using SQLite native ATTACH DATABASE for cross-repository symbol and dependency queries.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            repoPath: {
+              type: 'string',
+              description:
+                'Absolute or relative path to the target repository root containing .atlas/atlas.db',
+            },
+            alias: {
+              type: 'string',
+              description: 'Optional custom schema alias name (e.g. "backend" or "frontend")',
+            },
+          },
+          required: ['repoPath'],
+        },
+      },
+      {
+        name: 'atlas_plan_feature',
+        description:
+          'Autonomous feature planning agent tool: orchestrates hybrid search, dependency graph expansion, and rule checking to generate an optimal architectural roadmap and candidate files for implementing a new feature or fix.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            feature: {
+              type: 'string',
+              description: 'Detailed description of the feature or bugfix to plan',
+            },
+            maxFiles: {
+              type: 'number',
+              description: 'Maximum number of candidate files to include in the plan (default: 15)',
+            },
+          },
+          required: ['feature'],
         },
       },
     ];
@@ -620,10 +725,42 @@ export class McpServer {
       case 'atlas_search': {
         const query = String(args.query ?? '');
         const limit = typeof args.limit === 'number' ? args.limit : 20;
-        const { db } = this.openDb();
+        const semantic = Boolean(args.semantic);
+        const { db, projectId } = this.openDb();
         const searchRepo = new SearchRepository(db);
-        const results = searchRepo.searchFiles(query, limit);
-        return JSON.stringify(results, null, 2);
+        const ftsResults = searchRepo.searchFiles(query, limit);
+
+        if (!semantic) {
+          return JSON.stringify(ftsResults, null, 2);
+        }
+
+        const embeddingRepo = new EmbeddingRepository(db);
+        const embeddingProvider = createEmbeddingProvider();
+        const queryVector = await embeddingProvider.generateEmbedding(query);
+        const allEmbeddings = embeddingRepo.getAll(projectId);
+
+        const semanticMatches = allEmbeddings
+          .map((record) => {
+            const similarity = cosineSimilarity(queryVector, record.embedding);
+            return {
+              filePath: record.filePath,
+              symbolName: record.symbolName,
+              similarity,
+              model: record.model,
+            };
+          })
+          .filter((m) => m.similarity > 0.1)
+          .sort((a, b) => b.similarity - a.similarity)
+          .slice(0, limit);
+
+        return JSON.stringify(
+          {
+            lexicalResults: ftsResults,
+            semanticResults: semanticMatches,
+          },
+          null,
+          2,
+        );
       }
 
       case 'atlas_get_context': {
@@ -669,9 +806,9 @@ export class McpServer {
         const projectMeta: ProjectMeta = {
           name: projectRecord?.name || path.basename(this.rootDir),
           root: this.rootDir.replace(/\\/g, '/'),
-          languages: (projectRecord?.languages as any) || ['typescript'],
-          frameworks: (projectRecord?.frameworks as any) || [],
-          packageManager: (projectRecord?.packageManager as any) || 'pnpm',
+          languages: (projectRecord?.languages as Language[]) || ['typescript'],
+          frameworks: (projectRecord?.frameworks as Framework[]) || [],
+          packageManager: (projectRecord?.packageManager as PackageManager) || 'pnpm',
           fileCount: files.length,
           symbolCount: 0,
           dependencyCount: deps.length,
@@ -934,6 +1071,193 @@ export class McpServer {
           null,
           2,
         );
+      }
+
+      case 'atlas_apply_refactor': {
+        const filePath = String(args.filePath ?? '').trim();
+        const newContent = String(args.newContent ?? '');
+        if (!filePath) {
+          throw new Error('Missing "filePath" argument');
+        }
+
+        const absPath = path.resolve(this.rootDir, filePath);
+        const language = detectLanguage(filePath);
+
+        // 1. AST Safety Validation Gate
+        const validation = validateSourceCode(newContent, language);
+        if (!validation.valid) {
+          return JSON.stringify(
+            {
+              success: false,
+              applied: false,
+              filePath,
+              message: 'Refactoring rejected: code contains AST syntax errors.',
+              errors: validation.errors,
+            },
+            null,
+            2,
+          );
+        }
+
+        // 2. Safe Write to Disk
+        fs.mkdirSync(path.dirname(absPath), { recursive: true });
+        fs.writeFileSync(absPath, newContent, 'utf-8');
+
+        // 3. Incrementally update index
+        try {
+          const { db, projectId } = this.openDb();
+          const indexer = new Indexer({ root: this.rootDir, db, projectId });
+          await indexer.indexFiles([filePath]);
+        } catch {
+          // Non-blocking indexer update
+        }
+
+        return JSON.stringify(
+          {
+            success: true,
+            applied: true,
+            filePath,
+            message: 'Refactoring safely validated and applied to disk.',
+          },
+          null,
+          2,
+        );
+      }
+
+      case 'atlas_fix_circular_dependency': {
+        const cycle = Array.isArray(args.cyclePath) ? (args.cyclePath as string[]) : [];
+        if (cycle.length < 2) {
+          throw new Error('cyclePath must contain at least 2 file paths');
+        }
+
+        const suggestions = [
+          `1. Extract Shared Interfaces: Create a new file (e.g. types.ts) and move shared interface/type declarations from ${cycle[0]} and ${cycle[1]} into it.`,
+          `2. Dependency Inversion: Inject dependencies as constructor parameters rather than directly importing modules across the cycle.`,
+          `3. Dynamic Import: Defer runtime evaluation using dynamic import() inside specific functions.`,
+        ];
+
+        return JSON.stringify(
+          {
+            cycle,
+            recommendation:
+              'Decouple cyclical dependencies via interface extraction or dependency inversion.',
+            steps: suggestions,
+          },
+          null,
+          2,
+        );
+      }
+
+      case 'atlas_security_audit': {
+        const filePath = typeof args.filePath === 'string' ? args.filePath.trim() : '';
+        const { db, projectId } = this.openDb();
+        const fileRepo = new FileRepository(db);
+        let files = fileRepo.getAll(projectId);
+
+        if (filePath) {
+          files = files.filter(
+            (f: FileInfo) => f.relativePath === filePath || f.path.endsWith(filePath),
+          );
+        }
+
+        const taintAnalyzer = new TaintAnalyzer({ rootDir: this.rootDir, files });
+        const report = taintAnalyzer.audit();
+
+        return JSON.stringify(report, null, 2);
+      }
+
+      case 'atlas_federate_repo': {
+        const repoPath = String(args.repoPath ?? '').trim();
+        const alias = typeof args.alias === 'string' ? args.alias.trim() : undefined;
+        if (!repoPath) {
+          throw new Error('Missing "repoPath" argument');
+        }
+
+        const targetRoot = path.isAbsolute(repoPath)
+          ? repoPath
+          : path.resolve(this.rootDir, repoPath);
+        const { db } = this.openDb();
+        const federation = new FederationService(db);
+        const result = federation.attachRepo(targetRoot, alias);
+
+        return JSON.stringify(
+          {
+            success: true,
+            attachedRepo: result,
+            allAttached: federation.listFederated(),
+          },
+          null,
+          2,
+        );
+      }
+
+      case 'atlas_plan_feature': {
+        const feature = String(args.feature ?? '').trim();
+        const maxFiles = typeof args.maxFiles === 'number' ? args.maxFiles : 15;
+        if (!feature) {
+          throw new Error('Missing "feature" argument');
+        }
+
+        const { db, projectId } = this.openDb();
+        const fileRepo = new FileRepository(db);
+        const depRepo = new DependencyRepository(db);
+        const searchRepo = new SearchRepository(db);
+
+        const files = fileRepo.getAll(projectId);
+        const filesByPath = new Map<string, FileInfo>(
+          files.map((f: FileInfo) => [f.relativePath, f]),
+        );
+        const deps = depRepo.getAll(projectId);
+
+        const graph = new DependencyGraph();
+        graph.addEdges(deps);
+
+        const retrievalEngine = new RetrievalEngine(searchRepo, graph, filesByPath);
+        const retrievalResult = retrievalEngine.retrieve(feature, maxFiles);
+
+        const coreFiles: string[] = retrievalResult.candidates
+          .slice(0, Math.ceil(maxFiles / 2))
+          .map((r) => r.filePath);
+        const contextSet = new Set<string>();
+
+        for (const file of coreFiles) {
+          const directDeps = graph.getDependencies(file, 1);
+          const directDependents = graph.getDependents(file, 1);
+          for (const d of directDeps) contextSet.add(d);
+          for (const d of directDependents) contextSet.add(d);
+        }
+
+        for (const f of coreFiles) {
+          contextSet.delete(f);
+        }
+
+        const ruleEngine = new RuleEngine(this.rootDir);
+        const rules = ruleEngine.discover();
+
+        const plan = {
+          feature,
+          status: 'ready',
+          recommendedWorkflow: [
+            '1. Review architectural touchpoints and core files listed below.',
+            '2. Update interfaces and core data models if needed.',
+            '3. Implement business logic in target service/handler files.',
+            '4. Run "atlas diff" or "atlas analyze" to verify no circular dependencies or breaking changes were introduced.',
+          ],
+          primaryTouchpoints: coreFiles.map((file: string) => ({
+            filePath: file,
+            role: 'Primary modification target',
+            directDependents: graph.getDirectDependents(file).map((e) => e.source),
+            directDependencies: graph.getDirectDependencies(file).map((e) => e.target),
+          })),
+          supportingContextFiles: Array.from(contextSet).slice(0, maxFiles),
+          activeRulesCount: rules.length,
+          rulesSummary: rules.slice(0, 3).map((r) => ({
+            source: r.source,
+            snippet: r.content.slice(0, 150) + (r.content.length > 150 ? '...' : ''),
+          })),
+        };
+
+        return JSON.stringify(plan, null, 2);
       }
 
       default:

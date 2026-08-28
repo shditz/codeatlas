@@ -106,15 +106,96 @@ export class SearchRepository {
     this.db.run("INSERT INTO symbols_fts(symbols_fts) VALUES('rebuild')");
   }
 
+  /**
+   * Reciprocal Rank Fusion (RRF) — combines BM25 text results with
+   * pre-scored vector results into a single unified ranking.
+   * Formula: RRF(d) = Σ 1/(k + rank_i(d))  where k=60 (standard constant).
+   */
+  hybridSearch(
+    query: string,
+    vectorResults: Array<{ relativePath: string; score: number }>,
+    limit: number = 30,
+    k: number = 60,
+  ): Array<{ relativePath: string; rrfScore: number; ftsRank: number; vectorRank: number }> {
+    // 1. Get BM25 FTS results
+    const ftsResults = this.searchFiles(query, limit * 2);
+
+    // 2. Build rank maps (1-indexed)
+    const ftsRankMap = new Map<string, number>();
+    ftsResults.forEach((r, i) => ftsRankMap.set(r.relativePath, i + 1));
+
+    const vecRankMap = new Map<string, number>();
+    vectorResults.forEach((r, i) => vecRankMap.set(r.relativePath, i + 1));
+
+    // 3. Union all candidate file paths
+    const allPaths = new Set<string>([
+      ...ftsResults.map((r) => r.relativePath),
+      ...vectorResults.map((r) => r.relativePath),
+    ]);
+
+    // 4. Compute RRF score
+    const scored: Array<{
+      relativePath: string;
+      rrfScore: number;
+      ftsRank: number;
+      vectorRank: number;
+    }> = [];
+
+    for (const filePath of allPaths) {
+      const ftsRank = ftsRankMap.get(filePath) ?? limit * 3;
+      const vecRank = vecRankMap.get(filePath) ?? limit * 3;
+      const rrfScore = 1 / (k + ftsRank) + 1 / (k + vecRank);
+
+      scored.push({
+        relativePath: filePath,
+        rrfScore,
+        ftsRank,
+        vectorRank: vecRank,
+      });
+    }
+
+    // 5. Sort by descending RRF score and return top N
+    scored.sort((a, b) => b.rrfScore - a.rrfScore);
+    return scored.slice(0, limit);
+  }
+
+  private expandQuery(terms: string[]): string[] {
+    const synonyms: Record<string, string[]> = {
+      network: ['api', 'http', 'fetch', 'request', 'axios'],
+      db: ['database', 'sqlite', 'sql', 'query', 'storage'],
+      ui: ['view', 'component', 'render', 'react', 'dom'],
+      error: ['exception', 'catch', 'fail', 'crash', 'bug'],
+      test: ['spec', 'mock', 'assert', 'jest'],
+      config: ['settings', 'env', 'options', 'setup', 'toml', 'json'],
+      auth: ['login', 'token', 'jwt', 'session', 'security'],
+      graph: ['node', 'edge', 'dependency', 'tree', 'ast'],
+    };
+
+    const expanded = new Set<string>();
+    for (const term of terms) {
+      const lower = term.toLowerCase();
+      expanded.add(lower);
+      if (synonyms[lower]) {
+        for (const syn of synonyms[lower]) {
+          expanded.add(syn);
+        }
+      }
+    }
+    return Array.from(expanded);
+  }
+
   private sanitizeQuery(query: string): string {
-    const sanitized = query
+    const rawTerms = query
       .replace(/[^\w\s]/g, ' ')
       .trim()
       .split(/\s+/)
-      .filter((term) => term.length > 0)
-      .map((term) => `"${term}"`)
-      .join(' OR ');
+      .filter((term) => term.length > 0);
 
-    return sanitized || '""';
+    if (rawTerms.length === 0) return '""';
+
+    const expandedTerms = this.expandQuery(rawTerms);
+
+    // Use prefix matching (term*) for fuzzy matching in FTS5
+    return expandedTerms.map((term) => `"${term}"*`).join(' OR ');
   }
 }
