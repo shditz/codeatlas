@@ -145,32 +145,28 @@ Generate synchronized prompt rules and architectural guidelines from actual code
 - **pnpm**: `>= 9.0.0` (or npm / yarn)
 - **Git**
 
-### Global Installation (CLI)
+### Building & Installing from Source (Recommended)
+
+Since CodeAtlas is currently maintained as an active monorepo, clone and link the CLI globally to your system:
 
 ```bash
-# Install globally using pnpm
-pnpm add -g @codeatlas/cli
-
-# Or using npm
-npm install -g @codeatlas/cli
-```
-
-### Local Monorepo Setup
-
-```bash
-# 1. Clone repository
+# 1. Clone the repository
 git clone https://github.com/shditz/codeatlas.git
 cd codeatlas
 
 # 2. Install workspace dependencies
 pnpm install
 
-# 3. Build all packages and applications
+# 3. Build all packages and CLI binaries
 pnpm build
 
-# 4. Verify test suite (73/73 tests passing)
-pnpm test
+# 4. Link CLI globally to your terminal
+pnpm --filter @codeatlas/cli link --global
 ```
+
+Now you can run `atlas` directly from any terminal window!
+
+_(Note: Direct installation via `npm install -g @codeatlas/cli` will be available upon official publishing to the public npm registry)._
 
 ---
 

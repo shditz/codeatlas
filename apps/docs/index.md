@@ -42,7 +42,11 @@ features:
 ### 1. Installation
 
 ```bash
-npm install -g @codeatlas/cli
+# Clone and link globally
+git clone https://github.com/shditz/codeatlas.git
+cd codeatlas
+pnpm install && pnpm build
+pnpm --filter @codeatlas/cli link --global
 ```
 
 ### 2. Index Repository

@@ -8,17 +8,15 @@ This guide walks you through installing CodeAtlas, configuring your workspace, i
 
 CodeAtlas provides a global Command-Line Interface (`@codeatlas/cli`) and an official Visual Studio Code extension.
 
-### Method 1: Global CLI Installation
+### Method 1: Building & Installing from Source (Recommended)
 
 ```bash
-# Using npm
-npm install -g @codeatlas/cli
-
-# Using pnpm
-pnpm add -g @codeatlas/cli
-
-# Using yarn
-yarn global add @codeatlas/cli
+# Clone and link CLI globally
+git clone https://github.com/shditz/codeatlas.git
+cd codeatlas
+pnpm install
+pnpm build
+pnpm --filter @codeatlas/cli link --global
 ```
 
 Verify your installation:
@@ -26,6 +24,8 @@ Verify your installation:
 ```bash
 atlas --version
 ```
+
+_(Note: Direct installation via `npm install -g @codeatlas/cli` will also be available once published to the public npm registry)._
 
 ### Method 2: VS Code Extension
 
