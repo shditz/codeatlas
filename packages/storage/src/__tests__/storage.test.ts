@@ -22,7 +22,6 @@ describe('Storage & SQLite Repositories', () => {
     expect(migrations).toHaveLength(1);
     expect(migrations[0]?.version).toBe(1);
 
-    // Running again should be a no-op
     runMigrations(db);
     const migrations2 = db.all<{ version: number }>('SELECT * FROM migrations');
     expect(migrations2).toHaveLength(1);
@@ -31,7 +30,6 @@ describe('Storage & SQLite Repositories', () => {
   it('performs CRUD operations on files', () => {
     const fileRepo = new FileRepository(db);
 
-    // Insert project
     const projRes = db.run('INSERT INTO projects (name, root) VALUES (?, ?)', 'test', '/test');
     const projectId = Number(projRes.lastInsertRowid);
 
@@ -207,12 +205,10 @@ describe('Storage & SQLite Repositories', () => {
     db.transaction(() => {
       db.run('INSERT INTO projects (name, root) VALUES (?, ?)', 'child-1', '/child-1');
 
-      // Nested successful transaction
       db.transaction(() => {
         db.run('INSERT INTO projects (name, root) VALUES (?, ?)', 'child-2', '/child-2');
       });
 
-      // Nested failed transaction that rolls back to its savepoint
       try {
         db.transaction(() => {
           db.run('INSERT INTO projects (name, root) VALUES (?, ?)', 'child-3', '/child-3');

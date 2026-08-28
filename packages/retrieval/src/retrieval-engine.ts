@@ -25,7 +25,6 @@ export class RetrievalEngine {
     const queryTerms = this.extractTerms(query);
     const candidateMap = new Map<string, RetrievalCandidate>();
 
-    // 1. Keyword retrieval via FTS5
     const ftsResults = this.searchRepo.searchFiles(query, limit);
     for (const result of ftsResults) {
       this.addCandidate(candidateMap, result.relativePath, {
@@ -35,11 +34,9 @@ export class RetrievalEngine {
       });
     }
 
-    // 2. Symbol-based retrieval
     try {
       const symbolMatches = this.searchRepo.searchSymbols(query, limit);
       for (const sm of symbolMatches) {
-        // Boost files containing matched symbols if known
         if (sm.relativePath) {
           this.addCandidate(candidateMap, sm.relativePath, {
             type: 'symbol',
@@ -52,7 +49,6 @@ export class RetrievalEngine {
       // Symbol FTS fallback
     }
 
-    // 3. Path & semantic filename retrieval
     for (const [filePath] of this.filesByPath) {
       const pathScore = this.scorePathMatch(filePath, queryTerms);
       if (pathScore > 0) {
@@ -64,7 +60,6 @@ export class RetrievalEngine {
       }
     }
 
-    // 4. Graph expansion & Centrality (PageRank-style in-degree boosting)
     const matchedFiles = [...candidateMap.keys()];
     for (const filePath of matchedFiles) {
       const deps = this.graph.getDependencies(filePath, 1);
@@ -86,7 +81,6 @@ export class RetrievalEngine {
       }
     }
 
-    // Architectural centrality boost (files imported by many other files)
     for (const [filePath, candidate] of candidateMap.entries()) {
       const incomingEdges = this.graph.getDirectDependents(filePath);
       if (incomingEdges.length > 0) {
@@ -99,12 +93,10 @@ export class RetrievalEngine {
       }
     }
 
-    // Attach file info
     for (const candidate of candidateMap.values()) {
       candidate.file = this.filesByPath.get(candidate.filePath);
     }
 
-    // Sort by combined source scores
     const candidates = [...candidateMap.values()]
       .sort((a, b) => {
         const scoreA = a.sources.reduce((sum, s) => sum + s.score, 0);

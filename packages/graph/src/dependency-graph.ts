@@ -143,15 +143,10 @@ export class DependencyGraph {
     }
   }
 
-  /**
-   * Fast Label Propagation Algorithm for community detection and clustering.
-   * Partitions tightly connected nodes into shared community IDs for visual clustering.
-   */
   detectCommunities(iterations: number = 10): Map<string, number> {
     const nodes = Array.from(this.nodes);
     const communityMap = new Map<string, number>();
 
-    // Initial state: Each node has unique community ID
     nodes.forEach((node, idx) => {
       communityMap.set(node, idx);
     });
@@ -162,7 +157,6 @@ export class DependencyGraph {
       for (const node of nodes) {
         const neighborCommunities = new Map<number, number>();
 
-        // Outgoing neighbors
         const outEdges = this.outgoing.get(node) ?? [];
         for (const edge of outEdges) {
           const c = communityMap.get(edge.target);
@@ -171,7 +165,6 @@ export class DependencyGraph {
           }
         }
 
-        // Incoming neighbors
         const inEdges = this.incoming.get(node) ?? [];
         for (const edge of inEdges) {
           const c = communityMap.get(edge.source);
@@ -201,7 +194,6 @@ export class DependencyGraph {
       if (!changed) break;
     }
 
-    // Remap community IDs to dense 0..N-1 indexes
     const uniqueIds = Array.from(new Set(communityMap.values())).sort((a, b) => a - b);
     const idMap = new Map<number, number>();
     uniqueIds.forEach((id, idx) => idMap.set(id, idx));

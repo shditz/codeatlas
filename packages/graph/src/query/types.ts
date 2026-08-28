@@ -26,13 +26,13 @@ export interface Token {
 
 export interface NodePattern {
   variable: string;
-  label?: string; // e.g. 'Symbol', 'File'
+  label?: string; 
   properties?: Record<string, string | number | boolean>;
 }
 
 export interface EdgePattern {
   variable?: string;
-  type?: string; // e.g. 'CALLS', 'IMPORTS', 'EXTENDS'
+  type?: string; 
   direction: 'outgoing' | 'incoming' | 'both';
 }
 

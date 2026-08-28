@@ -41,7 +41,6 @@ export function registerMapCommand(program: Command): void {
       console.log(chalk.bold('Repository Map'));
       console.log('');
 
-      // Build tree
       const tree = new Map<string, typeof files>();
       for (const file of files) {
         const module = file.module || '.';

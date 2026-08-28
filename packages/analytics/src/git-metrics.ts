@@ -47,7 +47,6 @@ export class GitMetricsAnalyzer {
     for (const node of nodeMetrics) {
       const churnCount = churnMap.get(node.id) ?? churnMap.get(node.name) ?? 0;
 
-      // Hotspot formula: Churn * (1 + Instability) * (1 + ln(1 + inDegree))
       const logInDegree = Math.log(1 + node.inDegree);
       const hotspotScore = Number(
         (churnCount * (1 + node.instability * 2) * (1 + logInDegree) + node.inDegree * 0.5).toFixed(

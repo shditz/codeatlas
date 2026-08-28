@@ -125,17 +125,16 @@ const dummyData: GraphData = {
 };
 
 const CLUSTER_PALETTE = [
-  '#38bdf8', // Cyan (Cluster 0)
-  '#a78bfa', // Lavender (Cluster 1)
-  '#f43f5e', // Rose (Cluster 2)
-  '#34d399', // Emerald (Cluster 3)
-  '#facc15', // Amber (Cluster 4)
-  '#fb923c', // Orange (Cluster 5)
-  '#e879f9', // Fuchsia (Cluster 6)
-  '#2dd4bf', // Teal (Cluster 7)
+  '#38bdf8', 
+  '#a78bfa',
+  '#f43f5e',
+  '#34d399', 
+  '#facc15', 
+  '#fb923c',
+  '#e879f9', 
+  '#2dd4bf', 
 ];
 
-// Helper: resolve language to vibrant cosmic starlight color
 const getLanguageColor = (node: Node, colorMode: 'language' | 'cluster' = 'language'): string => {
   if (colorMode === 'cluster' && node.type !== 'dir') {
     return CLUSTER_PALETTE[(node.communityId ?? 0) % CLUSTER_PALETTE.length]!;
@@ -144,21 +143,21 @@ const getLanguageColor = (node: Node, colorMode: 'language' | 'cluster' = 'langu
   const ext = (node.name || '').split('.').pop()?.toLowerCase() || '';
   const lang = (node.language || '').toLowerCase();
 
-  if (node.type === 'dir' || lang === 'directory') return '#c084fc'; // Nebula Purple
-  if (lang === 'typescript' || ext === 'ts' || ext === 'tsx') return '#38bdf8'; // Cyan
-  if (lang === 'javascript' || ext === 'js' || ext === 'jsx') return '#facc15'; // Gold
-  if (lang === 'csharp' || ext === 'cs') return '#9333ea'; // Purple
+  if (node.type === 'dir' || lang === 'directory') return '#c084fc';
+  if (lang === 'typescript' || ext === 'ts' || ext === 'tsx') return '#38bdf8';
+  if (lang === 'javascript' || ext === 'js' || ext === 'jsx') return '#facc15';
+  if (lang === 'csharp' || ext === 'cs') return '#9333ea';
   if (lang === 'cpp' || lang === 'c' || ext === 'cpp' || ext === 'c' || ext === 'h')
-    return '#2563eb'; // Blue
-  if (lang === 'java' || ext === 'java') return '#ea580c'; // Warm Orange
-  if (lang === 'ruby' || ext === 'rb') return '#e11d48'; // Crimson
-  if (lang === 'kotlin' || ext === 'kt') return '#7c3aed'; // Violet
-  if (lang === 'swift' || ext === 'swift') return '#f97316'; // Coral
-  if (lang === 'php' || ext === 'php') return '#a78bfa'; // Electric Violet
-  if (lang === 'python' || ext === 'py') return '#34d399'; // Emerald
-  if (ext === 'css' || ext === 'scss' || ext === 'less') return '#f43f5e'; // Rose Pink
-  if (ext === 'html' || ext === 'htm') return '#fb923c'; // Amber Orange
-  return '#e2e8f0'; // Starlight White
+    return '#2563eb';
+  if (lang === 'java' || ext === 'java') return '#ea580c';
+  if (lang === 'ruby' || ext === 'rb') return '#e11d48';
+  if (lang === 'kotlin' || ext === 'kt') return '#7c3aed';
+  if (lang === 'swift' || ext === 'swift') return '#f97316';
+  if (lang === 'php' || ext === 'php') return '#a78bfa';
+  if (lang === 'python' || ext === 'py') return '#34d399';
+  if (ext === 'css' || ext === 'scss' || ext === 'less') return '#f43f5e'; 
+  if (ext === 'html' || ext === 'htm') return '#fb923c'; 
+  return '#e2e8f0'; 
 };
 
 function App() {
@@ -176,7 +175,6 @@ function App() {
   const fg3DRef = useRef<any>(null);
   const starfieldRef = useRef<THREE.Points | null>(null);
 
-  // Compute filtered nodes and synthesize sibling cluster links if only files are active
   const filteredData = useMemo(() => {
     let nodes = data.nodes;
     if (filterType !== 'all') {
@@ -189,7 +187,6 @@ function App() {
       return nodeIds.has(sourceId) && nodeIds.has(targetId);
     });
 
-    // If filtering to 'file' only and no direct imports exist, connect files in the same directory
     if (filterType === 'file' && links.length === 0) {
       const dirGroups = new Map<string, string[]>();
       for (const n of nodes) {
@@ -213,7 +210,6 @@ function App() {
     return { nodes, links };
   }, [data, filterType]);
 
-  // Spotlight & Isolated Path Sets
   const spotlightActive = spotlightMode && (selectedNode || hoveredNode);
   const activeFocusNode = hoveredNode || selectedNode;
 
@@ -237,7 +233,6 @@ function App() {
     return { highlightNodes: nodes, highlightLinks: links };
   }, [activeFocusNode, filteredData.links]);
 
-  // Handle VSCode communication
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       const message = event.data;
@@ -258,7 +253,6 @@ function App() {
     };
   }, []);
 
-  // Configure D3 Force Simulation to prevent node crowding and spreading clusters gracefully
   useEffect(() => {
     if (is3D && fg3DRef.current) {
       fg3DRef.current.d3Force('charge')?.strength(-220)?.distanceMax(1200);
@@ -269,13 +263,11 @@ function App() {
     }
   }, [is3D, filteredData]);
 
-  // 3D Scene Initialization: Add Cosmic Starfield & Ambient Lighting
   useEffect(() => {
     if (!is3D || !fg3DRef.current) return;
     const scene = fg3DRef.current.scene?.();
     if (!scene || starfieldRef.current) return;
 
-    // Cosmic Starfield Particle Shell
     const starGeometry = new THREE.BufferGeometry();
     const starCount = 1800;
     const starPositions = new Float32Array(starCount * 3);
@@ -290,20 +282,19 @@ function App() {
       starPositions[i + 1] = radius * Math.sin(phi) * Math.sin(theta);
       starPositions[i + 2] = radius * Math.cos(phi);
 
-      // Subtle star twinkle hues (icy blue, warm amber, white)
       const hueChoice = Math.random();
       if (hueChoice > 0.7) {
         starColors[i] = 0.6;
         starColors[i + 1] = 0.8;
-        starColors[i + 2] = 1.0; // Cyan
+        starColors[i + 2] = 1.0; 
       } else if (hueChoice > 0.4) {
         starColors[i] = 1.0;
         starColors[i + 1] = 0.9;
-        starColors[i + 2] = 0.7; // Gold
+        starColors[i + 2] = 0.7;
       } else {
         starColors[i] = 0.9;
         starColors[i + 1] = 0.9;
-        starColors[i + 2] = 0.95; // White
+        starColors[i + 2] = 0.95;
       }
     }
 
@@ -322,7 +313,6 @@ function App() {
     scene.add(starfield);
     starfieldRef.current = starfield;
 
-    // Ambient & Point Lighting for specular shine
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
     scene.add(ambientLight);
 
@@ -331,7 +321,6 @@ function App() {
     scene.add(pointLight);
   }, [is3D]);
 
-  // 3D Smooth OrbitControls Auto-rotation
   useEffect(() => {
     if (!is3D || !fg3DRef.current) return;
     const controls = fg3DRef.current.controls?.();
@@ -341,7 +330,6 @@ function App() {
     }
   }, [is3D, autoRotate, selectedNode]);
 
-  // Custom 3D Celestial Node Object (Nebula folder rings + luminous star sphere)
   const nodeThreeObject = useCallback(
     (node: Node) => {
       const isDir = node.type === 'dir';
@@ -351,7 +339,6 @@ function App() {
 
       const group = new THREE.Group();
 
-      // Star sphere core
       const radius = Math.max(2.2, (node.val || 4) * 0.75);
       const sphereGeometry = new THREE.SphereGeometry(radius, 16, 16);
       const sphereMaterial = new THREE.MeshStandardMaterial({
@@ -367,7 +354,6 @@ function App() {
       const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
       group.add(sphereMesh);
 
-      // If Folder: Add Saturn-like Nebula Orbital Ring
       if (isDir && isHighlighted) {
         const ringGeometry = new THREE.RingGeometry(radius * 1.6, radius * 2.2, 32);
         const ringMaterial = new THREE.MeshBasicMaterial({
@@ -386,7 +372,6 @@ function App() {
     [spotlightActive, highlightNodes, activeFocusNode, colorMode],
   );
 
-  // Click node handler
   const onNodeClick = useCallback(
     (node: Node) => {
       setSelectedNode(node);
@@ -412,7 +397,6 @@ function App() {
     [is3D],
   );
 
-  // Open file in VSCode
   const handleOpenFile = (path?: string) => {
     if (!path) return;
     if (typeof acquireVsCodeApi !== 'undefined') {
@@ -421,7 +405,6 @@ function App() {
     }
   };
 
-  // Reset view
   const handleResetView = () => {
     setSelectedNode(null);
     setAutoRotate(true);
@@ -432,7 +415,6 @@ function App() {
     }
   };
 
-  // Node highlight / matching search
   const isMatch = (node: Node) => {
     if (!searchQuery.trim()) return false;
     return (
@@ -441,7 +423,6 @@ function App() {
     );
   };
 
-  // Custom 2D Node Canvas Renderer with Starlight Bloom & Spotlight Dimming
   const draw2DNode = useCallback(
     (node: Node, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const isSelected = selectedNode?.id === node.id;
@@ -453,7 +434,6 @@ function App() {
       const r = Math.max(2.5, (node.val || 4) * 0.9);
       const alpha = isHighlighted ? 1 : 0.15;
 
-      // Glowing Star Halo (Outer Bloom)
       if (isHighlighted) {
         ctx.beginPath();
         ctx.arc(node.x!, node.y!, r + (isSelected ? 6 : 3.5), 0, 2 * Math.PI, false);
@@ -461,7 +441,6 @@ function App() {
         ctx.fill();
       }
 
-      // Node Core
       ctx.beginPath();
       ctx.arc(node.x!, node.y!, r, 0, 2 * Math.PI, false);
       ctx.fillStyle = isSelected ? '#ffffff' : baseColor;
@@ -469,14 +448,12 @@ function App() {
       ctx.fill();
       ctx.globalAlpha = 1;
 
-      // Border stroke
       ctx.strokeStyle = isSelected
         ? '#ffffff'
         : `rgba(255, 255, 255, ${isHighlighted ? 0.5 : 0.1})`;
       ctx.lineWidth = isSelected ? 2 : 0.8 / globalScale;
       ctx.stroke();
 
-      // Text Label (only if zoomed in or selected/hovered/searched/highlighted)
       const showLabel =
         (globalScale > 1.3 && isHighlighted) || isSelected || isHovered || isSearchMatch;
       if (showLabel) {
@@ -486,7 +463,6 @@ function App() {
         const textWidth = ctx.measureText(label).width;
         const bckgDimensions = [textWidth + 6 / globalScale, fontSize + 4 / globalScale];
 
-        // Pill background
         ctx.fillStyle = `rgba(10, 12, 16, ${isHighlighted ? 0.9 : 0.3})`;
         ctx.beginPath();
         ctx.roundRect(
@@ -502,7 +478,6 @@ function App() {
           : `rgba(255, 255, 255, ${isHighlighted ? 0.25 : 0.05})`;
         ctx.stroke();
 
-        // Text string
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = isSelected ? '#ffffff' : `${baseColor}`;
@@ -516,7 +491,6 @@ function App() {
 
   return (
     <div className="graph-container">
-      {/* Top Left Glass HUD Panel */}
       <div className="overlay-panel">
         <div className="panel-header">
           <div className="pulse-indicator"></div>
@@ -526,7 +500,6 @@ function App() {
           </div>
         </div>
 
-        {/* Search Bar */}
         <div className="search-box">
           <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <circle cx="11" cy="11" r="8" strokeWidth="2" />
@@ -545,7 +518,6 @@ function App() {
           )}
         </div>
 
-        {/* Filter Chips */}
         <div className="filter-chips">
           <button
             className={`chip ${filterType === 'all' ? 'active' : ''}`}
@@ -567,7 +539,6 @@ function App() {
           </button>
         </div>
 
-        {/* Stats Grid */}
         <div className="stats-grid">
           <div className="stat-card">
             <div className="stat-value">{filteredData.nodes.length}</div>
@@ -579,7 +550,6 @@ function App() {
           </div>
         </div>
 
-        {/* View Mode Switch */}
         <div className="toggle-container">
           <button
             className={`toggle-btn ${!is3D ? 'active' : ''}`}
@@ -595,7 +565,6 @@ function App() {
           </button>
         </div>
 
-        {/* Color Mode Switch */}
         <div className="toggle-container" style={{ marginTop: '6px' }}>
           <button
             className={`toggle-btn ${colorMode === 'language' ? 'active' : ''}`}
@@ -611,7 +580,6 @@ function App() {
           </button>
         </div>
 
-        {/* Spotlight & Rotation Toggles */}
         <div className="action-row">
           <button
             className={`action-btn ${spotlightMode ? 'active' : ''}`}
@@ -636,7 +604,6 @@ function App() {
           </button>
         </div>
 
-        {/* Color Legend */}
         <div className="legend-box">
           <div className="legend-title">
             {colorMode === 'cluster' ? 'Community Clusters' : 'Languages & Types'}
@@ -674,7 +641,6 @@ function App() {
         </div>
       </div>
 
-      {/* Selected Node Details Drawer */}
       {selectedNode && (
         <div className="node-inspector">
           <div className="inspector-header">
@@ -729,7 +695,6 @@ function App() {
         </div>
       )}
 
-      {/* Force Graph Renderer */}
       {is3D ? (
         <ForceGraph3D
           ref={fg3DRef}

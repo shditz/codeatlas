@@ -29,36 +29,29 @@ export function registerContextCommand(program: Command): void {
         const db = openDatabase(cwd);
         const projectId = getOrCreateProject(db, cwd);
 
-        // Load file index
         const fileRepo = new FileRepository(db);
         const files = fileRepo.getAll(projectId);
         const filesByPath = new Map<string, FileInfo>(files.map((f) => [f.relativePath, f]));
 
-        // Load dependency graph
         const depRepo = new DependencyRepository(db);
         const deps = depRepo.getAll(projectId);
         const graph = new DependencyGraph();
         graph.addEdges(deps);
 
-        // Load search
         const searchRepo = new SearchRepository(db);
 
-        // Retrieve
         const retrieval = new RetrievalEngine(searchRepo, graph, filesByPath);
         const retrievalResult = retrieval.retrieve(task, parseInt(options.limit, 10));
 
-        // Rank
         const ranker = new Ranker({
           weights: config.ranking,
           queryTerms: retrievalResult.queryTerms,
         });
         const ranked = ranker.rank(retrievalResult.candidates);
 
-        // Discover rules
         const ruleEngine = new RuleEngine(cwd);
         const rules = ruleEngine.discover();
 
-        // Build context pack
         const project = db.get<Record<string, unknown>>(
           'SELECT * FROM projects WHERE id = ?',
           projectId,
@@ -103,7 +96,6 @@ export function registerContextCommand(program: Command): void {
           return;
         }
 
-        // Display
         console.log('');
         console.log(chalk.bold(`Context Pack: "${task}"`));
         console.log('');

@@ -18,13 +18,9 @@ export class CodeCompressor {
     this.tokenCounter = new TokenCounter();
   }
 
-  /**
-   * Compress source code using semantic skeleton extraction if required by token budget.
-   */
   compress(code: string, language: Language, maxBudgetTokens?: number): CompressionResult {
     const originalTokens = this.tokenCounter.count(code);
 
-    // If already within budget and budget is provided, return original
     if (maxBudgetTokens !== undefined && originalTokens <= maxBudgetTokens) {
       return {
         content: code,
@@ -36,7 +32,6 @@ export class CodeCompressor {
       };
     }
 
-    // Generate skeleton
     const skeletonCode = generateSkeleton(code, language);
     const skeletonTokens = this.tokenCounter.count(skeletonCode);
 
@@ -54,7 +49,6 @@ export class CodeCompressor {
       };
     }
 
-    // If even skeleton is too large, create a minimal digest
     const digest = this.createMinimalDigest(code, language);
     const digestTokens = this.tokenCounter.count(digest);
     const savedTokens = Math.max(0, originalTokens - digestTokens);

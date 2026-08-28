@@ -22,7 +22,6 @@ export function registerDoctorCommand(program: Command): void {
       const files = fileRepo.getAll(projectId);
       const deps = depRepo.getAll(projectId);
 
-      // Rule checks
       const ruleEngine = new RuleEngine(cwd);
       const rules = ruleEngine.discover();
       const conflicts = ruleEngine.detectConflicts();
@@ -35,7 +34,6 @@ export function registerDoctorCommand(program: Command): void {
         message: string;
       }> = [];
 
-      // Index freshness
       const indexState = db.get<{ last_indexed: string; file_count: number }>(
         'SELECT last_indexed, file_count FROM index_state WHERE project_id = ?',
         projectId,
@@ -57,7 +55,6 @@ export function registerDoctorCommand(program: Command): void {
         });
       }
 
-      // Files
       if (files.length === 0) {
         checks.push({ name: 'Files', status: 'fail', score: 0, message: 'No files in index' });
       } else {
@@ -69,7 +66,6 @@ export function registerDoctorCommand(program: Command): void {
         });
       }
 
-      // Dependencies
       if (deps.length === 0 && files.length > 5) {
         checks.push({
           name: 'Dependencies',
@@ -86,7 +82,6 @@ export function registerDoctorCommand(program: Command): void {
         });
       }
 
-      // Rules
       if (rules.length === 0) {
         checks.push({ name: 'Rules', status: 'warn', score: 60, message: 'No AI rules found' });
       } else if (conflicts.length > 0) {
@@ -105,7 +100,6 @@ export function registerDoctorCommand(program: Command): void {
         });
       }
 
-      // Coverage
       const parseableFiles = files.filter(
         (f) => f.language === 'typescript' || f.language === 'javascript',
       );
@@ -121,7 +115,6 @@ export function registerDoctorCommand(program: Command): void {
         message: `${coverage}% of parseable files have symbols`,
       });
 
-      // Overall score
       const overallScore = Math.round(checks.reduce((sum, c) => sum + c.score, 0) / checks.length);
 
       db.close();

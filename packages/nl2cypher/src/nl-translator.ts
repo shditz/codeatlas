@@ -28,7 +28,6 @@ export class NaturalLanguageToCypher {
       };
     }
 
-    // 1. If LLM is available and configured, attempt LLM completion
     if (this.llm && this.llm.isAvailable()) {
       try {
         const rawResponse = await this.llm.complete(trimmed, {
@@ -50,7 +49,6 @@ export class NaturalLanguageToCypher {
       }
     }
 
-    // 2. Heuristic rule-based fallback
     const heuristicQuery = this.heuristics.generate(trimmed);
     if (heuristicQuery && this.validateQuery(heuristicQuery)) {
       return {
@@ -60,7 +58,6 @@ export class NaturalLanguageToCypher {
       };
     }
 
-    // 3. Ultimate fallback: search across files/symbols matching the query text
     const sanitizedSearch = trimmed.replace(/['"\\]/g, '');
     const fallback = `MATCH (s:Symbol) WHERE s.name CONTAINS '${sanitizedSearch}' RETURN s`;
 
@@ -73,17 +70,14 @@ export class NaturalLanguageToCypher {
 
   private cleanQuery(raw: string): string {
     let clean = raw.trim();
-    // Remove markdown code blocks if any
     clean = clean
       .replace(/```(?:cypher|sql)?/gi, '')
       .replace(/```/g, '')
       .trim();
-    // Take only the first MATCH query if multiple lines returned
     const matchIndex = clean.indexOf('MATCH');
     if (matchIndex !== -1) {
       clean = clean.substring(matchIndex);
     }
-    // Remove trailing semicolons
     clean = clean.replace(/;+$/, '').trim();
     return clean;
   }

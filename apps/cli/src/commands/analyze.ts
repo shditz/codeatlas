@@ -57,7 +57,6 @@ export function registerAnalyzeCommand(program: Command): void {
         console.log(chalk.bold.cyan('CodeAtlas Codebase Architecture Analysis'));
         console.log(chalk.dim('='.repeat(50)));
 
-        // Summary
         console.log(
           chalk.bold(
             `Files: ${chalk.green(report.summary.totalFiles)} | Symbols: ${chalk.green(report.summary.totalSymbols)} | Dependencies: ${chalk.green(report.summary.totalEdges)} | Avg Degree: ${chalk.green(report.summary.averageDegree)}`,
@@ -67,7 +66,6 @@ export function registerAnalyzeCommand(program: Command): void {
 
         const showAll = !options.cycles && !options.deadCode && !options.hotspots;
 
-        // 1. Circular Dependencies
         if (showAll || options.cycles) {
           console.log(chalk.bold.underline('1. Circular Dependency Analysis:'));
           if (report.cycles.length === 0) {
@@ -83,7 +81,6 @@ export function registerAnalyzeCommand(program: Command): void {
           console.log('');
         }
 
-        // 2. Dead Code Detection
         if (showAll || options.deadCode) {
           console.log(chalk.bold.underline('2. Dead / Orphaned Code Analysis:'));
           if (report.deadCode.length === 0) {
@@ -104,7 +101,6 @@ export function registerAnalyzeCommand(program: Command): void {
           console.log('');
         }
 
-        // 3. Hotspots & High Coupling
         if (showAll || options.hotspots) {
           console.log(chalk.bold.underline('3. High Coupling & Structural Hotspots:'));
           if (report.hotspots.length === 0) {
@@ -123,7 +119,6 @@ export function registerAnalyzeCommand(program: Command): void {
           console.log('');
         }
 
-        // 4. Git Technical Debt Hotspots (Code Churn + Coupling)
         if ((showAll || options.hotspots) && report.gitHotspots && report.gitHotspots.length > 0) {
           console.log(chalk.bold.underline('4. Git Technical Debt & Churn Hotspots:'));
           console.table(

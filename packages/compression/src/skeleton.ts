@@ -1,9 +1,5 @@
 import type { Language } from '@codeatlas/core';
 
-/**
- * Generate a structural skeleton of the code by stripping function/method bodies
- * while preserving imports, types, interfaces, class declarations, and function signatures.
- */
 export function generateSkeleton(code: string, language: Language): string {
   switch (language) {
     case 'typescript':
@@ -20,9 +16,6 @@ export function generateSkeleton(code: string, language: Language): string {
   }
 }
 
-/**
- * TypeScript / JavaScript Skeleton Generator
- */
 function generateTypeScriptSkeleton(code: string): string {
   const lines = code.split('\n');
   const result: string[] = [];
@@ -35,7 +28,6 @@ function generateTypeScriptSkeleton(code: string): string {
     const rawLine = lines[i]!;
     const line = rawLine.trim();
 
-    // Multiline comment tracking
     if (line.startsWith('/*') && !line.includes('*/')) {
       inComment = true;
       result.push(rawLine);
@@ -47,7 +39,6 @@ function generateTypeScriptSkeleton(code: string): string {
       continue;
     }
 
-    // Keep comments, imports, exports, types, interfaces
     if (
       line.startsWith('//') ||
       line.startsWith('import ') ||
@@ -63,7 +54,6 @@ function generateTypeScriptSkeleton(code: string): string {
       continue;
     }
 
-    // Check if line defines a function or method start
     const isFunctionHeader =
       /^(export\s+)?(async\s+)?function\b/.test(line) ||
       /^(public\s+|private\s+|protected\s+|static\s+|async\s+)*(constructor|get\s+\w+|set\s+\w+|\w+)\s*\([^)]*\)\s*(:\s*[^;{]+)?\s*\{?$/.test(
@@ -73,7 +63,6 @@ function generateTypeScriptSkeleton(code: string): string {
         line,
       );
 
-    // If currently skipping function body
     if (inFunctionBody) {
       const openCount = (rawLine.match(/\{/g) || []).length;
       const closeCount = (rawLine.match(/\}/g) || []).length;
@@ -81,7 +70,6 @@ function generateTypeScriptSkeleton(code: string): string {
 
       if (braceDepth <= functionBodyDepth) {
         inFunctionBody = false;
-        // Function ended
         const indent = ' '.repeat(rawLine.search(/\S/) > -1 ? rawLine.search(/\S/) : 2);
         result.push(`${indent}}`);
       }
@@ -93,7 +81,6 @@ function generateTypeScriptSkeleton(code: string): string {
       const openCount = (rawLine.match(/\{/g) || []).length;
       const closeCount = (rawLine.match(/\}/g) || []).length;
 
-      // If closed on same line (e.g. () => {})
       if (openCount === closeCount && openCount > 0) {
         result.push(`${headerPart} { /* ... */ }`);
       } else {
@@ -105,7 +92,6 @@ function generateTypeScriptSkeleton(code: string): string {
       continue;
     }
 
-    // Keep class headers, properties, etc.
     const openCount = (rawLine.match(/\{/g) || []).length;
     const closeCount = (rawLine.match(/\}/g) || []).length;
     braceDepth += openCount - closeCount;
@@ -116,9 +102,6 @@ function generateTypeScriptSkeleton(code: string): string {
   return result.join('\n');
 }
 
-/**
- * Python Skeleton Generator
- */
 function generatePythonSkeleton(code: string): string {
   const lines = code.split('\n');
   const result: string[] = [];
@@ -138,10 +121,8 @@ function generatePythonSkeleton(code: string): string {
 
     if (inDef) {
       if (currentIndent > defIndent) {
-        // Still inside def body, skip
         continue;
       } else {
-        // Exited def body
         inDef = false;
       }
     }
@@ -161,9 +142,6 @@ function generatePythonSkeleton(code: string): string {
   return result.join('\n');
 }
 
-/**
- * Go Skeleton Generator
- */
 function generateGoSkeleton(code: string): string {
   const lines = code.split('\n');
   const result: string[] = [];
@@ -213,9 +191,6 @@ function generateGoSkeleton(code: string): string {
   return result.join('\n');
 }
 
-/**
- * Rust Skeleton Generator
- */
 function generateRustSkeleton(code: string): string {
   const lines = code.split('\n');
   const result: string[] = [];
@@ -265,9 +240,6 @@ function generateRustSkeleton(code: string): string {
   return result.join('\n');
 }
 
-/**
- * Generic Brace-based Skeleton Generator
- */
 function generateGenericBraceSkeleton(code: string): string {
   return generateTypeScriptSkeleton(code);
 }

@@ -70,7 +70,6 @@ export class Indexer {
     const scanResult = await this.scanner.scan();
     const files = scanResult.files;
 
-    // Save project metadata
     const projectRepo = new ProjectRepository(this.options.db);
     projectRepo.update(this.options.projectId, {
       packageManager: scanResult.project.packageManager,
@@ -83,7 +82,6 @@ export class Indexer {
     const existingPaths = new Set(existingHashes.keys());
     const currentPaths = new Set(files.map((f) => f.relativePath));
 
-    // Delete removed files and their FTS entries
     for (const existingPath of existingPaths) {
       if (!currentPaths.has(existingPath)) {
         const existingFile = this.fileRepo.getByPath(this.options.projectId, existingPath);
@@ -96,7 +94,6 @@ export class Indexer {
       }
     }
 
-    // Filter files needing update
     const pendingFiles: FileInfo[] = [];
     const contentCache = new Map<string, string>();
     for (const file of files) {
@@ -119,7 +116,6 @@ export class Indexer {
       }
     }
 
-    // Process pending files in parallel batches
     const dependencies: DependencyEdge[] = [];
 
     for (let i = 0; i < pendingFiles.length; i += this.concurrency) {
@@ -143,7 +139,6 @@ export class Indexer {
         }),
       );
 
-      // Save chunk results to SQLite inside a single transaction for maximum I/O performance
       this.options.db.transaction(() => {
         for (const { file, content, parseResult, error } of parsedResults) {
           if (error) {
@@ -221,14 +216,12 @@ export class Indexer {
       });
     }
 
-    // Insert dependencies
     if (dependencies.length > 0) {
       this.depRepo.deleteAll(this.options.projectId);
       this.depRepo.insertBatch(this.options.projectId, dependencies);
       dependenciesCreated = dependencies.length;
     }
 
-    // Update index state
     this.options.db.run(
       `INSERT INTO index_state (project_id, file_count, symbol_count, import_count, version, hash)
        VALUES (?, ?, ?, ?, ?, ?)
@@ -265,7 +258,6 @@ export class Indexer {
     importPath: string,
     existingPaths: Set<string>,
   ): string | undefined {
-    // Skip external packages
     if (!importPath.startsWith('.') && !importPath.startsWith('/')) {
       return undefined;
     }
@@ -290,7 +282,6 @@ export class Indexer {
       resolved = importPath;
     }
 
-    // Try extensions
     const extensions = [
       '.ts',
       '.tsx',

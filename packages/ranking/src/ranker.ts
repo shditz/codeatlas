@@ -36,7 +36,6 @@ export class Ranker {
       const explanations: ScoreExplanation[] = [];
       let totalScore = 0;
 
-      // Lexical relevance
       const lexicalScore = this.computeLexicalScore(candidate);
       if (lexicalScore > 0) {
         totalScore += lexicalScore * this.weights.lexical_weight;
@@ -48,7 +47,6 @@ export class Ranker {
         });
       }
 
-      // Symbol relevance
       const symbolScore = this.computeSymbolScore(candidate);
       if (symbolScore > 0) {
         totalScore += symbolScore * this.weights.symbol_weight;
@@ -60,7 +58,6 @@ export class Ranker {
         });
       }
 
-      // Path relevance
       const pathScore = this.computePathScore(candidate);
       if (pathScore > 0) {
         totalScore += pathScore * this.weights.path_weight;
@@ -72,7 +69,6 @@ export class Ranker {
         });
       }
 
-      // Dependency proximity
       const depScore = this.computeDependencyScore(candidate);
       if (depScore > 0) {
         totalScore += depScore * this.weights.dependency_weight;
@@ -84,7 +80,6 @@ export class Ranker {
         });
       }
 
-      // Module coherence
       const moduleScore = this.computeModuleScore(candidate);
       if (moduleScore > 0) {
         totalScore += moduleScore * this.weights.module_weight;
@@ -96,7 +91,6 @@ export class Ranker {
         });
       }
 
-      // Normalize to 0-1 range
       const maxPossible =
         this.weights.lexical_weight +
         this.weights.symbol_weight +

@@ -26,7 +26,6 @@ export class FileRepository {
       null,
       file.lastModified ?? null,
     );
-    // Query the actual row id — lastInsertRowid is unreliable for ON CONFLICT DO UPDATE
     const row = this.db.get<{ id: number }>(
       'SELECT id FROM files WHERE project_id = ? AND relative_path = ?',
       projectId,
@@ -165,7 +164,6 @@ export class SymbolRepository {
   }
 
   deleteByFile(fileId: number): void {
-    // Clean up FTS entries safely
     const symbols = this.getByFile(fileId);
     for (const sym of symbols) {
       try {

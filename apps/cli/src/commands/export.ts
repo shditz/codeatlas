@@ -132,7 +132,6 @@ export function registerExportCommand(program: Command): void {
       const content = exporter.export(contextPack, { target });
       const outputPath = options.output ?? path.join(cwd, exporter.defaultFilename());
 
-      // Check for existing file
       if (fs.existsSync(outputPath) && !options.output) {
         const basename = path.basename(outputPath);
         console.log(chalk.yellow(`  Existing ${basename} detected.`));

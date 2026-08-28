@@ -80,7 +80,6 @@ export class CodeAtlasOverviewProvider implements vscode.TreeDataProvider<CodeAt
     const { fileRepo, symbolRepo } = this;
 
     if (!element) {
-      // Root items
       const fileCount = fileRepo.count(this.projectId);
       const symbolCount = symbolRepo.count();
 

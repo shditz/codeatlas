@@ -46,7 +46,6 @@ export async function run(): Promise<void> {
       return;
     }
 
-    // Set up storage and indexer
     const dbPath = path.join(root, '.atlas', 'atlas.db');
     fs.mkdirSync(path.dirname(dbPath), { recursive: true });
     const db = new AtlasDatabase(dbPath);
@@ -61,11 +60,9 @@ export async function run(): Promise<void> {
     });
     await indexer.index();
 
-    // Get rules
     const ruleEngine = new RuleEngine(root);
     const rules = ruleEngine.discover();
 
-    // Build context pack
     const contextEngine = new ContextEngine({
       tokenBudget,
       defaultMode: 'full',
@@ -109,7 +106,6 @@ export async function run(): Promise<void> {
       rules,
     });
 
-    // Export formatted pack
     const exporter = createExporter(targetAgent);
     const outputContent = exporter.export(pack, { target: targetAgent });
 
@@ -126,7 +122,6 @@ export async function run(): Promise<void> {
       `✅ Generated Context Pack: ${pack.files.length} files, ${pack.tokenUsage} tokens -> ${outFile}`,
     );
 
-    // Post comment if applicable
     if (postComment && token && github.context.payload.pull_request) {
       const prNumber = github.context.payload.pull_request.number;
       const octokit = github.getOctokit(token);

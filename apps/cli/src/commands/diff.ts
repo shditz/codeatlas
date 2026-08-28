@@ -79,7 +79,6 @@ export function registerDiffCommand(program: Command): void {
         const graph = new DependencyGraph();
         graph.addEdges(deps);
 
-        // Find dependent files (callers / consumers of changed files)
         const affectedFiles = new Set<string>(changedFiles);
         for (const file of changedFiles) {
           const dependents = graph.getDependents(file);
@@ -121,7 +120,6 @@ export function registerDiffCommand(program: Command): void {
           });
         }
 
-        // Sort by score descending
         rankedResults.sort((a, b) => b.relevance - a.relevance);
 
         const ruleEngine = new RuleEngine(cwd);

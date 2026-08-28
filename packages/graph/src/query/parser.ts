@@ -24,7 +24,6 @@ export class Parser {
     let edge: EdgePattern | undefined;
     let target: NodePattern | undefined;
 
-    // Check if there is an edge pattern: -[...] -> or -> or -
     if (this.check('DASH') || this.check('ARROW_LEFT')) {
       edge = this.parseEdgePattern();
       target = this.parseNodePattern();

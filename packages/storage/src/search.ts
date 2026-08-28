@@ -108,7 +108,7 @@ export class SearchRepository {
 
   private sanitizeQuery(query: string): string {
     const sanitized = query
-      .replace(/[^\w\s]/g, ' ') // Only allow word characters and spaces
+      .replace(/[^\w\s]/g, ' ') 
       .trim()
       .split(/\s+/)
       .filter((term) => term.length > 0)

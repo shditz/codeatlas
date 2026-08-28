@@ -74,7 +74,6 @@ export function activate(context: vscode.ExtensionContext): void {
   vscode.window.registerTreeDataProvider('codeatlas.overview', overviewProvider);
   vscode.window.registerTreeDataProvider('codeatlas.rules', rulesProvider);
 
-  // Watch for AI rules changes
   const rulesWatcher = vscode.workspace.createFileSystemWatcher(
     '**/{.cursorrules,.windsurfrules,.clinerules,.traerules,.lingmarules,.comaterules,.codegeexrules,.roorules,.augmentrules,AGENTS.md,CLAUDE.md,GEMINI.md,DEEPSEEK.md,QWEN.md,KIMI.md,GROK.md,DEVIN.md,OPENHANDS.md,REPLIT.md,AMAZONQ.md,ANTIGRAVITY.md}',
   );
@@ -83,7 +82,6 @@ export function activate(context: vscode.ExtensionContext): void {
   rulesWatcher.onDidDelete(() => rulesProvider.refresh());
   context.subscriptions.push(rulesWatcher);
 
-  // Command 1: Index Codebase
   context.subscriptions.push(
     vscode.commands.registerCommand('codeatlas.indexCodebase', async () => {
       if (!workspaceRoot) {
@@ -129,7 +127,6 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
   );
 
-  // Command 2: Export Context
   context.subscriptions.push(
     vscode.commands.registerCommand('codeatlas.exportContext', async (uri?: vscode.Uri) => {
       if (!workspaceRoot) {
@@ -254,7 +251,6 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
   );
 
-  // Command 3: Generate PR Context
   context.subscriptions.push(
     vscode.commands.registerCommand('codeatlas.generatePRContext', async () => {
       if (!workspaceRoot) {
@@ -282,7 +278,6 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
   );
 
-  // Command 4: Run Cypher Graph Query
   context.subscriptions.push(
     vscode.commands.registerCommand('codeatlas.queryGraph', async () => {
       const presets = [
@@ -394,7 +389,6 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
   );
 
-  // Command 5: Toggle Watcher
   context.subscriptions.push(
     vscode.commands.registerCommand('codeatlas.toggleWatcher', async () => {
       if (!workspaceRoot) return;
@@ -431,7 +425,6 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
   );
 
-  // Command 6: Open Graph View
   context.subscriptions.push(
     vscode.commands.registerCommand('codeatlas.openGraphView', () => {
       GraphViewProvider.createOrShow(context.extensionUri, db, projectId);

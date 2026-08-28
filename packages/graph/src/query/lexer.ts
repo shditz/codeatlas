@@ -33,7 +33,6 @@ export class Lexer {
 
       const char = this.input[this.pos]!;
 
-      // Arrow or dash patterns
       if (this.input.startsWith('->', this.pos)) {
         tokens.push(this.makeToken('ARROW_RIGHT', '->', 2));
         continue;
@@ -47,7 +46,6 @@ export class Lexer {
         continue;
       }
 
-      // Comparison operators
       if (
         this.input.startsWith('!=', this.pos) ||
         this.input.startsWith('>=', this.pos) ||
@@ -62,7 +60,6 @@ export class Lexer {
         continue;
       }
 
-      // Single character delimiters
       if (char === ':') {
         tokens.push(this.makeToken('COLON', ':', 1));
         continue;
@@ -96,25 +93,21 @@ export class Lexer {
         continue;
       }
 
-      // String literals (single or double quote)
       if (char === '"' || char === "'") {
         tokens.push(this.readString(char));
         continue;
       }
 
-      // Numbers
       if (/\d/.test(char)) {
         tokens.push(this.readNumber());
         continue;
       }
 
-      // Identifiers or Keywords
       if (/[a-zA-Z_]/.test(char)) {
         tokens.push(this.readIdentifier());
         continue;
       }
 
-      // Unknown character fallback
       this.advance();
     }
 
@@ -159,7 +152,7 @@ export class Lexer {
   private readString(quote: string): Token {
     const startCol = this.column;
     const startLine = this.line;
-    this.advance(); // skip quote
+    this.advance(); 
     let value = '';
 
     while (this.pos < this.input.length && this.input[this.pos] !== quote) {
@@ -173,7 +166,7 @@ export class Lexer {
     }
 
     if (this.pos < this.input.length && this.input[this.pos] === quote) {
-      this.advance(); // skip closing quote
+      this.advance();
     }
 
     return {

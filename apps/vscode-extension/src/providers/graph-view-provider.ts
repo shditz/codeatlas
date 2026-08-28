@@ -22,14 +22,12 @@ export class GraphViewProvider {
       ? vscode.window.activeTextEditor.viewColumn
       : undefined;
 
-    // If we already have a panel, show it.
     if (GraphViewProvider.currentPanel) {
       GraphViewProvider.currentPanel.setDatabase(db, projectId);
       GraphViewProvider.currentPanel._panel.reveal(column);
       return;
     }
 
-    // Otherwise, create a new panel.
     const panel = vscode.window.createWebviewPanel(
       'codeatlasGraph',
       'CodeAtlas: Architecture Graph',
@@ -58,13 +56,10 @@ export class GraphViewProvider {
     this._db = db;
     this._projectId = projectId;
 
-    // Set the webview's initial html content
     this._update();
 
-    // Listen for when the panel is disposed
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 
-    // Handle messages from the webview
     this._panel.webview.onDidReceiveMessage(
       (message) => {
         switch (message.command) {
@@ -137,21 +132,21 @@ export class GraphViewProvider {
         const dir = parts.slice(0, -1).join('/');
         const ext = name.split('.').pop()?.toLowerCase() || '';
 
-        let color = '#94a3b8'; // default starlight slate
+        let color = '#94a3b8'; 
         if (f.language === 'typescript' || ext === 'ts' || ext === 'tsx')
-          color = '#38bdf8'; // Cyan
+          color = '#38bdf8'; 
         else if (f.language === 'javascript' || ext === 'js' || ext === 'jsx')
-          color = '#facc15'; // Gold
+          color = '#facc15'; 
         else if (f.language === 'php' || ext === 'php')
-          color = '#a78bfa'; // Purple/Violet
+          color = '#a78bfa'; 
         else if (f.language === 'python' || ext === 'py')
-          color = '#34d399'; // Emerald
+          color = '#34d399'; 
         else if (ext === 'css' || ext === 'scss' || ext === 'less')
-          color = '#f43f5e'; // Rose Pink
+          color = '#f43f5e'; 
         else if (ext === 'html' || ext === 'htm')
-          color = '#fb923c'; // Amber Orange
+          color = '#fb923c'; 
         else if (ext === 'md' || ext === 'json' || ext === 'yaml' || ext === 'yml')
-          color = '#e2e8f0'; // Ice White
+          color = '#e2e8f0'; 
 
         nodeMap.set(f.relativePath, {
           id: f.relativePath,
@@ -164,7 +159,6 @@ export class GraphViewProvider {
           color,
         });
 
-        // Generate folder nodes & hierarchical containment links
         if (dir) {
           let currentPath = '';
           for (let i = 0; i < parts.length - 1; i++) {
@@ -204,7 +198,6 @@ export class GraphViewProvider {
         }
       }
 
-      // Build dependency graph and detect communities / clusters
       const graph = new DependencyGraph();
       for (const d of deps) {
         graph.addEdge({
@@ -217,7 +210,6 @@ export class GraphViewProvider {
       }
       const communities = graph.detectCommunities(6);
 
-      // Add code import/reference dependencies
       for (const d of deps) {
         if (nodeMap.has(d.source) && nodeMap.has(d.target)) {
           links.push({
@@ -256,7 +248,6 @@ export class GraphViewProvider {
   private _update() {
     const webview = this._panel.webview;
 
-    // We expect the webview React app to be built into apps/webview/dist
     const webviewDistPath = vscode.Uri.joinPath(this._extensionUri, '..', 'webview', 'dist');
     const indexHtmlPath = path.join(webviewDistPath.fsPath, 'index.html');
 
@@ -264,13 +255,8 @@ export class GraphViewProvider {
     if (fs.existsSync(indexHtmlPath)) {
       html = fs.readFileSync(indexHtmlPath, 'utf8');
 
-      // We need to replace relative paths with webview URIs
-      // <script type="module" crossorigin src="/assets/index-XXXX.js"></script>
-      // <link rel="stylesheet" crossorigin href="/assets/index-XXXX.css">
-
       const assetUri = webview.asWebviewUri(webviewDistPath).toString();
 
-      // Update asset paths
       html = html.replace(/(src|href)="\/assets\//g, `$1="${assetUri}/assets/`);
     } else {
       html = `<!DOCTYPE html>

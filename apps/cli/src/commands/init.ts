@@ -34,17 +34,14 @@ export function registerInitCommand(program: Command): void {
       fs.mkdirSync(path.join(atlasDir, 'snapshots'), { recursive: true });
       fs.mkdirSync(path.join(atlasDir, 'cache'), { recursive: true });
 
-      // Create config
       const config = defaultConfig();
       config.project.name = path.basename(cwd);
       const configContent = generateConfigTOML(config);
       fs.writeFileSync(getConfigPath(cwd), configContent, 'utf-8');
 
-      // Initialize database
       const db = new AtlasDatabase(getDbPath(cwd));
       runMigrations(db);
 
-      // Create project record
       const normalizedRoot = cwd.replace(/\\/g, '/');
       db.run(
         'INSERT OR IGNORE INTO projects (name, root) VALUES (?, ?)',
@@ -54,7 +51,6 @@ export function registerInitCommand(program: Command): void {
 
       db.close();
 
-      // Create .atlasignore if it doesn't exist
       const ignorePath = path.join(cwd, '.atlasignore');
       if (!fs.existsSync(ignorePath)) {
         fs.writeFileSync(

@@ -38,9 +38,6 @@ export class GraphQueryEngine {
     }
   }
 
-  /**
-   * Execute a Cypher-like string query against the graph.
-   */
   execute(queryString: string): GraphQueryResult {
     const startTime = Date.now();
     const parser = new Parser(queryString);
@@ -60,12 +57,10 @@ export class GraphQueryEngine {
   private executeQuery(query: GraphQuery): Array<Record<string, unknown>> {
     const results: Array<Record<string, unknown>> = [];
 
-    // Filter candidate source nodes
     const candidateSources = this.findMatchingNodes(query.source);
 
     for (const sourceNode of candidateSources) {
       if (!query.edge || !query.target) {
-        // Single node query: MATCH (n) WHERE ... RETURN n
         const binding: Record<string, unknown> = {
           [query.source.variable]: sourceNode,
         };
@@ -76,7 +71,6 @@ export class GraphQueryEngine {
         continue;
       }
 
-      // Edge traversal query: MATCH (s)-[e]->(t)
       const connectedEdges = this.findMatchingEdges(sourceNode.id, query.edge);
 
       for (const edge of connectedEdges) {
@@ -152,7 +146,6 @@ export class GraphQueryEngine {
         return e.source === nodeId || e.target === nodeId;
       });
     } else {
-      // Build from DependencyGraph direct methods
       if (edgePattern.direction === 'outgoing' || edgePattern.direction === 'both') {
         const outDeps = this.graph.getDirectDependencies(nodeId);
         candidateEdges.push(

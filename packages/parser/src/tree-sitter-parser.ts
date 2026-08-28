@@ -158,10 +158,6 @@ export async function parseFile(
   return { symbols, imports, exportedNames, errors };
 }
 
-/* ─────────────────────────────────────────────────────────────
- * TypeScript / JavaScript AST Extraction
- * ───────────────────────────────────────────────────────────── */
-
 function extractTypeScriptSymbols(
   node: AstNode,
   filePath: string,
@@ -358,10 +354,6 @@ function extractTypeScriptExportedNames(node: AstNode, exportedNames: string[]):
   }
 }
 
-/* ─────────────────────────────────────────────────────────────
- * Python AST Extraction
- * ───────────────────────────────────────────────────────────── */
-
 function extractPythonSymbols(
   node: AstNode,
   filePath: string,
@@ -463,10 +455,6 @@ function extractPythonImports(node: AstNode, filePath: string, imports: ImportIn
   }
 }
 
-/* ─────────────────────────────────────────────────────────────
- * Go AST Extraction
- * ───────────────────────────────────────────────────────────── */
-
 function extractGoSymbols(
   node: AstNode,
   filePath: string,
@@ -558,10 +546,6 @@ function isGoExported(name: string): boolean {
   return /^[A-Z]/.test(name);
 }
 
-/* ─────────────────────────────────────────────────────────────
- * Rust AST Extraction
- * ───────────────────────────────────────────────────────────── */
-
 function extractRustSymbols(
   node: AstNode,
   filePath: string,
@@ -645,10 +629,6 @@ function extractRustImports(node: AstNode, filePath: string, imports: ImportInfo
     }
   }
 }
-
-/* ─────────────────────────────────────────────────────────────
- * Helpers & Complexity Calculators
- * ───────────────────────────────────────────────────────────── */
 
 export function calculateAstCyclomaticComplexity(node: AstNode): number {
   let complexity = 1;
@@ -740,10 +720,6 @@ function isBlockNode(type: string): boolean {
   );
 }
 
-/* ─────────────────────────────────────────────────────────────
- * Multi-Language Lexical AST Extractors (C#, C++, Java, Ruby, Kotlin, Swift)
- * ───────────────────────────────────────────────────────────── */
-
 function extractCSharpSymbolsAndImports(
   content: string,
   filePath: string,
@@ -759,7 +735,6 @@ function extractCSharpSymbolsAndImports(
     const line = rawLine.trim();
     if (!line || line.startsWith('//') || line.startsWith('/*')) continue;
 
-    // using Namespace.Sub;
     const usingMatch = line.match(/^using\s+([\w.]+);/);
     if (usingMatch && usingMatch[1]) {
       imports.push({
@@ -773,7 +748,6 @@ function extractCSharpSymbolsAndImports(
       continue;
     }
 
-    // class, interface, struct, enum
     const typeMatch = line.match(
       /(?:public|private|protected|internal|static|abstract|sealed|\s)*\b(class|interface|struct|enum)\s+([A-Za-z0-9_]+)/,
     );
@@ -795,7 +769,6 @@ function extractCSharpSymbolsAndImports(
       continue;
     }
 
-    // methods
     const methodMatch = line.match(
       /(?:(?:public|private|protected|internal|static|async|virtual|override|abstract|sealed)\s+)+([\w<>[\]?]+)\s+([A-Za-z0-9_]+)\s*\([^;{}]*\)/,
     );
@@ -836,7 +809,6 @@ function extractCppSymbolsAndImports(
     const line = rawLine.trim();
     if (!line || line.startsWith('//') || line.startsWith('/*')) continue;
 
-    // #include <vector> or #include "my_header.h"
     const incMatch = line.match(/^#include\s*[<"]([^>"]+)[>"]/);
     if (incMatch && incMatch[1]) {
       imports.push({
@@ -850,7 +822,6 @@ function extractCppSymbolsAndImports(
       continue;
     }
 
-    // class, struct, enum
     const typeMatch = line.match(/\b(class|struct|enum(?:\s+class)?)\s+([A-Za-z0-9_]+)/);
     if (typeMatch && typeMatch[1] && typeMatch[2]) {
       const kind = typeMatch[1].startsWith('enum') ? 'enum' : (typeMatch[1] as SymbolKind);
@@ -869,7 +840,6 @@ function extractCppSymbolsAndImports(
       continue;
     }
 
-    // functions
     const funcMatch = line.match(
       /(?:[\w:*&<>]+\s+)+([A-Za-z0-9_]+)\s*\([^;{}]*\)\s*(?:const)?\s*\{/,
     );
@@ -907,7 +877,6 @@ function extractJavaSymbolsAndImports(
     const line = rawLine.trim();
     if (!line || line.startsWith('//') || line.startsWith('/*')) continue;
 
-    // import java.util.List;
     const impMatch = line.match(/^import\s+(?:static\s+)?([\w.*]+);/);
     if (impMatch && impMatch[1]) {
       imports.push({
@@ -921,7 +890,6 @@ function extractJavaSymbolsAndImports(
       continue;
     }
 
-    // class, interface, enum
     const typeMatch = line.match(
       /(?:public|protected|private|abstract|static|final|\s)*\b(class|interface|enum)\s+([A-Za-z0-9_]+)/,
     );
@@ -943,7 +911,6 @@ function extractJavaSymbolsAndImports(
       continue;
     }
 
-    // methods
     const methodMatch = line.match(
       /(?:public|protected|private|static|final|abstract|synchronized|\s)+([\w<>[\]]+)\s+([A-Za-z0-9_]+)\s*\([^;{}]*\)\s*(?:throws\s+[\w,\s]+)?\s*\{/,
     );
@@ -982,7 +949,6 @@ function extractRubySymbolsAndImports(
     const line = rawLine.trim();
     if (!line || line.startsWith('#')) continue;
 
-    // require 'json'
     const reqMatch = line.match(/^(?:require|require_relative|load)\s+['"]([^'"]+)['"]/);
     if (reqMatch && reqMatch[1]) {
       imports.push({
@@ -996,7 +962,6 @@ function extractRubySymbolsAndImports(
       continue;
     }
 
-    // class, module
     const classMatch = line.match(/^(?:class|module)\s+([A-Z][A-Za-z0-9_:]*)/);
     if (classMatch && classMatch[1]) {
       const name = classMatch[1];
@@ -1014,7 +979,6 @@ function extractRubySymbolsAndImports(
       continue;
     }
 
-    // def method_name
     const defMatch = line.match(/^def\s+([A-Za-z0-9_!?.]+)/);
     if (defMatch && defMatch[1]) {
       const name = defMatch[1];
@@ -1048,7 +1012,6 @@ function extractKotlinSymbolsAndImports(
     const line = rawLine.trim();
     if (!line || line.startsWith('//') || line.startsWith('/*')) continue;
 
-    // import kotlinx.coroutines.*
     const impMatch = line.match(/^import\s+([\w.*]+)/);
     if (impMatch && impMatch[1]) {
       imports.push({
@@ -1062,7 +1025,6 @@ function extractKotlinSymbolsAndImports(
       continue;
     }
 
-    // class, interface
     const typeMatch = line.match(
       /(?:open|data|sealed|abstract|internal|public|private|\s)*\b(class|interface|object|enum\s+class)\s+([A-Za-z0-9_]+)/,
     );
@@ -1084,7 +1046,6 @@ function extractKotlinSymbolsAndImports(
       continue;
     }
 
-    // fun name()
     const funMatch = line.match(
       /(?:suspend|override|inline|internal|public|private|\s)*\bfun\s+(?:<[^>]+>\s+)?([A-Za-z0-9_]+)\s*\(/,
     );
@@ -1121,7 +1082,6 @@ function extractSwiftSymbolsAndImports(
     const line = rawLine.trim();
     if (!line || line.startsWith('//') || line.startsWith('/*')) continue;
 
-    // import SwiftUI
     const impMatch = line.match(/^import\s+([A-Za-z0-9_]+)/);
     if (impMatch && impMatch[1]) {
       imports.push({
@@ -1135,7 +1095,6 @@ function extractSwiftSymbolsAndImports(
       continue;
     }
 
-    // class, struct, protocol, enum
     const typeMatch = line.match(
       /(?:public|open|final|internal|fileprivate|private|\s)*\b(class|struct|protocol|enum)\s+([A-Za-z0-9_]+)/,
     );
@@ -1164,7 +1123,6 @@ function extractSwiftSymbolsAndImports(
       continue;
     }
 
-    // func
     const funcMatch = line.match(
       /(?:public|private|fileprivate|open|static|class|mutating|\s)*\bfunc\s+([A-Za-z0-9_]+)\s*\(/,
     );

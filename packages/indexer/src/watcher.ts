@@ -52,7 +52,6 @@ export class RepositoryWatcher {
         if (!filename) return;
         const normalized = normalizePath(filename);
 
-        // Check ignore patterns
         for (const pattern of IGNORE_PATTERNS) {
           if (
             normalized.startsWith(pattern) ||
@@ -86,7 +85,6 @@ export class RepositoryWatcher {
 
   private async triggerReindex(): Promise<void> {
     if (this.isIndexing) {
-      // Re-trigger after current indexing finishes
       if (this.debounceTimer) clearTimeout(this.debounceTimer);
       this.debounceTimer = setTimeout(() => this.triggerReindex(), 200);
       return;

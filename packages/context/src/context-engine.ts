@@ -39,7 +39,6 @@ export class ContextEngine {
     let remainingTokens = this.options.tokenBudget;
     const tokenBreakdown = { architecture: 0, rules: 0, repositoryMap: 0, code: 0 };
 
-    // 1. Intelligent rule filtering and token allocation
     const taskTerms = input.task
       .toLowerCase()
       .split(/\s+/)
@@ -56,7 +55,6 @@ export class ContextEngine {
     tokenBreakdown.rules = allocatedRulesTokens;
     remainingTokens -= allocatedRulesTokens;
 
-    // 2. Reserve tokens for repository map
     if (input.repositoryMap) {
       const mapTokens = this.tokenCounter.count(input.repositoryMap);
       const allocatedMapTokens = Math.min(mapTokens, Math.floor(remainingTokens * 0.15));
@@ -64,7 +62,6 @@ export class ContextEngine {
       remainingTokens -= allocatedMapTokens;
     }
 
-    // 3. Progressive Code Allocation: Full for top direct matches, Skeleton/Digest for deep dependencies
     const contextFiles: ContextFile[] = [];
     let codeTokensUsed = 0;
 
@@ -85,7 +82,6 @@ export class ContextEngine {
 
       const lang = result.candidate.file?.language ?? 'unknown';
 
-      // Progressive strategy: Top 3 results get maximum budget allowed; subsequent results are compressed to signature if budget is getting tight
       const isTopResult = i < 3 && result.relevance > 0.5;
       const maxFileBudget = isTopResult
         ? remainingTokens

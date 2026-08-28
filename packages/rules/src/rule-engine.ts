@@ -52,17 +52,14 @@ export class RuleEngine {
   discover(): Rule[] {
     this.rules = [];
 
-    // Discover root-level rule files
     for (const spec of RULE_FILES) {
       this.discoverFile(spec.pattern, spec.source, 'global', spec.agentTarget);
     }
 
-    // Discover rule directories
     for (const spec of RULE_DIRECTORIES) {
       this.discoverDirectory(spec.dir, spec.source, spec.agentTarget);
     }
 
-    // Discover nested AGENTS.md, CLAUDE.md, GEMINI.md
     this.discoverNestedRules();
 
     logger.info(`Discovered ${this.rules.length} rules`);
@@ -116,7 +113,6 @@ export class RuleEngine {
     }> = [];
 
     for (const rule of this.rules) {
-      // Check for empty rules
       if (!rule.content.trim()) {
         issues.push({
           rule,
@@ -125,7 +121,6 @@ export class RuleEngine {
         });
       }
 
-      // Check for very long rules
       if (rule.content.length > 10_000) {
         issues.push({
           rule,
@@ -134,7 +129,6 @@ export class RuleEngine {
         });
       }
 
-      // Check for duplicate content
       const duplicates = this.rules.filter(
         (r) => r.id !== rule.id && r.content.trim() === rule.content.trim(),
       );
@@ -292,7 +286,6 @@ export class RuleEngine {
     const contentA = ruleA.content.toLowerCase();
     const contentB = ruleB.content.toLowerCase();
 
-    // Check for tab vs spaces conflict
     const aUseTabs = contentA.includes('use tabs') || contentA.includes('indent with tabs');
     const aUseSpaces =
       contentA.includes('use spaces') ||
@@ -317,7 +310,6 @@ export class RuleEngine {
       };
     }
 
-    // Check for single vs double quotes conflict
     const aSingleQuote = contentA.includes('single quote') || contentA.includes("use '");
     const aDoubleQuote = contentA.includes('double quote') || contentA.includes('use "');
     const bSingleQuote = contentB.includes('single quote') || contentB.includes("use '");
@@ -336,7 +328,6 @@ export class RuleEngine {
       };
     }
 
-    // Check for semicolon rules
     const aNoSemi = contentA.includes('no semicolon') || contentA.includes('no-semi');
     const aSemi = contentA.includes('use semicolon') || contentA.includes('always use semi');
     const bNoSemi = contentB.includes('no semicolon') || contentB.includes('no-semi');

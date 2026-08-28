@@ -44,7 +44,6 @@ export class DeadCodeDetector {
   detectDeadCode(): DeadCodeItem[] {
     const deadItems: DeadCodeItem[] = [];
 
-    // 1. Detect dead files
     const nonCodeLangs = new Set([
       'markdown',
       'yaml',
@@ -78,7 +77,6 @@ export class DeadCodeDetector {
       }
     }
 
-    // 2. Detect unreferenced symbols (if symbols available)
     if (this.symbols.length > 0) {
       const referencedSymbols = new Set<string>();
 

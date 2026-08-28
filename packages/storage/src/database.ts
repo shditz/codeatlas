@@ -4,7 +4,6 @@ import { createLogger, StorageError } from '@codeatlas/shared';
 
 const logger = createLogger('storage');
 
-// Native node:sqlite DatabaseSync
 interface NativeDatabaseSync {
   exec(sql: string): void;
   prepare(sql: string): {
