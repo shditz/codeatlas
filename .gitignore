@@ -42,5 +42,4 @@ context-pack.md
 *.vsix
 **/.vitepress/cache/**
 **/.vitepress/dist/**
-
-
+PROJECT_CONTEXT.md
