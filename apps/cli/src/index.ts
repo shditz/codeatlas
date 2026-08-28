@@ -22,7 +22,7 @@ const program = new Command();
 program
   .name('atlas')
   .description(chalk.bold('CodeAtlas') + ' — Give AI a map of your codebase.')
-  .version('0.1.0');
+  .version('0.1.1');
 
 registerInitCommand(program);
 registerScanCommand(program);
