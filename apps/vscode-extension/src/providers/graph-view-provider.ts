@@ -118,7 +118,17 @@ export class GraphViewProvider {
       const files = fileRepo.getAll(this._projectId);
       const deps = depRepo.getAll(this._projectId);
 
-      const nodeMap = new Map<string, Record<string, unknown>>();
+      interface GraphNodeData {
+        id: string;
+        name: string;
+        path: string;
+        type: string;
+        ext?: string;
+        color?: string;
+        [key: string]: unknown;
+      }
+
+      const nodeMap = new Map<string, GraphNodeData>();
       const links: Record<string, unknown>[] = [];
 
       for (const f of files) {

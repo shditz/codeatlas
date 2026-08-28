@@ -12,8 +12,11 @@ describe('Model Context Protocol (MCP) Server', () => {
 
     expect(response).not.toBeNull();
     expect(response?.id).toBe(1);
-    const result = response?.result as Record<string, unknown>;
-    expect((result.serverInfo as Record<string, unknown>).name).toBe('codeatlas-mcp');
+    const result = response?.result as {
+      serverInfo: { name: string };
+      capabilities: { tools?: unknown; resources?: unknown; prompts?: unknown };
+    };
+    expect(result.serverInfo.name).toBe('codeatlas-mcp');
     expect(result.capabilities.tools).toBeDefined();
     expect(result.capabilities.resources).toBeDefined();
     expect(result.capabilities.prompts).toBeDefined();

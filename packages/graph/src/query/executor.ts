@@ -187,10 +187,12 @@ export class GraphQueryEngine {
 
   private evaluateWhereClauses(binding: Record<string, unknown>, whereClauses: WhereClause[]): boolean {
     for (const clause of whereClauses) {
-      const entity = binding[clause.variable];
+      const entity = binding[clause.variable] as
+        | { properties?: Record<string, unknown>; [key: string]: unknown }
+        | undefined;
       if (!entity) return false;
 
-      const entityProps = entity.properties || entity;
+      const entityProps = (entity.properties ?? entity) as Record<string, unknown>;
       const actualVal = entityProps[clause.property] ?? entity[clause.property];
 
       if (actualVal === undefined) return false;
@@ -234,7 +236,9 @@ export class GraphQueryEngine {
     for (const varName of returnVariables) {
       const parts = varName.split('.');
       const rootVar = parts[0]!;
-      const entity = binding[rootVar];
+      const entity = binding[rootVar] as
+        | { properties?: Record<string, unknown>; [key: string]: unknown }
+        | undefined;
 
       if (!entity) {
         row[varName] = null;
@@ -243,9 +247,10 @@ export class GraphQueryEngine {
 
       if (parts.length > 1) {
         const prop = parts[1]!;
-        row[varName] = (entity.properties ? entity.properties[prop] : entity[prop]) ?? null;
+        const entityProps = (entity.properties ?? entity) as Record<string, unknown>;
+        row[varName] = entityProps[prop] ?? null;
       } else {
-        row[varName] = entity.properties ? entity.properties : entity;
+        row[varName] = entity.properties ?? entity;
       }
     }
     return row;

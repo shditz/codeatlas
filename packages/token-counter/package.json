@@ -1,7 +1,6 @@
 {
   "name": "@codeatlas/token-counter",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "exports": {
     ".": {
@@ -23,5 +22,14 @@
   "dependencies": {
     "@codeatlas/shared": "workspace:*",
     "@codeatlas/core": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shditz/codeatlas.git",
+    "directory": "packages/token-counter"
   }
 }

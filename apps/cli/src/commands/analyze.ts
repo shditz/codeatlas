@@ -106,7 +106,7 @@ export function registerAnalyzeCommand(program: Command): void {
 
         // 3. Hotspots & High Coupling
         if (showAll || options.hotspots) {
-          console.log(chalk.bold.underline('3. High Coupling & Complexity Hotspots:'));
+          console.log(chalk.bold.underline('3. High Coupling & Structural Hotspots:'));
           if (report.hotspots.length === 0) {
             console.log(chalk.dim('  No hotspots identified.'));
           } else {
@@ -120,6 +120,21 @@ export function registerAnalyzeCommand(program: Command): void {
               })),
             );
           }
+          console.log('');
+        }
+
+        // 4. Git Technical Debt Hotspots (Code Churn + Coupling)
+        if ((showAll || options.hotspots) && report.gitHotspots && report.gitHotspots.length > 0) {
+          console.log(chalk.bold.underline('4. Git Technical Debt & Churn Hotspots:'));
+          console.table(
+            report.gitHotspots.slice(0, 8).map((gh) => ({
+              File: gh.filePath,
+              Churn: gh.churnScore,
+              'Hotspot Score': gh.hotspotScore,
+              Risk: gh.riskLevel.toUpperCase(),
+              Recommendation: gh.recommendation,
+            })),
+          );
           console.log('');
         }
 

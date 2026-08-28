@@ -1,7 +1,6 @@
 {
   "name": "@codeatlas/parser",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "exports": {
     ".": {
@@ -29,5 +28,14 @@
     "tree-sitter-python": "^0.23.0",
     "tree-sitter-rust": "^0.23.0",
     "tree-sitter-typescript": "^0.23.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shditz/codeatlas.git",
+    "directory": "packages/parser"
   }
 }

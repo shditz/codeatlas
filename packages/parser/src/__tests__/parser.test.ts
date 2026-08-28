@@ -297,4 +297,38 @@ public struct ProfileView {
     expect(swiftResult.symbols.map((s) => s.name)).toContain('ProfileView');
     expect(swiftResult.symbols.map((s) => s.name)).toContain('render');
   });
+
+  it('calculates cyclomatic complexity for functions with branch statements', async () => {
+    const complexTs = `
+      export function evaluateRisk(score: number, isVip: boolean, retries: number): string {
+        if (score > 90) {
+          return 'low';
+        } else if (score > 50 && isVip) {
+          return 'medium';
+        } else if (score <= 50 || retries > 3) {
+          for (let i = 0; i < retries; i++) {
+            if (i === 2) break;
+          }
+          return 'high';
+        }
+        return 'unknown';
+      }
+
+      export function simpleFunction(): void {
+        console.log('hello');
+      }
+    `;
+
+    const result = await parseFile('src/risk.ts', complexTs, 'typescript');
+    expect(result.errors).toHaveLength(0);
+
+    const evalFn = result.symbols.find((s) => s.name === 'evaluateRisk');
+    expect(evalFn).toBeDefined();
+    expect(evalFn?.cyclomaticComplexity).toBeGreaterThanOrEqual(5);
+
+    const simpleFn = result.symbols.find((s) => s.name === 'simpleFunction');
+    expect(simpleFn).toBeDefined();
+    expect(simpleFn?.cyclomaticComplexity).toBe(1);
+  });
 });
+

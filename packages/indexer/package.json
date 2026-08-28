@@ -1,7 +1,6 @@
 {
   "name": "@codeatlas/indexer",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "exports": {
     ".": {
@@ -31,5 +30,14 @@
   },
   "devDependencies": {
     "@types/picomatch": "^3.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shditz/codeatlas.git",
+    "directory": "packages/indexer"
   }
 }

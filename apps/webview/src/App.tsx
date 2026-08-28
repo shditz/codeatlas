@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import ForceGraph2D, { type ForceGraphMethods } from 'react-force-graph-2d';
+import ForceGraph2D from 'react-force-graph-2d';
 import ForceGraph3D from 'react-force-graph-3d';
 import * as THREE from 'three';
 import './index.css';
@@ -170,8 +171,8 @@ function App() {
   const [filterType, setFilterType] = useState<'all' | 'file' | 'dir'>('all');
   const [spotlightMode, setSpotlightMode] = useState(true);
 
-  const fg2DRef = useRef<ForceGraphMethods>(null);
-  const fg3DRef = useRef<unknown>(null);
+  const fg2DRef = useRef<any>(null);
+  const fg3DRef = useRef<any>(null);
   const starfieldRef = useRef<THREE.Points | null>(null);
 
   // Compute filtered nodes and synthesize sibling cluster links if only files are active
@@ -732,59 +733,59 @@ function App() {
           ref={fg3DRef}
           graphData={filteredData}
           nodeThreeObject={nodeThreeObject}
-          nodeLabel={(n: unknown) => `
+          nodeLabel={(n: any) => `
             <div class="node-tooltip">
               <div class="tt-title" style="color:${getLanguageColor(n)}">${n.name}</div>
               <div class="tt-sub">${n.path || n.id}</div>
               <div class="tt-meta">${n.type} • ${n.language || ''}</div>
             </div>
           `}
-          linkColor={(l: unknown) => {
+          linkColor={(l: any) => {
             const isHighlighted = !spotlightActive || highlightLinks.has(l);
             if (!isHighlighted) return 'rgba(255, 255, 255, 0.04)';
             if (l.type === 'contains' || l.type === 'sibling') return 'rgba(192, 132, 252, 0.6)';
             return 'rgba(56, 189, 248, 0.75)';
           }}
-          linkWidth={(l: unknown) => (!spotlightActive || highlightLinks.has(l) ? 1.6 : 0.5)}
-          linkDirectionalParticles={(l: unknown) => (!spotlightActive || highlightLinks.has(l) ? 3 : 0)}
+          linkWidth={(l: any) => (!spotlightActive || highlightLinks.has(l) ? 1.6 : 0.5)}
+          linkDirectionalParticles={(l: any) => (!spotlightActive || highlightLinks.has(l) ? 3 : 0)}
           linkDirectionalParticleSpeed={0.005}
           linkDirectionalParticleWidth={2.2}
-          linkDirectionalParticleColor={(l: unknown) =>
+          linkDirectionalParticleColor={(l: any) =>
             l.type === 'contains' || l.type === 'sibling' ? '#c084fc' : '#38bdf8'
           }
-          onNodeClick={handleNodeClick}
-          onNodeHover={(n: unknown) => setHoveredNode(n)}
+          onNodeClick={onNodeClick}
+          onNodeHover={(n: any) => setHoveredNode(n)}
           backgroundColor="#040508"
         />
       ) : (
         <ForceGraph2D
-          ref={fg2DRef as unknown}
+          ref={fg2DRef}
           graphData={filteredData}
           nodeCanvasObject={draw2DNode}
-          nodePointerAreaPaint={(node: unknown, color: string, ctx: CanvasRenderingContext2D) => {
+          nodePointerAreaPaint={(node: any, color: string, ctx: CanvasRenderingContext2D) => {
             const r = Math.max(2.5, (node.val || 4) * 0.9);
             ctx.fillStyle = color;
             ctx.beginPath();
             ctx.arc(node.x, node.y, r + 4, 0, 2 * Math.PI, false);
             ctx.fill();
           }}
-          linkColor={(l: unknown) => {
+          linkColor={(l: any) => {
             const isHighlighted = !spotlightActive || highlightLinks.has(l);
             if (!isHighlighted) return 'rgba(255, 255, 255, 0.04)';
             if (l.type === 'contains' || l.type === 'sibling') return 'rgba(192, 132, 252, 0.5)';
             return 'rgba(56, 189, 248, 0.7)';
           }}
-          linkWidth={(l: unknown) => (!spotlightActive || highlightLinks.has(l) ? 1.5 : 0.5)}
+          linkWidth={(l: any) => (!spotlightActive || highlightLinks.has(l) ? 1.5 : 0.5)}
           linkDirectionalArrowLength={3.5}
           linkDirectionalArrowRelPos={1}
-          linkDirectionalParticles={(l: unknown) => (!spotlightActive || highlightLinks.has(l) ? 2 : 0)}
+          linkDirectionalParticles={(l: any) => (!spotlightActive || highlightLinks.has(l) ? 2 : 0)}
           linkDirectionalParticleSpeed={0.006}
           linkDirectionalParticleWidth={2.2}
-          linkDirectionalParticleColor={(l: unknown) =>
+          linkDirectionalParticleColor={(l: any) =>
             l.type === 'contains' || l.type === 'sibling' ? '#c084fc' : '#38bdf8'
           }
-          onNodeClick={handleNodeClick}
-          onNodeHover={(n: unknown) => setHoveredNode(n)}
+          onNodeClick={onNodeClick}
+          onNodeHover={(n: any) => setHoveredNode(n)}
           backgroundColor="#040508"
         />
       )}

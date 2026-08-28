@@ -1,24 +1,38 @@
 import { DependencyGraph } from '@codeatlas/graph';
 import type { AtlasDatabase } from '@codeatlas/storage';
-import { FileRepository, SymbolRepository, DependencyRepository } from '@codeatlas/storage';
+import {
+  FileRepository,
+  SymbolRepository,
+  DependencyRepository,
+  ProjectRepository,
+} from '@codeatlas/storage';
 import type {
   CodebaseAnalytics,
   CycleDetectionResult,
   DeadCodeItem,
   NodeMetrics,
+  TechnicalDebtHotspot,
 } from '@codeatlas/core';
 import { CycleDetector } from './cycle-detector.js';
 import { DeadCodeDetector, type DeadCodeDetectorOptions } from './dead-code-detector.js';
 import { MetricsCalculator, type GraphMetricsSummary } from './metrics.js';
+import { GitMetricsAnalyzer } from './git-metrics.js';
 
 export class CodebaseAnalyzer {
   private graph: DependencyGraph;
   private db?: AtlasDatabase;
   private projectId: number;
+  private rootDir?: string;
 
-  constructor(options: { graph?: DependencyGraph; db?: AtlasDatabase; projectId?: number }) {
+  constructor(options: {
+    graph?: DependencyGraph;
+    db?: AtlasDatabase;
+    projectId?: number;
+    rootDir?: string;
+  }) {
     this.db = options.db;
     this.projectId = options.projectId ?? 1;
+    this.rootDir = options.rootDir;
 
     if (options.graph) {
       this.graph = options.graph;
@@ -63,12 +77,30 @@ export class CodebaseAnalyzer {
     const hotspots = metricsCalculator.getHotspots(10);
     const instabilities = metricsCalculator.getHighInstabilities(10);
 
+    let gitHotspots: TechnicalDebtHotspot[] | undefined;
+    const projectRoot =
+      this.rootDir ||
+      (this.db ? new ProjectRepository(this.db).getById(this.projectId)?.root : undefined) ||
+      process.cwd();
+
+    if (projectRoot) {
+      try {
+        const gitAnalyzer = new GitMetricsAnalyzer(projectRoot);
+        if (gitAnalyzer.isGitAvailable()) {
+          gitHotspots = gitAnalyzer.analyzeHotspots(hotspots);
+        }
+      } catch {
+        // Fallback gracefully if git history is unavailable
+      }
+    }
+
     return {
       summary,
       cycles: cycleRes.cycles,
       deadCode,
       hotspots,
       instabilities,
+      gitHotspots,
     };
   }
 

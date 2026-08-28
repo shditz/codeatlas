@@ -158,6 +158,7 @@ export interface SymbolInfo {
   exported: boolean;
   signature?: string;
   parentSymbol?: string;
+  cyclomaticComplexity?: number;
 }
 
 export interface ImportInfo {
@@ -324,6 +325,17 @@ export interface NodeMetrics {
   isRoot: boolean;
 }
 
+export interface TechnicalDebtHotspot {
+  filePath: string;
+  churnScore: number;
+  instability: number;
+  inDegree: number;
+  outDegree: number;
+  hotspotScore: number;
+  riskLevel: 'critical' | 'high' | 'medium' | 'low';
+  recommendation: string;
+}
+
 export interface CodebaseAnalytics {
   summary: {
     totalFiles: number;
@@ -336,4 +348,6 @@ export interface CodebaseAnalytics {
   deadCode: DeadCodeItem[];
   hotspots: NodeMetrics[];
   instabilities: NodeMetrics[];
+  gitHotspots?: TechnicalDebtHotspot[];
 }
+

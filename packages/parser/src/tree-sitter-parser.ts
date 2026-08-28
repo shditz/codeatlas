@@ -644,8 +644,53 @@ function extractRustImports(node: AstNode, filePath: string, imports: ImportInfo
 }
 
 /* ─────────────────────────────────────────────────────────────
- * Helpers
+ * Helpers & Complexity Calculators
  * ───────────────────────────────────────────────────────────── */
+
+export function calculateAstCyclomaticComplexity(node: AstNode): number {
+  let complexity = 1;
+
+  function traverse(n: AstNode): void {
+    const type = n.type;
+    if (
+      type === 'if_statement' ||
+      type === 'for_statement' ||
+      type === 'for_in_statement' ||
+      type === 'while_statement' ||
+      type === 'do_statement' ||
+      type === 'ternary_expression' ||
+      type === 'conditional_expression' ||
+      type === 'catch_clause' ||
+      type === 'switch_case' ||
+      type === 'case_clause' ||
+      type === 'elif_clause' ||
+      type === 'match_arm'
+    ) {
+      complexity++;
+    } else if (type === 'binary_expression') {
+      const op = n.childForFieldName('operator')?.text;
+      if (op === '&&' || op === '||' || op === '??' || op === 'and' || op === 'or') {
+        complexity++;
+      }
+    }
+
+    for (const child of n.namedChildren) {
+      traverse(child);
+    }
+  }
+
+  traverse(node);
+  return complexity;
+}
+
+export function calculateTextCyclomaticComplexity(code: string): number {
+  let complexity = 1;
+  const branchMatches = code.match(/\b(if|for|while|catch|case|elif)\b|(&&|\|\||\?\?|\?(?!\.))/g);
+  if (branchMatches) {
+    complexity += branchMatches.length;
+  }
+  return complexity;
+}
 
 function makeSymbol(
   name: string,
@@ -656,6 +701,11 @@ function makeSymbol(
   parentSymbol: string | null,
 ): SymbolInfo {
   const firstLine = node.text.split('\n')[0] ?? '';
+  let cyclomaticComplexity: number | undefined;
+  if (kind === 'function' || kind === 'method') {
+    cyclomaticComplexity = calculateAstCyclomaticComplexity(node);
+  }
+
   return {
     name,
     kind,
@@ -666,6 +716,7 @@ function makeSymbol(
     exported,
     signature: firstLine.length > 200 ? firstLine.slice(0, 200) + '...' : firstLine,
     parentSymbol: parentSymbol ?? undefined,
+    cyclomaticComplexity,
   };
 }
 

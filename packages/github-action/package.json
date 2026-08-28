@@ -1,7 +1,6 @@
 {
   "name": "@codeatlas/github-action",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "exports": {
     ".": {
@@ -28,5 +27,14 @@
     "@codeatlas/exporters": "workspace:*",
     "@codeatlas/rules": "workspace:*",
     "@codeatlas/indexer": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shditz/codeatlas.git",
+    "directory": "packages/github-action"
   }
 }
