@@ -59,15 +59,17 @@ jobs:
 
       - name: Package VS Code Extension (.vsix)
         run: |
+          mkdir -p apps/vscode-extension/webview/dist
+          cp -r apps/webview/dist/* apps/vscode-extension/webview/dist/
           cd apps/vscode-extension
-          npx --yes @vscode/vsce package --no-dependencies -o ../../codeatlas-vscode.vsix
+          npx --yes @vscode/vsce package --no-dependencies -o ../../codeatlas-vscode-0.1.1.vsix
+          cp ../../codeatlas-vscode-0.1.1.vsix ../../codeatlas-vscode.vsix
 
       - name: Upload VS Code Extension (.vsix) to GitHub Releases
         run: |
-          # Upload vsix to the primary/initial release or newly created tags
-          gh release upload v0.1.0 codeatlas-vscode.vsix --clobber || true
+          gh release upload v0.1.0 codeatlas-vscode-0.1.1.vsix codeatlas-vscode.vsix --clobber || true
           for tag in $(git tag --points-at HEAD); do
-            gh release upload "$tag" codeatlas-vscode.vsix --clobber || true
+            gh release upload "$tag" codeatlas-vscode-0.1.1.vsix codeatlas-vscode.vsix --clobber || true
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

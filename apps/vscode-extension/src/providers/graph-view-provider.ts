@@ -242,7 +242,10 @@ export class GraphViewProvider {
   private _update() {
     const webview = this._panel.webview;
 
-    const webviewDistPath = vscode.Uri.joinPath(this._extensionUri, '..', 'webview', 'dist');
+    let webviewDistPath = vscode.Uri.joinPath(this._extensionUri, 'webview', 'dist');
+    if (!fs.existsSync(path.join(webviewDistPath.fsPath, 'index.html'))) {
+      webviewDistPath = vscode.Uri.joinPath(this._extensionUri, '..', 'webview', 'dist');
+    }
     const indexHtmlPath = path.join(webviewDistPath.fsPath, 'index.html');
 
     let html = '';

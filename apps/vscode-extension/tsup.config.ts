@@ -4,7 +4,7 @@ export default defineConfig({
   entry: ['src/extension.ts'],
   format: ['cjs'],
   external: ['vscode'],
-  noExternal: [/@codeatlas\/.*/],
+  noExternal: [/@codeatlas-ai\/.*/],
   clean: true,
   sourcemap: true,
 });
