@@ -52,7 +52,6 @@ export function registerPrCommand(program: Command): void {
         graph.addEdge(dep);
       }
 
-      // Collect directly changed files + their dependents
       const affectedFiles = new Set<string>(changedFiles);
       for (const file of changedFiles) {
         const dependents = graph.getDependents(file, 1);

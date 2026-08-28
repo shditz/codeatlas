@@ -174,7 +174,7 @@ export class SymbolRepository {
         // Ignore missing FTS entries
       }
     }
-    
+
     this.db.run('DELETE FROM symbols WHERE file_id = ?', fileId);
   }
 

@@ -60,14 +60,50 @@ describe('Dependency Graph', () => {
     const graph = new DependencyGraph();
 
     // Cluster 1 (Auth domain)
-    graph.addEdge({ source: 'auth/a.ts', target: 'auth/b.ts', kind: 'import', symbols: [], weight: 2 });
-    graph.addEdge({ source: 'auth/b.ts', target: 'auth/c.ts', kind: 'import', symbols: [], weight: 2 });
-    graph.addEdge({ source: 'auth/c.ts', target: 'auth/a.ts', kind: 'import', symbols: [], weight: 2 });
+    graph.addEdge({
+      source: 'auth/a.ts',
+      target: 'auth/b.ts',
+      kind: 'import',
+      symbols: [],
+      weight: 2,
+    });
+    graph.addEdge({
+      source: 'auth/b.ts',
+      target: 'auth/c.ts',
+      kind: 'import',
+      symbols: [],
+      weight: 2,
+    });
+    graph.addEdge({
+      source: 'auth/c.ts',
+      target: 'auth/a.ts',
+      kind: 'import',
+      symbols: [],
+      weight: 2,
+    });
 
     // Cluster 2 (Payment domain)
-    graph.addEdge({ source: 'pay/x.ts', target: 'pay/y.ts', kind: 'import', symbols: [], weight: 2 });
-    graph.addEdge({ source: 'pay/y.ts', target: 'pay/z.ts', kind: 'import', symbols: [], weight: 2 });
-    graph.addEdge({ source: 'pay/z.ts', target: 'pay/x.ts', kind: 'import', symbols: [], weight: 2 });
+    graph.addEdge({
+      source: 'pay/x.ts',
+      target: 'pay/y.ts',
+      kind: 'import',
+      symbols: [],
+      weight: 2,
+    });
+    graph.addEdge({
+      source: 'pay/y.ts',
+      target: 'pay/z.ts',
+      kind: 'import',
+      symbols: [],
+      weight: 2,
+    });
+    graph.addEdge({
+      source: 'pay/z.ts',
+      target: 'pay/x.ts',
+      kind: 'import',
+      symbols: [],
+      weight: 2,
+    });
 
     const communities = graph.detectCommunities(5);
 

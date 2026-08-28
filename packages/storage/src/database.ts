@@ -21,13 +21,18 @@ export interface RunResult {
 }
 
 function getDatabaseSyncConstructor(): new (path: string) => NativeDatabaseSync {
-  const mod = (process as unknown as { getBuiltinModule?: (m: string) => unknown }).getBuiltinModule?.('node:sqlite') as { DatabaseSync: new (path: string) => NativeDatabaseSync } | undefined;
+  const mod = (
+    process as unknown as { getBuiltinModule?: (m: string) => unknown }
+  ).getBuiltinModule?.('node:sqlite') as
+    { DatabaseSync: new (path: string) => NativeDatabaseSync } | undefined;
   if (mod?.DatabaseSync) {
     return mod.DatabaseSync;
   }
   try {
     const nodeReq = (globalThis as unknown as { require?: (m: string) => unknown }).require;
-    if (nodeReq) return (nodeReq('node:sqlite') as { DatabaseSync: new (path: string) => NativeDatabaseSync }).DatabaseSync;
+    if (nodeReq)
+      return (nodeReq('node:sqlite') as { DatabaseSync: new (path: string) => NativeDatabaseSync })
+        .DatabaseSync;
   } catch {
     // fallback
   }

@@ -185,11 +185,13 @@ export class GraphQueryEngine {
     return candidateEdges;
   }
 
-  private evaluateWhereClauses(binding: Record<string, unknown>, whereClauses: WhereClause[]): boolean {
+  private evaluateWhereClauses(
+    binding: Record<string, unknown>,
+    whereClauses: WhereClause[],
+  ): boolean {
     for (const clause of whereClauses) {
       const entity = binding[clause.variable] as
-        | { properties?: Record<string, unknown>; [key: string]: unknown }
-        | undefined;
+        { properties?: Record<string, unknown>; [key: string]: unknown } | undefined;
       if (!entity) return false;
 
       const entityProps = (entity.properties ?? entity) as Record<string, unknown>;
@@ -231,14 +233,16 @@ export class GraphQueryEngine {
     }
   }
 
-  private projectRow(binding: Record<string, unknown>, returnVariables: string[]): Record<string, unknown> {
+  private projectRow(
+    binding: Record<string, unknown>,
+    returnVariables: string[],
+  ): Record<string, unknown> {
     const row: Record<string, unknown> = {};
     for (const varName of returnVariables) {
       const parts = varName.split('.');
       const rootVar = parts[0]!;
       const entity = binding[rootVar] as
-        | { properties?: Record<string, unknown>; [key: string]: unknown }
-        | undefined;
+        { properties?: Record<string, unknown>; [key: string]: unknown } | undefined;
 
       if (!entity) {
         row[varName] = null;

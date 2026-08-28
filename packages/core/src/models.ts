@@ -351,4 +351,3 @@ export interface CodebaseAnalytics {
   instabilities: NodeMetrics[];
   gitHotspots?: TechnicalDebtHotspot[];
 }
-

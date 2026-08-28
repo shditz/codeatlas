@@ -103,7 +103,6 @@ export function registerRulesCommand(program: Command): void {
       console.log('');
     });
 
-  // Default action when 'atlas rules' is called without subcommand
   rules.action(async () => {
     rules.commands.find((c) => c.name() === 'list')?.parse(process.argv);
   });

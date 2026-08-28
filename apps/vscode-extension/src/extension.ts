@@ -408,7 +408,7 @@ export function activate(context: vscode.ExtensionContext): void {
         if (!fs.existsSync(dbPath)) {
           const action = await vscode.window.showWarningMessage(
             'CodeAtlas: Database not found. You must index the workspace first.',
-            'Index Now'
+            'Index Now',
           );
           if (action === 'Index Now') {
             vscode.commands.executeCommand('codeatlas.indexWorkspace');

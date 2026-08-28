@@ -148,7 +148,8 @@ const getLanguageColor = (node: Node, colorMode: 'language' | 'cluster' = 'langu
   if (lang === 'typescript' || ext === 'ts' || ext === 'tsx') return '#38bdf8'; // Cyan
   if (lang === 'javascript' || ext === 'js' || ext === 'jsx') return '#facc15'; // Gold
   if (lang === 'csharp' || ext === 'cs') return '#9333ea'; // Purple
-  if (lang === 'cpp' || lang === 'c' || ext === 'cpp' || ext === 'c' || ext === 'h') return '#2563eb'; // Blue
+  if (lang === 'cpp' || lang === 'c' || ext === 'cpp' || ext === 'c' || ext === 'h')
+    return '#2563eb'; // Blue
   if (lang === 'java' || ext === 'java') return '#ea580c'; // Warm Orange
   if (lang === 'ruby' || ext === 'rb') return '#e11d48'; // Crimson
   if (lang === 'kotlin' || ext === 'kt') return '#7c3aed'; // Violet
@@ -386,7 +387,8 @@ function App() {
   );
 
   // Click node handler
-  const onNodeClick = useCallback((node: Node) => {
+  const onNodeClick = useCallback(
+    (node: Node) => {
       setSelectedNode(node);
       setAutoRotate(false);
 

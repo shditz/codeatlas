@@ -22,7 +22,6 @@ export function registerScanCommand(program: Command): void {
 
       const result = await scanner.scan();
 
-      // Update project in database
       const db = openDatabase(cwd);
       const projectId = getOrCreateProject(db, cwd);
 

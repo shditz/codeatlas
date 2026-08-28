@@ -46,11 +46,13 @@ export class GitMetricsAnalyzer {
 
     for (const node of nodeMetrics) {
       const churnCount = churnMap.get(node.id) ?? churnMap.get(node.name) ?? 0;
-      
+
       // Hotspot formula: Churn * (1 + Instability) * (1 + ln(1 + inDegree))
       const logInDegree = Math.log(1 + node.inDegree);
       const hotspotScore = Number(
-        (churnCount * (1 + node.instability * 2) * (1 + logInDegree) + node.inDegree * 0.5).toFixed(2),
+        (churnCount * (1 + node.instability * 2) * (1 + logInDegree) + node.inDegree * 0.5).toFixed(
+          2,
+        ),
       );
 
       let riskLevel: 'critical' | 'high' | 'medium' | 'low' = 'low';
@@ -58,10 +60,12 @@ export class GitMetricsAnalyzer {
 
       if (hotspotScore >= 15 || (node.isGodObject && churnCount > 3)) {
         riskLevel = 'critical';
-        recommendation = 'Critical technical debt: High churn combined with high coupling/God Object status. Refactor into smaller focused modules.';
+        recommendation =
+          'Critical technical debt: High churn combined with high coupling/God Object status. Refactor into smaller focused modules.';
       } else if (hotspotScore >= 8 || node.instability > 0.8) {
         riskLevel = 'high';
-        recommendation = 'High volatility: Frequently modified and dependent on unstable abstractions. Add unit test coverage and decouple dependencies.';
+        recommendation =
+          'High volatility: Frequently modified and dependent on unstable abstractions. Add unit test coverage and decouple dependencies.';
       } else if (hotspotScore >= 3 || node.inDegree > 5) {
         riskLevel = 'medium';
         recommendation = 'Moderate coupling: Ensure API stability and interface boundaries.';

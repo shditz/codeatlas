@@ -331,4 +331,3 @@ public struct ProfileView {
     expect(simpleFn?.cyclomaticComplexity).toBe(1);
   });
 });
-

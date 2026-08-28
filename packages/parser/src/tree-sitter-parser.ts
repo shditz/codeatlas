@@ -3,7 +3,10 @@ import type { SymbolInfo, ImportInfo, SymbolKind, Language } from '@codeatlas/co
 import { createLogger } from '@codeatlas/shared';
 
 const logger = createLogger('parser');
-const nodeRequire = typeof require !== 'undefined' ? require : createRequire(import.meta?.url ?? `file://${process.cwd()}/dummy.js`);
+const nodeRequire =
+  typeof require !== 'undefined'
+    ? require
+    : createRequire(import.meta?.url ?? `file://${process.cwd()}/dummy.js`);
 
 let ParserClass: unknown = null;
 const languageGrammars: Partial<Record<Language, unknown>> = {};
@@ -798,7 +801,9 @@ function extractCSharpSymbolsAndImports(
     );
     if (methodMatch && methodMatch[2]) {
       const name = methodMatch[2];
-      if (!['if', 'for', 'while', 'switch', 'catch', 'lock', 'using', 'get', 'set'].includes(name)) {
+      if (
+        !['if', 'for', 'while', 'switch', 'catch', 'lock', 'using', 'get', 'set'].includes(name)
+      ) {
         const isPublic = line.includes('public');
         symbols.push({
           name,

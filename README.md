@@ -14,6 +14,7 @@ CodeAtlas is a local-first platform that indexes your codebase into a dependency
 ---
 
 ## Table of Contents
+
 - [Overview](#overview)
 - [Key Features](#key-features)
 - [Installation](#installation)
@@ -31,7 +32,7 @@ CodeAtlas is a local-first platform that indexes your codebase into a dependency
 
 ## Overview
 
-CodeAtlas maps out your codebase by parsing source code into Abstract Syntax Trees (AST) using Tree-sitter. It stores relationships (such as function calls, module imports, and classes) in a local `.atlas/atlas.db` SQLite database. This creates a detailed map of your code that can be used to visualize architecture or generate accurate context packs for other tools. 
+CodeAtlas maps out your codebase by parsing source code into Abstract Syntax Trees (AST) using Tree-sitter. It stores relationships (such as function calls, module imports, and classes) in a local `.atlas/atlas.db` SQLite database. This creates a detailed map of your code that can be used to visualize architecture or generate accurate context packs for other tools.
 
 Because it runs completely offline, your code remains 100% private.
 
@@ -114,6 +115,7 @@ atlas query "who imports storage"
 CodeAtlas provides a native VS Code extension for inline AST indexing and visual graph exploration.
 
 **Installation (VSIX):**
+
 1. Build the extension package:
    ```bash
    pnpm --filter codeatlas-vscode build
@@ -123,6 +125,7 @@ CodeAtlas provides a native VS Code extension for inline AST indexing and visual
 4. Select the built file: `apps/vscode-extension/codeatlas-vscode-0.1.0.vsix`.
 
 **Using the Extension:**
+
 - Run `CodeAtlas: Index Workspace` from the Command Palette to build the initial index.
 - Run `CodeAtlas: Open Interactive Graph` to open the visual architecture map tab.
 - Click the graph icon in the editor title bar of any open file to see its direct relationships.
@@ -132,13 +135,16 @@ CodeAtlas provides a native VS Code extension for inline AST indexing and visual
 The repository includes a detailed VitePress documentation portal.
 
 **Running the Web Documentation Locally:**
+
 ```bash
 # Start the documentation development server
 pnpm run docs:dev
 ```
+
 Open [http://localhost:5173/](http://localhost:5173/) in your browser.
 
 **Building the Static Site:**
+
 ```bash
 # Build the static site output to apps/docs/.vitepress/dist
 pnpm run docs:build
@@ -151,7 +157,9 @@ pnpm run docs:build
 CodeAtlas includes a Model Context Protocol (MCP) server that operates over standard input/output (`stdio`).
 
 ### Integrating with Claude Desktop
+
 Add CodeAtlas to your Claude Desktop configuration file:
+
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
@@ -178,12 +186,7 @@ CodeAtlas relies on a `codeatlas.config.json` file placed in the root of your pr
 ```json
 {
   "include": ["src/**/*", "packages/**/*", "apps/**/*"],
-  "exclude": [
-    "**/node_modules/**",
-    "**/dist/**",
-    "**/build/**",
-    "**/.git/**"
-  ],
+  "exclude": ["**/node_modules/**", "**/dist/**", "**/build/**", "**/.git/**"],
   "maxFileSizeKB": 2048,
   "rules": {
     "autoExportOnIndex": true,

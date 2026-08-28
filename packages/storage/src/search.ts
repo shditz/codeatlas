@@ -30,8 +30,6 @@ export class SearchRepository {
     }
   }
 
-
-
   indexSymbol(symbolId: number, name: string, signature: string | null): void {
     this.db.run(
       'INSERT INTO symbols_fts(rowid, name, signature) VALUES (?, ?, ?)',
@@ -43,13 +41,11 @@ export class SearchRepository {
 
   removeSymbol(symbolId: number): void {
     try {
-      this.db.run("DELETE FROM symbols_fts WHERE rowid = ?", symbolId);
+      this.db.run('DELETE FROM symbols_fts WHERE rowid = ?', symbolId);
     } catch {
       // Ignore if FTS entry doesn't exist
     }
   }
-
-
 
   searchFiles(query: string, limit: number = 50): FtsResult[] {
     const sanitized = this.sanitizeQuery(query);
@@ -79,7 +75,10 @@ export class SearchRepository {
     }));
   }
 
-  searchSymbols(query: string, limit: number = 50): Array<{ file_id: number; relativePath: string; rank: number }> {
+  searchSymbols(
+    query: string,
+    limit: number = 50,
+  ): Array<{ file_id: number; relativePath: string; rank: number }> {
     const sanitized = this.sanitizeQuery(query);
     if (!sanitized) return [];
 
@@ -95,7 +94,7 @@ export class SearchRepository {
       limit,
     );
 
-    return rows.map(r => ({
+    return rows.map((r) => ({
       file_id: r.file_id,
       relativePath: r.relative_path,
       rank: r.rank,
@@ -115,7 +114,7 @@ export class SearchRepository {
       .filter((term) => term.length > 0)
       .map((term) => `"${term}"`)
       .join(' OR ');
-      
+
     return sanitized || '""';
   }
 }
