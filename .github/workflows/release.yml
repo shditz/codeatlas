@@ -37,13 +37,15 @@ jobs:
 
       - name: Package VS Code Extension
         run: |
+          mkdir -p apps/vscode-extension/webview/dist
+          cp -r apps/webview/dist/* apps/vscode-extension/webview/dist/ 2>/dev/null || true
           cd apps/vscode-extension
-          npx vsce package -o codeatlas.vsix
+          npx --yes @vscode/vsce package --no-dependencies -o ../../codeatlas-vscode.vsix
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: apps/vscode-extension/codeatlas.vsix
+          files: codeatlas-vscode.vsix
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
