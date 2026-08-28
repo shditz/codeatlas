@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import path from 'node:path';
 import fs from 'node:fs';
 import { FileRepository, DependencyRepository, type AtlasDatabase } from '@codeatlas/storage';
+import { DependencyGraph } from '@codeatlas/graph';
 
 export class GraphViewProvider {
   public static currentPanel: GraphViewProvider | undefined;
@@ -117,8 +118,8 @@ export class GraphViewProvider {
       const files = fileRepo.getAll(this._projectId);
       const deps = depRepo.getAll(this._projectId);
 
-      const nodeMap = new Map<string, any>();
-      const links: any[] = [];
+      const nodeMap = new Map<string, Record<string, unknown>>();
+      const links: Record<string, unknown>[] = [];
 
       for (const f of files) {
         const parts = f.relativePath.split('/');
@@ -193,6 +194,19 @@ export class GraphViewProvider {
         }
       }
 
+      // Build dependency graph and detect communities / clusters
+      const graph = new DependencyGraph();
+      for (const d of deps) {
+        graph.addEdge({
+          source: d.source,
+          target: d.target,
+          kind: d.kind || 'import',
+          symbols: d.symbols || [],
+          weight: d.weight || 1,
+        });
+      }
+      const communities = graph.detectCommunities(6);
+
       // Add code import/reference dependencies
       for (const d of deps) {
         if (nodeMap.has(d.source) && nodeMap.has(d.target)) {
@@ -204,7 +218,10 @@ export class GraphViewProvider {
         }
       }
 
-      const nodes = Array.from(nodeMap.values());
+      const nodes = Array.from(nodeMap.values()).map((node) => ({
+        ...node,
+        communityId: communities.get(node.id) ?? 0,
+      }));
 
       this._panel.webview.postMessage({
         command: 'setGraphData',

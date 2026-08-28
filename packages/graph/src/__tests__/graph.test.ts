@@ -55,4 +55,26 @@ describe('Dependency Graph', () => {
       'src/database/db.ts',
     ]);
   });
+
+  it('detects communities and clusters nodes using label propagation', () => {
+    const graph = new DependencyGraph();
+
+    // Cluster 1 (Auth domain)
+    graph.addEdge({ source: 'auth/a.ts', target: 'auth/b.ts', kind: 'import', symbols: [], weight: 2 });
+    graph.addEdge({ source: 'auth/b.ts', target: 'auth/c.ts', kind: 'import', symbols: [], weight: 2 });
+    graph.addEdge({ source: 'auth/c.ts', target: 'auth/a.ts', kind: 'import', symbols: [], weight: 2 });
+
+    // Cluster 2 (Payment domain)
+    graph.addEdge({ source: 'pay/x.ts', target: 'pay/y.ts', kind: 'import', symbols: [], weight: 2 });
+    graph.addEdge({ source: 'pay/y.ts', target: 'pay/z.ts', kind: 'import', symbols: [], weight: 2 });
+    graph.addEdge({ source: 'pay/z.ts', target: 'pay/x.ts', kind: 'import', symbols: [], weight: 2 });
+
+    const communities = graph.detectCommunities(5);
+
+    expect(communities.get('auth/a.ts')).toBe(communities.get('auth/b.ts'));
+    expect(communities.get('auth/b.ts')).toBe(communities.get('auth/c.ts'));
+    expect(communities.get('pay/x.ts')).toBe(communities.get('pay/y.ts'));
+    expect(communities.get('pay/y.ts')).toBe(communities.get('pay/z.ts'));
+    expect(communities.get('auth/a.ts')).not.toBe(communities.get('pay/x.ts'));
+  });
 });

@@ -21,13 +21,13 @@ export interface RunResult {
 }
 
 function getDatabaseSyncConstructor(): new (path: string) => NativeDatabaseSync {
-  const mod = (process as any).getBuiltinModule?.('node:sqlite');
+  const mod = (process as unknown as { getBuiltinModule?: (m: string) => unknown }).getBuiltinModule?.('node:sqlite') as { DatabaseSync: new (path: string) => NativeDatabaseSync } | undefined;
   if (mod?.DatabaseSync) {
     return mod.DatabaseSync;
   }
   try {
-    const nodeReq = (globalThis as any).require;
-    if (nodeReq) return nodeReq('node:sqlite').DatabaseSync;
+    const nodeReq = (globalThis as unknown as { require?: (m: string) => unknown }).require;
+    if (nodeReq) return (nodeReq('node:sqlite') as { DatabaseSync: new (path: string) => NativeDatabaseSync }).DatabaseSync;
   } catch {
     // fallback
   }
@@ -39,6 +39,7 @@ function getDatabaseSyncConstructor(): new (path: string) => NativeDatabaseSync 
 export class AtlasDatabase {
   private db: NativeDatabaseSync;
   private readonly dbPath: string;
+  private transactionDepth = 0;
 
   constructor(dbPath: string) {
     this.dbPath = dbPath;
@@ -111,18 +112,39 @@ export class AtlasDatabase {
   }
 
   transaction<T>(fn: () => T): T {
-    this.db.exec('BEGIN');
+    const isRoot = this.transactionDepth === 0;
+    const savepointName = `sp_${this.transactionDepth}`;
+    this.transactionDepth++;
+
     try {
+      if (isRoot) {
+        this.db.exec('BEGIN');
+      } else {
+        this.db.exec(`SAVEPOINT ${savepointName}`);
+      }
+
       const result = fn();
-      this.db.exec('COMMIT');
+
+      if (isRoot) {
+        this.db.exec('COMMIT');
+      } else {
+        this.db.exec(`RELEASE ${savepointName}`);
+      }
+
       return result;
     } catch (error) {
       try {
-        this.db.exec('ROLLBACK');
+        if (isRoot) {
+          this.db.exec('ROLLBACK');
+        } else {
+          this.db.exec(`ROLLBACK TO ${savepointName}`);
+        }
       } catch {
         // ignore rollback error
       }
       throw error;
+    } finally {
+      this.transactionDepth--;
     }
   }
 

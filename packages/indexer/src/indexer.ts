@@ -1,7 +1,8 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import { createLogger, hashContent } from '@codeatlas/shared';
 import { canParse } from '@codeatlas/core';
-import { parseFile } from '@codeatlas/parser';
+import { parseFile, type ParseResult } from '@codeatlas/parser';
 import type { AtlasDatabase } from '@codeatlas/storage';
 import {
   FileRepository,
@@ -10,7 +11,7 @@ import {
   DependencyRepository,
   SearchRepository,
 } from '@codeatlas/storage';
-import type { DependencyEdge } from '@codeatlas/core';
+import type { DependencyEdge, FileInfo } from '@codeatlas/core';
 import { Scanner, type ScanOptions } from './scanner.js';
 
 const logger = createLogger('indexer');
@@ -18,6 +19,7 @@ const logger = createLogger('indexer');
 export interface IndexOptions extends ScanOptions {
   db: AtlasDatabase;
   projectId: number;
+  concurrency?: number;
 }
 
 export interface IndexResult {
@@ -39,6 +41,7 @@ export class Indexer {
   private depRepo: DependencyRepository;
   private searchRepo: SearchRepository;
   private scanner: Scanner;
+  private concurrency: number;
 
   constructor(private options: IndexOptions) {
     this.fileRepo = new FileRepository(options.db);
@@ -47,6 +50,7 @@ export class Indexer {
     this.depRepo = new DependencyRepository(options.db);
     this.searchRepo = new SearchRepository(options.db);
     this.scanner = new Scanner(options);
+    this.concurrency = Math.max(1, Math.min(options.concurrency ?? (os.cpus()?.length || 4), 16));
   }
 
   async index(): Promise<IndexResult> {
@@ -60,7 +64,7 @@ export class Indexer {
     let importsExtracted = 0;
     let dependenciesCreated = 0;
 
-    logger.info('Starting indexing...');
+    logger.info(`Starting indexing with concurrency pool of ${this.concurrency}...`);
 
     const files = await this.scanner.collectFiles();
     const existingHashes = this.fileRepo.getAllHashes(this.options.projectId);
@@ -75,104 +79,127 @@ export class Indexer {
       }
     }
 
-    // Index new and changed files
-    const dependencies: DependencyEdge[] = [];
-
+    // Filter files needing update
+    const pendingFiles: FileInfo[] = [];
     for (const file of files) {
       try {
         const content = fs.readFileSync(file.path, 'utf-8');
         const contentHash = hashContent(content);
-
         const existingHash = existingHashes.get(file.relativePath);
+
         if (existingHash === contentHash) {
           filesSkipped++;
           continue;
         }
 
         file.hash = contentHash;
-
-        // Parse if the language supports it
-        if (canParse(file.language)) {
-          const parseResult = await parseFile(
-            file.relativePath,
-            content,
-            file.language as 'typescript' | 'javascript',
-          );
-
-          file.symbolCount = parseResult.symbols.length;
-          file.importCount = parseResult.imports.length;
-          file.exportCount = parseResult.exportedNames.length;
-
-          // Upsert file
-          const fileId = this.fileRepo.upsert(this.options.projectId, file);
-
-          // Clear old symbols and imports
-          this.symbolRepo.deleteByFile(fileId);
-          this.importRepo.deleteByFile(fileId);
-
-          // Insert symbols
-          if (parseResult.symbols.length > 0) {
-            this.symbolRepo.insertBatch(fileId, parseResult.symbols);
-            symbolsExtracted += parseResult.symbols.length;
-          }
-
-          // Insert imports
-          if (parseResult.imports.length > 0) {
-            this.importRepo.insertBatch(fileId, parseResult.imports);
-            importsExtracted += parseResult.imports.length;
-
-            // Create dependency edges
-            for (const imp of parseResult.imports) {
-              const resolvedTarget = this.resolveImportPath(
-                file.relativePath,
-                imp.importPath,
-                currentPaths,
-              );
-              if (resolvedTarget) {
-                dependencies.push({
-                  source: file.relativePath,
-                  target: resolvedTarget,
-                  kind: 'import',
-                  symbols: imp.symbols,
-                  weight: 1.0,
-                });
-              }
-            }
-          }
-
-          // Update FTS index
-          try {
-            this.searchRepo.removeFile(fileId);
-          } catch {
-            /* FTS entry may not exist */
-          }
-          this.searchRepo.indexFile(fileId, file.relativePath, content);
-
-          if (parseResult.errors.length > 0) {
-            errors.push(...parseResult.errors);
-          }
-
-          filesUpdated++;
-        } else {
-          // Non-parseable file: just index metadata
-          const fileId = this.fileRepo.upsert(this.options.projectId, file);
-
-          try {
-            this.searchRepo.removeFile(fileId);
-          } catch {
-            /* FTS entry may not exist */
-          }
-          this.searchRepo.indexFile(fileId, file.relativePath, content);
-
-          filesUpdated++;
-        }
-
-        filesIndexed++;
-      } catch (error) {
-        const msg = error instanceof Error ? error.message : String(error);
-        errors.push(`Failed to index ${file.relativePath}: ${msg}`);
-        logger.debug(`Index error for ${file.relativePath}: ${msg}`);
+        pendingFiles.push(file);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        errors.push(`Failed to read ${file.relativePath}: ${msg}`);
       }
+    }
+
+    // Process pending files in parallel batches
+    const dependencies: DependencyEdge[] = [];
+
+    for (let i = 0; i < pendingFiles.length; i += this.concurrency) {
+      const chunk = pendingFiles.slice(i, i + this.concurrency);
+
+      const parsedResults = await Promise.all(
+        chunk.map(async (file) => {
+          try {
+            const content = fs.readFileSync(file.path, 'utf-8');
+            let parseResult: ParseResult | null = null;
+
+            if (canParse(file.language)) {
+              parseResult = await parseFile(file.relativePath, content, file.language);
+            }
+
+            return { file, content, parseResult, error: null };
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            return { file, content: '', parseResult: null, error: msg };
+          }
+        }),
+      );
+
+      // Save chunk results to SQLite inside a single transaction for maximum I/O performance
+      this.options.db.transaction(() => {
+        for (const { file, content, parseResult, error } of parsedResults) {
+          if (error) {
+            errors.push(`Failed to parse ${file.relativePath}: ${error}`);
+            continue;
+          }
+
+          try {
+            if (parseResult) {
+              file.symbolCount = parseResult.symbols.length;
+              file.importCount = parseResult.imports.length;
+              file.exportCount = parseResult.exportedNames.length;
+
+              const fileId = this.fileRepo.upsert(this.options.projectId, file);
+
+              this.symbolRepo.deleteByFile(fileId);
+              this.importRepo.deleteByFile(fileId);
+
+              if (parseResult.symbols.length > 0) {
+                this.symbolRepo.insertBatch(fileId, parseResult.symbols);
+                symbolsExtracted += parseResult.symbols.length;
+              }
+
+              if (parseResult.imports.length > 0) {
+                this.importRepo.insertBatch(fileId, parseResult.imports);
+                importsExtracted += parseResult.imports.length;
+
+                for (const imp of parseResult.imports) {
+                  const resolvedTarget = this.resolveImportPath(
+                    file.relativePath,
+                    imp.importPath,
+                    currentPaths,
+                  );
+                  if (resolvedTarget) {
+                    dependencies.push({
+                      source: file.relativePath,
+                      target: resolvedTarget,
+                      kind: 'import',
+                      symbols: imp.symbols,
+                      weight: 1.0,
+                    });
+                  }
+                }
+              }
+
+              try {
+                this.searchRepo.removeFile(fileId);
+              } catch {
+                /* FTS entry may not exist */
+              }
+              this.searchRepo.indexFile(fileId, file.relativePath, content);
+
+              if (parseResult.errors.length > 0) {
+                errors.push(...parseResult.errors);
+              }
+
+              filesUpdated++;
+            } else {
+              const fileId = this.fileRepo.upsert(this.options.projectId, file);
+              try {
+                this.searchRepo.removeFile(fileId);
+              } catch {
+                /* FTS entry may not exist */
+              }
+              this.searchRepo.indexFile(fileId, file.relativePath, content);
+              filesUpdated++;
+            }
+
+            filesIndexed++;
+          } catch (dbErr) {
+            const msg = dbErr instanceof Error ? dbErr.message : String(dbErr);
+            errors.push(`Database error for ${file.relativePath}: ${msg}`);
+          }
+        }
+      });
     }
 
     // Insert dependencies

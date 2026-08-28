@@ -46,32 +46,32 @@
     "commands": [
       {
         "command": "codeatlas.indexCodebase",
-        "title": "CodeAtlas: Index / Refresh Codebase",
+        "title": "Index / Refresh Codebase",
         "category": "CodeAtlas"
       },
       {
         "command": "codeatlas.exportContext",
-        "title": "CodeAtlas: Export Context for AI Agent",
+        "title": "Export Context for AI Agent",
         "category": "CodeAtlas"
       },
       {
         "command": "codeatlas.generatePRContext",
-        "title": "CodeAtlas: Generate Git PR Context",
+        "title": "Generate Git PR Context",
         "category": "CodeAtlas"
       },
       {
         "command": "codeatlas.queryGraph",
-        "title": "CodeAtlas: Run Cypher Graph Query",
+        "title": "Run Cypher Graph Query",
         "category": "CodeAtlas"
       },
       {
         "command": "codeatlas.toggleWatcher",
-        "title": "CodeAtlas: Toggle Real-time Watcher",
+        "title": "Toggle Real-time Watcher",
         "category": "CodeAtlas"
       },
       {
         "command": "codeatlas.openGraphView",
-        "title": "CodeAtlas: Open Interactive Graph View",
+        "title": "Open Interactive Graph View",
         "category": "CodeAtlas",
         "icon": "$(type-hierarchy)"
       }

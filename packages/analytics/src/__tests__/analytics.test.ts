@@ -1,7 +1,13 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { DependencyGraph } from '@codeatlas/graph';
 import type { DependencyEdge, FileInfo } from '@codeatlas/core';
-import { CycleDetector, DeadCodeDetector, MetricsCalculator, CodebaseAnalyzer } from '../index.js';
+import {
+  CycleDetector,
+  DeadCodeDetector,
+  MetricsCalculator,
+  CodebaseAnalyzer,
+  GitMetricsAnalyzer,
+} from '../index.js';
 
 describe('Analytics Engine', () => {
   let graph: DependencyGraph;
@@ -160,6 +166,47 @@ describe('Analytics Engine', () => {
       expect(report.cycles).toHaveLength(1);
       expect(report.summary.totalEdges).toBe(2);
       expect(report.hotspots).toBeDefined();
+    });
+  });
+
+  describe('GitMetricsAnalyzer', () => {
+    it('calculates hotspot risk scores based on churn and graph metrics', () => {
+      const gitAnalyzer = new GitMetricsAnalyzer(process.cwd());
+
+      const mockNodeMetrics = [
+        {
+          id: 'src/core/engine.ts',
+          name: 'engine.ts',
+          inDegree: 12,
+          outDegree: 8,
+          instability: 0.85,
+          isGodObject: true,
+          isLeaf: false,
+          isRoot: false,
+        },
+        {
+          id: 'src/utils/math.ts',
+          name: 'math.ts',
+          inDegree: 1,
+          outDegree: 0,
+          instability: 0.1,
+          isGodObject: false,
+          isLeaf: true,
+          isRoot: false,
+        },
+      ];
+
+      const customChurnMap = new Map<string, number>([
+        ['src/core/engine.ts', 25],
+        ['src/utils/math.ts', 1],
+      ]);
+
+      const hotspots = gitAnalyzer.analyzeHotspots(mockNodeMetrics, customChurnMap);
+      expect(hotspots).toHaveLength(2);
+      expect(hotspots[0]?.filePath).toBe('src/core/engine.ts');
+      expect(hotspots[0]?.riskLevel).toBe('critical');
+      expect(hotspots[1]?.filePath).toBe('src/utils/math.ts');
+      expect(hotspots[1]?.riskLevel).toBe('low');
     });
   });
 });

@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { createLogger, GitError } from '@codeatlas/shared';
 
 const logger = createLogger('git');
@@ -31,7 +31,7 @@ export class GitService {
 
   isGitRepo(): boolean {
     try {
-      this.exec('git rev-parse --git-dir');
+      this.exec(['rev-parse', '--git-dir']);
       return true;
     } catch {
       return false;
@@ -52,10 +52,10 @@ export class GitService {
 
     let branch = 'main';
     try {
-      branch = this.exec('git symbolic-ref --short HEAD').trim();
+      branch = this.exec(['symbolic-ref', '--short', 'HEAD']).trim();
     } catch {
       try {
-        branch = this.exec('git rev-parse --abbrev-ref HEAD').trim();
+        branch = this.exec(['rev-parse', '--abbrev-ref', 'HEAD']).trim();
       } catch {
         branch = 'main';
       }
@@ -63,7 +63,7 @@ export class GitService {
 
     let statusOutput = '';
     try {
-      statusOutput = this.exec('git status --porcelain');
+      statusOutput = this.exec(['status', '--porcelain']);
     } catch {
       statusOutput = '';
     }
@@ -102,7 +102,7 @@ export class GitService {
     if (!this.isGitRepo()) return [];
 
     try {
-      const output = this.exec(`git log --format="%H|%h|%s|%an|%aI" -n ${limit}`);
+      const output = this.exec(['log', '--format=%H|%h|%s|%an|%aI', '-n', String(limit)]);
 
       return output
         .split('\n')
@@ -126,7 +126,7 @@ export class GitService {
     if (!this.isGitRepo()) return undefined;
 
     try {
-      const output = this.exec(`git log -1 --format="%aI" -- "${filePath}"`);
+      const output = this.exec(['log', '-1', '--format=%aI', '--', filePath]);
       return output.trim() || undefined;
     } catch {
       return undefined;
@@ -138,7 +138,7 @@ export class GitService {
 
     try {
       const ref = since ?? 'HEAD~10';
-      const output = this.exec(`git diff --name-only ${ref}`);
+      const output = this.exec(['diff', '--name-only', ref]);
       return output.split('\n').filter(Boolean);
     } catch {
       return [];
@@ -149,7 +149,7 @@ export class GitService {
     if (!this.isGitRepo()) return [];
 
     try {
-      const output = this.exec('git diff --cached --name-only');
+      const output = this.exec(['diff', '--cached', '--name-only']);
       return output.split('\n').filter(Boolean);
     } catch {
       return [];
@@ -160,7 +160,7 @@ export class GitService {
     if (!this.isGitRepo()) return [];
 
     try {
-      const output = this.exec(`git diff --name-only ${baseBranch}...HEAD`);
+      const output = this.exec(['diff', '--name-only', `${baseBranch}...HEAD`]);
       return output.split('\n').filter(Boolean);
     } catch {
       return [];
@@ -171,8 +171,8 @@ export class GitService {
     if (!this.isGitRepo()) return '';
 
     try {
-      const cmd = filePath ? `git diff -- "${filePath}"` : 'git diff';
-      return this.exec(cmd);
+      const args = filePath ? ['diff', '--', filePath] : ['diff'];
+      return this.exec(args);
     } catch {
       return '';
     }
@@ -182,7 +182,7 @@ export class GitService {
     if (!this.isGitRepo()) return '';
 
     try {
-      return this.exec('git diff --cached');
+      return this.exec(['diff', '--cached']);
     } catch {
       return '';
     }
@@ -192,15 +192,15 @@ export class GitService {
     if (!this.isGitRepo()) return '';
 
     try {
-      return this.exec(`git diff ${baseBranch}...HEAD`);
+      return this.exec(['diff', `${baseBranch}...HEAD`]);
     } catch {
       return '';
     }
   }
 
-  private exec(command: string): string {
+  private exec(args: string[]): string {
     try {
-      return execSync(command, {
+      return execFileSync('git', args, {
         cwd: this.cwd,
         encoding: 'utf-8',
         maxBuffer: 10 * 1024 * 1024,
@@ -208,8 +208,9 @@ export class GitService {
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      logger.debug(`Git command failed: ${command} — ${message}`);
-      throw new GitError(`Git command failed: ${message}`, { command });
+      const cmdStr = `git ${args.join(' ')}`;
+      logger.debug(`Git command failed: ${cmdStr} — ${message}`);
+      throw new GitError(`Git command failed: ${message}`, { command: cmdStr });
     }
   }
 }

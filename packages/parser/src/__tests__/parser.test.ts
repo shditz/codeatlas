@@ -198,4 +198,103 @@ pub fn initialize_cache() -> Cache {
     const status = result.symbols.find((s) => s.name === 'CacheStatus');
     expect(status?.kind).toBe('enum');
   });
+
+  it('extracts symbols and imports from C#', async () => {
+    const csCode = `
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
+
+namespace App.Controllers
+{
+    public class UserController : ControllerBase
+    {
+        public async Task<IActionResult> GetUser(int id)
+        {
+            return Ok();
+        }
+    }
+}
+`;
+    const result = await parseFile('Controllers/UserController.cs', csCode, 'csharp');
+    expect(result.errors).toHaveLength(0);
+    expect(result.imports).toHaveLength(2);
+    expect(result.symbols.map((s) => s.name)).toContain('UserController');
+    expect(result.symbols.map((s) => s.name)).toContain('GetUser');
+  });
+
+  it('extracts symbols and imports from C++', async () => {
+    const cppCode = `
+#include <vector>
+#include "engine/render.h"
+
+class GameEngine {
+public:
+    void Start() {
+    }
+};
+
+struct Vector3 {
+    float x, y, z;
+};
+`;
+    const result = await parseFile('src/engine.cpp', cppCode, 'cpp');
+    expect(result.errors).toHaveLength(0);
+    expect(result.imports).toHaveLength(2);
+    expect(result.symbols.map((s) => s.name)).toContain('GameEngine');
+    expect(result.symbols.map((s) => s.name)).toContain('Vector3');
+    expect(result.symbols.map((s) => s.name)).toContain('Start');
+  });
+
+  it('extracts symbols and imports from Java', async () => {
+    const javaCode = `
+import java.util.List;
+import org.springframework.stereotype.Service;
+
+public class OrderService {
+    public Order processOrder(Long id) {
+        return null;
+    }
+}
+`;
+    const result = await parseFile('OrderService.java', javaCode, 'java');
+    expect(result.errors).toHaveLength(0);
+    expect(result.imports).toHaveLength(2);
+    expect(result.symbols.map((s) => s.name)).toContain('OrderService');
+    expect(result.symbols.map((s) => s.name)).toContain('processOrder');
+  });
+
+  it('extracts symbols and imports from Ruby, Kotlin, and Swift', async () => {
+    const rbCode = `
+require 'json'
+class ApiClient
+  def fetch_data
+  end
+end
+`;
+    const rbResult = await parseFile('client.rb', rbCode, 'ruby');
+    expect(rbResult.symbols.map((s) => s.name)).toContain('ApiClient');
+    expect(rbResult.symbols.map((s) => s.name)).toContain('fetch_data');
+
+    const ktCode = `
+import kotlinx.coroutines.flow.Flow
+class UserRepository {
+    fun fetchUser(): Flow<User> {
+    }
+}
+`;
+    const ktResult = await parseFile('UserRepository.kt', ktCode, 'kotlin');
+    expect(ktResult.symbols.map((s) => s.name)).toContain('UserRepository');
+    expect(ktResult.symbols.map((s) => s.name)).toContain('fetchUser');
+
+    const swiftCode = `
+import SwiftUI
+public struct ProfileView {
+    public func render() {
+    }
+}
+`;
+    const swiftResult = await parseFile('ProfileView.swift', swiftCode, 'swift');
+    expect(swiftResult.symbols.map((s) => s.name)).toContain('ProfileView');
+    expect(swiftResult.symbols.map((s) => s.name)).toContain('render');
+  });
 });

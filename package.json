@@ -35,9 +35,13 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "clean": "pnpm -r run clean && rimraf node_modules",
-    "prepare": "pnpm build"
+    "prepare": "pnpm build",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.27.12",
     "@eslint/js": "^9.0.0",
     "@types/node": "^22.5.0",
     "eslint": "^9.0.0",

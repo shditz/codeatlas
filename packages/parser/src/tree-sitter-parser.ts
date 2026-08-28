@@ -8,6 +8,7 @@ const nodeRequire = typeof require !== 'undefined' ? require : createRequire(imp
 let ParserClass: unknown = null;
 const languageGrammars: Partial<Record<Language, unknown>> = {};
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getParserClass(): any {
   if (!ParserClass) {
     ParserClass = nodeRequire('tree-sitter');
@@ -84,43 +85,66 @@ export async function parseFile(
   const errors: string[] = [];
 
   try {
-    const ParserConstructor = getParserClass();
-    const lang = getLanguage(language);
+    if (['typescript', 'javascript', 'python', 'go', 'rust'].includes(language)) {
+      const ParserConstructor = getParserClass();
+      const lang = getLanguage(language);
 
-    const parser = new ParserConstructor();
-    parser.setLanguage(lang);
+      const parser = new ParserConstructor();
+      parser.setLanguage(lang);
 
-    const tree = parser.parse(content);
-    const root = tree.rootNode as unknown as AstNode;
+      const tree = parser.parse(content);
+      const root = tree.rootNode as unknown as AstNode;
 
-    switch (language) {
-      case 'typescript':
-      case 'javascript':
-        extractTypeScriptSymbols(root, filePath, symbols, exportedNames, null);
-        extractTypeScriptImports(root, filePath, imports);
-        break;
+      switch (language) {
+        case 'typescript':
+        case 'javascript':
+          extractTypeScriptSymbols(root, filePath, symbols, exportedNames, null);
+          extractTypeScriptImports(root, filePath, imports);
+          break;
 
-      case 'python':
-        extractPythonSymbols(root, filePath, symbols, exportedNames, null);
-        extractPythonImports(root, filePath, imports);
-        break;
+        case 'python':
+          extractPythonSymbols(root, filePath, symbols, exportedNames, null);
+          extractPythonImports(root, filePath, imports);
+          break;
 
-      case 'go':
-        extractGoSymbols(root, filePath, symbols, exportedNames, null);
-        extractGoImports(root, filePath, imports);
-        break;
+        case 'go':
+          extractGoSymbols(root, filePath, symbols, exportedNames, null);
+          extractGoImports(root, filePath, imports);
+          break;
 
-      case 'rust':
-        extractRustSymbols(root, filePath, symbols, exportedNames, null);
-        extractRustImports(root, filePath, imports);
-        break;
+        case 'rust':
+          extractRustSymbols(root, filePath, symbols, exportedNames, null);
+          extractRustImports(root, filePath, imports);
+          break;
+      }
 
-      default:
-        break;
-    }
-
-    if (tree.rootNode.hasError) {
-      errors.push(`Parse tree contains errors for ${filePath}`);
+      if (tree.rootNode.hasError) {
+        errors.push(`Parse tree contains errors for ${filePath}`);
+      }
+    } else {
+      switch (language) {
+        case 'csharp':
+          extractCSharpSymbolsAndImports(content, filePath, symbols, imports, exportedNames);
+          break;
+        case 'cpp':
+        case 'c':
+          extractCppSymbolsAndImports(content, filePath, symbols, imports, exportedNames);
+          break;
+        case 'java':
+          extractJavaSymbolsAndImports(content, filePath, symbols, imports, exportedNames);
+          break;
+        case 'ruby':
+          extractRubySymbolsAndImports(content, filePath, symbols, imports, exportedNames);
+          break;
+        case 'kotlin':
+          extractKotlinSymbolsAndImports(content, filePath, symbols, imports, exportedNames);
+          break;
+        case 'swift':
+          extractSwiftSymbolsAndImports(content, filePath, symbols, imports, exportedNames);
+          break;
+        default:
+          break;
+      }
     }
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
@@ -660,4 +684,448 @@ function isBlockNode(type: string): boolean {
     type === 'switch_body' ||
     type === 'block'
   );
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * Multi-Language Lexical AST Extractors (C#, C++, Java, Ruby, Kotlin, Swift)
+ * ───────────────────────────────────────────────────────────── */
+
+function extractCSharpSymbolsAndImports(
+  content: string,
+  filePath: string,
+  symbols: SymbolInfo[],
+  imports: ImportInfo[],
+  exportedNames: string[],
+): void {
+  const lines = content.split('\n');
+  let currentClass: string | null = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i] ?? '';
+    const line = rawLine.trim();
+    if (!line || line.startsWith('//') || line.startsWith('/*')) continue;
+
+    // using Namespace.Sub;
+    const usingMatch = line.match(/^using\s+([\w.]+);/);
+    if (usingMatch && usingMatch[1]) {
+      imports.push({
+        filePath,
+        importPath: usingMatch[1],
+        symbols: [usingMatch[1]],
+        isDefault: false,
+        isNamespace: true,
+        isType: false,
+      });
+      continue;
+    }
+
+    // class, interface, struct, enum
+    const typeMatch = line.match(
+      /(?:public|private|protected|internal|static|abstract|sealed|\s)*\b(class|interface|struct|enum)\s+([A-Za-z0-9_]+)/,
+    );
+    if (typeMatch && typeMatch[1] && typeMatch[2]) {
+      const kind = typeMatch[1] as SymbolKind;
+      const name = typeMatch[2];
+      const isPublic = line.includes('public');
+      currentClass = name;
+      symbols.push({
+        name,
+        kind,
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: isPublic,
+        signature: line,
+      });
+      if (isPublic) exportedNames.push(name);
+      continue;
+    }
+
+    // methods
+    const methodMatch = line.match(
+      /(?:(?:public|private|protected|internal|static|async|virtual|override|abstract|sealed)\s+)+([\w<>[\]?]+)\s+([A-Za-z0-9_]+)\s*\([^;{}]*\)/,
+    );
+    if (methodMatch && methodMatch[2]) {
+      const name = methodMatch[2];
+      if (!['if', 'for', 'while', 'switch', 'catch', 'lock', 'using', 'get', 'set'].includes(name)) {
+        const isPublic = line.includes('public');
+        symbols.push({
+          name,
+          kind: currentClass ? 'method' : 'function',
+          filePath,
+          line: i + 1,
+          column: rawLine.indexOf(name),
+          exported: isPublic,
+          signature: line,
+          parentSymbol: currentClass ?? undefined,
+        });
+        if (isPublic) exportedNames.push(name);
+      }
+    }
+  }
+}
+
+function extractCppSymbolsAndImports(
+  content: string,
+  filePath: string,
+  symbols: SymbolInfo[],
+  imports: ImportInfo[],
+  exportedNames: string[],
+): void {
+  const lines = content.split('\n');
+  let currentScope: string | null = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i] ?? '';
+    const line = rawLine.trim();
+    if (!line || line.startsWith('//') || line.startsWith('/*')) continue;
+
+    // #include <vector> or #include "my_header.h"
+    const incMatch = line.match(/^#include\s*[<"]([^>"]+)[>"]/);
+    if (incMatch && incMatch[1]) {
+      imports.push({
+        filePath,
+        importPath: incMatch[1],
+        symbols: [incMatch[1]],
+        isDefault: false,
+        isNamespace: false,
+        isType: false,
+      });
+      continue;
+    }
+
+    // class, struct, enum
+    const typeMatch = line.match(/\b(class|struct|enum(?:\s+class)?)\s+([A-Za-z0-9_]+)/);
+    if (typeMatch && typeMatch[1] && typeMatch[2]) {
+      const kind = typeMatch[1].startsWith('enum') ? 'enum' : (typeMatch[1] as SymbolKind);
+      const name = typeMatch[2];
+      currentScope = name;
+      symbols.push({
+        name,
+        kind,
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: true,
+        signature: line,
+      });
+      exportedNames.push(name);
+      continue;
+    }
+
+    // functions
+    const funcMatch = line.match(
+      /(?:[\w:*&<>]+\s+)+([A-Za-z0-9_]+)\s*\([^;{}]*\)\s*(?:const)?\s*\{/,
+    );
+    if (funcMatch && funcMatch[1]) {
+      const name = funcMatch[1];
+      if (!['if', 'for', 'while', 'switch', 'catch'].includes(name)) {
+        symbols.push({
+          name,
+          kind: currentScope ? 'method' : 'function',
+          filePath,
+          line: i + 1,
+          column: rawLine.indexOf(name),
+          exported: true,
+          signature: line,
+          parentSymbol: currentScope ?? undefined,
+        });
+        exportedNames.push(name);
+      }
+    }
+  }
+}
+
+function extractJavaSymbolsAndImports(
+  content: string,
+  filePath: string,
+  symbols: SymbolInfo[],
+  imports: ImportInfo[],
+  exportedNames: string[],
+): void {
+  const lines = content.split('\n');
+  let currentClass: string | null = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i] ?? '';
+    const line = rawLine.trim();
+    if (!line || line.startsWith('//') || line.startsWith('/*')) continue;
+
+    // import java.util.List;
+    const impMatch = line.match(/^import\s+(?:static\s+)?([\w.*]+);/);
+    if (impMatch && impMatch[1]) {
+      imports.push({
+        filePath,
+        importPath: impMatch[1],
+        symbols: [impMatch[1].split('.').pop() ?? impMatch[1]],
+        isDefault: false,
+        isNamespace: impMatch[1].endsWith('.*'),
+        isType: true,
+      });
+      continue;
+    }
+
+    // class, interface, enum
+    const typeMatch = line.match(
+      /(?:public|protected|private|abstract|static|final|\s)*\b(class|interface|enum)\s+([A-Za-z0-9_]+)/,
+    );
+    if (typeMatch && typeMatch[1] && typeMatch[2]) {
+      const kind = typeMatch[1] as SymbolKind;
+      const name = typeMatch[2];
+      const isPublic = line.includes('public');
+      currentClass = name;
+      symbols.push({
+        name,
+        kind,
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: isPublic,
+        signature: line,
+      });
+      if (isPublic) exportedNames.push(name);
+      continue;
+    }
+
+    // methods
+    const methodMatch = line.match(
+      /(?:public|protected|private|static|final|abstract|synchronized|\s)+([\w<>[\]]+)\s+([A-Za-z0-9_]+)\s*\([^;{}]*\)\s*(?:throws\s+[\w,\s]+)?\s*\{/,
+    );
+    if (methodMatch && methodMatch[2]) {
+      const name = methodMatch[2];
+      if (!['if', 'for', 'while', 'switch', 'catch'].includes(name)) {
+        const isPublic = line.includes('public');
+        symbols.push({
+          name,
+          kind: currentClass ? 'method' : 'function',
+          filePath,
+          line: i + 1,
+          column: rawLine.indexOf(name),
+          exported: isPublic,
+          signature: line,
+          parentSymbol: currentClass ?? undefined,
+        });
+        if (isPublic) exportedNames.push(name);
+      }
+    }
+  }
+}
+
+function extractRubySymbolsAndImports(
+  content: string,
+  filePath: string,
+  symbols: SymbolInfo[],
+  imports: ImportInfo[],
+  exportedNames: string[],
+): void {
+  const lines = content.split('\n');
+  let currentScope: string | null = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i] ?? '';
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) continue;
+
+    // require 'json'
+    const reqMatch = line.match(/^(?:require|require_relative|load)\s+['"]([^'"]+)['"]/);
+    if (reqMatch && reqMatch[1]) {
+      imports.push({
+        filePath,
+        importPath: reqMatch[1],
+        symbols: [reqMatch[1]],
+        isDefault: false,
+        isNamespace: false,
+        isType: false,
+      });
+      continue;
+    }
+
+    // class, module
+    const classMatch = line.match(/^(?:class|module)\s+([A-Z][A-Za-z0-9_:]*)/);
+    if (classMatch && classMatch[1]) {
+      const name = classMatch[1];
+      currentScope = name;
+      symbols.push({
+        name,
+        kind: 'class',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: true,
+        signature: line,
+      });
+      exportedNames.push(name);
+      continue;
+    }
+
+    // def method_name
+    const defMatch = line.match(/^def\s+([A-Za-z0-9_!?.]+)/);
+    if (defMatch && defMatch[1]) {
+      const name = defMatch[1];
+      symbols.push({
+        name,
+        kind: currentScope ? 'method' : 'function',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: true,
+        signature: line,
+        parentSymbol: currentScope ?? undefined,
+      });
+      exportedNames.push(name);
+    }
+  }
+}
+
+function extractKotlinSymbolsAndImports(
+  content: string,
+  filePath: string,
+  symbols: SymbolInfo[],
+  imports: ImportInfo[],
+  exportedNames: string[],
+): void {
+  const lines = content.split('\n');
+  let currentClass: string | null = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i] ?? '';
+    const line = rawLine.trim();
+    if (!line || line.startsWith('//') || line.startsWith('/*')) continue;
+
+    // import kotlinx.coroutines.*
+    const impMatch = line.match(/^import\s+([\w.*]+)/);
+    if (impMatch && impMatch[1]) {
+      imports.push({
+        filePath,
+        importPath: impMatch[1],
+        symbols: [impMatch[1].split('.').pop() ?? impMatch[1]],
+        isDefault: false,
+        isNamespace: impMatch[1].endsWith('.*'),
+        isType: true,
+      });
+      continue;
+    }
+
+    // class, interface
+    const typeMatch = line.match(
+      /(?:open|data|sealed|abstract|internal|public|private|\s)*\b(class|interface|object|enum\s+class)\s+([A-Za-z0-9_]+)/,
+    );
+    if (typeMatch && typeMatch[1] && typeMatch[2]) {
+      const name = typeMatch[2];
+      const kind = typeMatch[1].includes('interface') ? 'interface' : 'class';
+      const isPublic = !line.includes('private');
+      currentClass = name;
+      symbols.push({
+        name,
+        kind,
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: isPublic,
+        signature: line,
+      });
+      if (isPublic) exportedNames.push(name);
+      continue;
+    }
+
+    // fun name()
+    const funMatch = line.match(
+      /(?:suspend|override|inline|internal|public|private|\s)*\bfun\s+(?:<[^>]+>\s+)?([A-Za-z0-9_]+)\s*\(/,
+    );
+    if (funMatch && funMatch[1]) {
+      const name = funMatch[1];
+      const isPublic = !line.includes('private');
+      symbols.push({
+        name,
+        kind: currentClass ? 'method' : 'function',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: isPublic,
+        signature: line,
+        parentSymbol: currentClass ?? undefined,
+      });
+      if (isPublic) exportedNames.push(name);
+    }
+  }
+}
+
+function extractSwiftSymbolsAndImports(
+  content: string,
+  filePath: string,
+  symbols: SymbolInfo[],
+  imports: ImportInfo[],
+  exportedNames: string[],
+): void {
+  const lines = content.split('\n');
+  let currentScope: string | null = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i] ?? '';
+    const line = rawLine.trim();
+    if (!line || line.startsWith('//') || line.startsWith('/*')) continue;
+
+    // import SwiftUI
+    const impMatch = line.match(/^import\s+([A-Za-z0-9_]+)/);
+    if (impMatch && impMatch[1]) {
+      imports.push({
+        filePath,
+        importPath: impMatch[1],
+        symbols: [impMatch[1]],
+        isDefault: false,
+        isNamespace: true,
+        isType: false,
+      });
+      continue;
+    }
+
+    // class, struct, protocol, enum
+    const typeMatch = line.match(
+      /(?:public|open|final|internal|fileprivate|private|\s)*\b(class|struct|protocol|enum)\s+([A-Za-z0-9_]+)/,
+    );
+    if (typeMatch && typeMatch[1] && typeMatch[2]) {
+      const kind =
+        typeMatch[1] === 'protocol'
+          ? 'trait'
+          : typeMatch[1] === 'struct'
+            ? 'struct'
+            : typeMatch[1] === 'enum'
+              ? 'enum'
+              : 'class';
+      const name = typeMatch[2];
+      const isPublic = line.includes('public') || line.includes('open');
+      currentScope = name;
+      symbols.push({
+        name,
+        kind,
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: isPublic,
+        signature: line,
+      });
+      if (isPublic) exportedNames.push(name);
+      continue;
+    }
+
+    // func
+    const funcMatch = line.match(
+      /(?:public|private|fileprivate|open|static|class|mutating|\s)*\bfunc\s+([A-Za-z0-9_]+)\s*\(/,
+    );
+    if (funcMatch && funcMatch[1]) {
+      const name = funcMatch[1];
+      const isPublic = line.includes('public') || line.includes('open');
+      symbols.push({
+        name,
+        kind: currentScope ? 'method' : 'function',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: isPublic,
+        signature: line,
+        parentSymbol: currentScope ?? undefined,
+      });
+      if (isPublic) exportedNames.push(name);
+    }
+  }
 }

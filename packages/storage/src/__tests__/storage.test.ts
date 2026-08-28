@@ -200,4 +200,35 @@ describe('Storage & SQLite Repositories', () => {
     const fetched = projectRepo.getByRoot('/workspace/repo-backend');
     expect(fetched?.name).toBe('backend');
   });
+
+  it('supports nested transactions correctly with rollback and commit', () => {
+    db.run('INSERT INTO projects (name, root) VALUES (?, ?)', 'root-proj', '/root');
+
+    db.transaction(() => {
+      db.run('INSERT INTO projects (name, root) VALUES (?, ?)', 'child-1', '/child-1');
+
+      // Nested successful transaction
+      db.transaction(() => {
+        db.run('INSERT INTO projects (name, root) VALUES (?, ?)', 'child-2', '/child-2');
+      });
+
+      // Nested failed transaction that rolls back to its savepoint
+      try {
+        db.transaction(() => {
+          db.run('INSERT INTO projects (name, root) VALUES (?, ?)', 'child-3', '/child-3');
+          throw new Error('Rollback nested');
+        });
+      } catch {
+        // Expected error caught
+      }
+    });
+
+    const projects = db.all<{ name: string }>('SELECT name FROM projects');
+    const names = projects.map((p) => p.name);
+
+    expect(names).toContain('root-proj');
+    expect(names).toContain('child-1');
+    expect(names).toContain('child-2');
+    expect(names).not.toContain('child-3');
+  });
 });

@@ -73,6 +73,15 @@ export function activate(context: vscode.ExtensionContext): void {
   vscode.window.registerTreeDataProvider('codeatlas.overview', overviewProvider);
   vscode.window.registerTreeDataProvider('codeatlas.rules', rulesProvider);
 
+  // Watch for AI rules changes
+  const rulesWatcher = vscode.workspace.createFileSystemWatcher(
+    '**/{.cursorrules,.windsurfrules,.clinerules,.traerules,.lingmarules,.comaterules,.codegeexrules,.roorules,.augmentrules,AGENTS.md,CLAUDE.md,GEMINI.md,DEEPSEEK.md,QWEN.md,KIMI.md,GROK.md,DEVIN.md,OPENHANDS.md,REPLIT.md,AMAZONQ.md,ANTIGRAVITY.md}',
+  );
+  rulesWatcher.onDidChange(() => rulesProvider.refresh());
+  rulesWatcher.onDidCreate(() => rulesProvider.refresh());
+  rulesWatcher.onDidDelete(() => rulesProvider.refresh());
+  context.subscriptions.push(rulesWatcher);
+
   // Command 1: Index Codebase
   context.subscriptions.push(
     vscode.commands.registerCommand('codeatlas.indexCodebase', async () => {
@@ -105,9 +114,15 @@ export function activate(context: vscode.ExtensionContext): void {
           overviewProvider.setDatabase(db, projectId);
           rulesProvider.refresh();
 
-          vscode.window.showInformationMessage(
-            `CodeAtlas: Indexed ${result.filesIndexed} files, ${result.symbolsExtracted} symbols, ${result.dependenciesCreated} dependencies in ${result.duration}ms`,
-          );
+          if (result.errors && result.errors.length > 0) {
+            vscode.window.showWarningMessage(
+              `CodeAtlas: Indexed with ${result.errors.length} errors. First error: ${result.errors[0]}`,
+            );
+          } else {
+            vscode.window.showInformationMessage(
+              `CodeAtlas: Indexed ${result.filesIndexed} files, ${result.symbolsExtracted} symbols, ${result.dependenciesCreated} dependencies in ${result.duration}ms`,
+            );
+          }
         },
       );
     }),

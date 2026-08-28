@@ -1,6 +1,6 @@
 # Security Policy
 
-CodeAtlas takes the security of our software and user data seriously. This document outlines our vulnerability reporting process and our foundational security principles.
+This document outlines our vulnerability reporting process and our foundational security principles.
 
 ---
 
@@ -17,12 +17,12 @@ If you discover a security vulnerability in CodeAtlas, please report it responsi
 
 ## Core Security & Privacy Principles
 
-CodeAtlas is engineered with a strict local-first architecture:
+CodeAtlas is built to keep your code private and secure on your local machine:
 
-1. **Zero External Data Transmission**: All AST parsing, SQLite storage, graph rendering, and context pack generation execute 100% locally on your machine.
+1. **Local-First Architecture**: All AST parsing, SQLite storage, and context generation execute 100% locally on your machine.
 2. **Deterministic Exclusions**: CodeAtlas automatically respects `.gitignore` and `.atlasignore` to prevent parsing of sensitive credentials, environment files (`.env`), private keys, or certificate bundles.
-3. **Secret & Credential Masking**: Automated heuristics filter known secret patterns (e.g., API tokens, AWS keys, JWT tokens) from generated context packs and exported prompt files.
-4. **No Background Telemetry**: CodeAtlas contains zero telemetry, analytics, tracking pings, or remote logging.
+3. **Secret Masking**: Automated heuristics filter known secret patterns (e.g., API tokens, AWS keys, JWT tokens) from generated context and exported files.
+4. **No Telemetry**: CodeAtlas contains zero telemetry, analytics, tracking pings, or remote logging.
 5. **Sandboxed Webview**: The VS Code Extension Webview operates within a sandboxed context, enforcing strict Content Security Policies (CSP) and local resource root boundaries.
 
 ---

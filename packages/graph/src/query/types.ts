@@ -57,19 +57,19 @@ export interface GraphQuery {
 export interface GraphNodeItem {
   id: string;
   label: string;
-  properties: Record<string, any>;
+  properties: Record<string, unknown>;
 }
 
 export interface GraphEdgeItem {
   source: string;
   target: string;
   type: string;
-  properties?: Record<string, any>;
+  properties?: Record<string, unknown>;
 }
 
 export interface GraphQueryResult {
   columns: string[];
-  rows: Array<Record<string, any>>;
+  rows: Array<Record<string, unknown>>;
   count: number;
   executionTimeMs: number;
 }

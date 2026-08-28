@@ -57,8 +57,8 @@ export class GraphQueryEngine {
     };
   }
 
-  private executeQuery(query: GraphQuery): Array<Record<string, any>> {
-    const results: Array<Record<string, any>> = [];
+  private executeQuery(query: GraphQuery): Array<Record<string, unknown>> {
+    const results: Array<Record<string, unknown>> = [];
 
     // Filter candidate source nodes
     const candidateSources = this.findMatchingNodes(query.source);
@@ -66,7 +66,7 @@ export class GraphQueryEngine {
     for (const sourceNode of candidateSources) {
       if (!query.edge || !query.target) {
         // Single node query: MATCH (n) WHERE ... RETURN n
-        const binding: Record<string, any> = {
+        const binding: Record<string, unknown> = {
           [query.source.variable]: sourceNode,
         };
 
@@ -87,7 +87,7 @@ export class GraphQueryEngine {
           continue;
         }
 
-        const binding: Record<string, any> = {
+        const binding: Record<string, unknown> = {
           [query.source.variable]: sourceNode,
           [query.target.variable]: targetNode,
         };
@@ -107,7 +107,7 @@ export class GraphQueryEngine {
 
   private findMatchingNodes(pattern: {
     label?: string;
-    properties?: Record<string, any>;
+    properties?: Record<string, unknown>;
   }): GraphNodeItem[] {
     const matched: GraphNodeItem[] = [];
 
@@ -122,7 +122,7 @@ export class GraphQueryEngine {
 
   private matchesNodePattern(
     node: GraphNodeItem,
-    pattern: { label?: string; properties?: Record<string, any> },
+    pattern: { label?: string; properties?: Record<string, unknown> },
   ): boolean {
     if (pattern.label && pattern.label.toLowerCase() !== node.label.toLowerCase()) {
       return false;
@@ -185,7 +185,7 @@ export class GraphQueryEngine {
     return candidateEdges;
   }
 
-  private evaluateWhereClauses(binding: Record<string, any>, whereClauses: WhereClause[]): boolean {
+  private evaluateWhereClauses(binding: Record<string, unknown>, whereClauses: WhereClause[]): boolean {
     for (const clause of whereClauses) {
       const entity = binding[clause.variable];
       if (!entity) return false;
@@ -201,7 +201,7 @@ export class GraphQueryEngine {
     return true;
   }
 
-  private compare(actual: any, operator: string, expected: any): boolean {
+  private compare(actual: unknown, operator: string, expected: unknown): boolean {
     const actStr = String(actual).toLowerCase();
     const expStr = String(expected).toLowerCase();
 
@@ -229,8 +229,8 @@ export class GraphQueryEngine {
     }
   }
 
-  private projectRow(binding: Record<string, any>, returnVariables: string[]): Record<string, any> {
-    const row: Record<string, any> = {};
+  private projectRow(binding: Record<string, unknown>, returnVariables: string[]): Record<string, unknown> {
+    const row: Record<string, unknown> = {};
     for (const varName of returnVariables) {
       const parts = varName.split('.');
       const rootVar = parts[0]!;

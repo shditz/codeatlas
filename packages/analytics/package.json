@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@codeatlas/core": "workspace:*",
+    "@codeatlas/git": "workspace:*",
     "@codeatlas/shared": "workspace:*",
     "@codeatlas/storage": "workspace:*",
     "@codeatlas/graph": "workspace:*"

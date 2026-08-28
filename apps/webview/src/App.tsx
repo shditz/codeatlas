@@ -15,14 +15,15 @@ interface Node {
   size?: number;
   val?: number;
   color?: string;
+  communityId?: number;
   x?: number;
   y?: number;
   z?: number;
 }
 
 interface Link {
-  source: any;
-  target: any;
+  source: string | Node;
+  target: string | Node;
   type: string;
 }
 
@@ -39,8 +40,10 @@ const dummyData: GraphData = {
       path: 'src',
       type: 'dir',
       language: 'directory',
-      val: 5,
+      size: 0,
+      val: 6,
       color: '#c084fc',
+      communityId: 0,
     },
     {
       id: 'src/index.ts',
@@ -48,9 +51,10 @@ const dummyData: GraphData = {
       path: 'src/index.ts',
       type: 'file',
       language: 'typescript',
-      size: 1420,
+      size: 1200,
       val: 4,
       color: '#38bdf8',
+      communityId: 0,
     },
     {
       id: 'src/utils.ts',
@@ -58,9 +62,10 @@ const dummyData: GraphData = {
       path: 'src/utils.ts',
       type: 'file',
       language: 'typescript',
-      size: 840,
+      size: 850,
       val: 3,
       color: '#38bdf8',
+      communityId: 0,
     },
     {
       id: 'src/components',
@@ -68,8 +73,10 @@ const dummyData: GraphData = {
       path: 'src/components',
       type: 'dir',
       language: 'directory',
+      size: 0,
       val: 5,
       color: '#c084fc',
+      communityId: 1,
     },
     {
       id: 'src/components/Graph.tsx',
@@ -77,9 +84,10 @@ const dummyData: GraphData = {
       path: 'src/components/Graph.tsx',
       type: 'file',
       language: 'typescript',
-      size: 3200,
+      size: 3400,
       val: 5,
       color: '#38bdf8',
+      communityId: 1,
     },
     {
       id: 'src/components/Sidebar.tsx',
@@ -90,6 +98,7 @@ const dummyData: GraphData = {
       size: 2100,
       val: 4,
       color: '#38bdf8',
+      communityId: 1,
     },
     {
       id: 'package.json',
@@ -100,6 +109,7 @@ const dummyData: GraphData = {
       size: 650,
       val: 3,
       color: '#e2e8f0',
+      communityId: 2,
     },
   ],
   links: [
@@ -113,8 +123,22 @@ const dummyData: GraphData = {
   ],
 };
 
+const CLUSTER_PALETTE = [
+  '#38bdf8', // Cyan (Cluster 0)
+  '#a78bfa', // Lavender (Cluster 1)
+  '#f43f5e', // Rose (Cluster 2)
+  '#34d399', // Emerald (Cluster 3)
+  '#facc15', // Amber (Cluster 4)
+  '#fb923c', // Orange (Cluster 5)
+  '#e879f9', // Fuchsia (Cluster 6)
+  '#2dd4bf', // Teal (Cluster 7)
+];
+
 // Helper: resolve language to vibrant cosmic starlight color
-const getLanguageColor = (node: Node): string => {
+const getLanguageColor = (node: Node, colorMode: 'language' | 'cluster' = 'language'): string => {
+  if (colorMode === 'cluster' && node.type !== 'dir') {
+    return CLUSTER_PALETTE[(node.communityId ?? 0) % CLUSTER_PALETTE.length]!;
+  }
   if (node.color) return node.color;
   const ext = (node.name || '').split('.').pop()?.toLowerCase() || '';
   const lang = (node.language || '').toLowerCase();
@@ -122,6 +146,12 @@ const getLanguageColor = (node: Node): string => {
   if (node.type === 'dir' || lang === 'directory') return '#c084fc'; // Nebula Purple
   if (lang === 'typescript' || ext === 'ts' || ext === 'tsx') return '#38bdf8'; // Cyan
   if (lang === 'javascript' || ext === 'js' || ext === 'jsx') return '#facc15'; // Gold
+  if (lang === 'csharp' || ext === 'cs') return '#9333ea'; // Purple
+  if (lang === 'cpp' || lang === 'c' || ext === 'cpp' || ext === 'c' || ext === 'h') return '#2563eb'; // Blue
+  if (lang === 'java' || ext === 'java') return '#ea580c'; // Warm Orange
+  if (lang === 'ruby' || ext === 'rb') return '#e11d48'; // Crimson
+  if (lang === 'kotlin' || ext === 'kt') return '#7c3aed'; // Violet
+  if (lang === 'swift' || ext === 'swift') return '#f97316'; // Coral
   if (lang === 'php' || ext === 'php') return '#a78bfa'; // Electric Violet
   if (lang === 'python' || ext === 'py') return '#34d399'; // Emerald
   if (ext === 'css' || ext === 'scss' || ext === 'less') return '#f43f5e'; // Rose Pink
@@ -132,6 +162,7 @@ const getLanguageColor = (node: Node): string => {
 function App() {
   const [data, setData] = useState<GraphData>(dummyData);
   const [is3D, setIs3D] = useState(true);
+  const [colorMode, setColorMode] = useState<'language' | 'cluster'>('language');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [hoveredNode, setHoveredNode] = useState<Node | null>(null);
@@ -140,7 +171,7 @@ function App() {
   const [spotlightMode, setSpotlightMode] = useState(true);
 
   const fg2DRef = useRef<ForceGraphMethods>(null);
-  const fg3DRef = useRef<any>(null);
+  const fg3DRef = useRef<unknown>(null);
   const starfieldRef = useRef<THREE.Points | null>(null);
 
   // Compute filtered nodes and synthesize sibling cluster links if only files are active
@@ -186,7 +217,7 @@ function App() {
 
   const { highlightNodes, highlightLinks } = useMemo(() => {
     const nodes = new Set<string>();
-    const links = new Set<any>();
+    const links = new Set<unknown>();
 
     if (activeFocusNode) {
       nodes.add(activeFocusNode.id);
@@ -310,9 +341,9 @@ function App() {
 
   // Custom 3D Celestial Node Object (Nebula folder rings + luminous star sphere)
   const nodeThreeObject = useCallback(
-    (node: any) => {
+    (node: Node) => {
       const isDir = node.type === 'dir';
-      const baseColor = getLanguageColor(node);
+      const baseColor = getLanguageColor(node, colorMode);
       const isHighlighted = !spotlightActive || highlightNodes.has(node.id);
       const isFocus = activeFocusNode?.id === node.id;
 
@@ -350,12 +381,11 @@ function App() {
 
       return group;
     },
-    [spotlightActive, highlightNodes, activeFocusNode],
+    [spotlightActive, highlightNodes, activeFocusNode, colorMode],
   );
 
   // Click node handler
-  const handleNodeClick = useCallback(
-    (node: any) => {
+  const onNodeClick = useCallback((node: Node) => {
       setSelectedNode(node);
       setAutoRotate(false);
 
@@ -410,27 +440,27 @@ function App() {
 
   // Custom 2D Node Canvas Renderer with Starlight Bloom & Spotlight Dimming
   const draw2DNode = useCallback(
-    (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+    (node: Node, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const isSelected = selectedNode?.id === node.id;
       const isHovered = hoveredNode?.id === node.id;
       const isSearchMatch = isMatch(node);
       const isHighlighted = !spotlightActive || highlightNodes.has(node.id) || isSearchMatch;
 
-      const baseColor = getLanguageColor(node);
+      const baseColor = getLanguageColor(node, colorMode);
       const r = Math.max(2.5, (node.val || 4) * 0.9);
       const alpha = isHighlighted ? 1 : 0.15;
 
       // Glowing Star Halo (Outer Bloom)
       if (isHighlighted) {
         ctx.beginPath();
-        ctx.arc(node.x, node.y, r + (isSelected ? 6 : 3.5), 0, 2 * Math.PI, false);
+        ctx.arc(node.x!, node.y!, r + (isSelected ? 6 : 3.5), 0, 2 * Math.PI, false);
         ctx.fillStyle = isSelected ? 'rgba(255, 255, 255, 0.6)' : `${baseColor}44`;
         ctx.fill();
       }
 
       // Node Core
       ctx.beginPath();
-      ctx.arc(node.x, node.y, r, 0, 2 * Math.PI, false);
+      ctx.arc(node.x!, node.y!, r, 0, 2 * Math.PI, false);
       ctx.fillStyle = isSelected ? '#ffffff' : baseColor;
       ctx.globalAlpha = alpha;
       ctx.fill();
@@ -457,8 +487,8 @@ function App() {
         ctx.fillStyle = `rgba(10, 12, 16, ${isHighlighted ? 0.9 : 0.3})`;
         ctx.beginPath();
         ctx.roundRect(
-          node.x - bckgDimensions[0] / 2,
-          node.y + r + 2 / globalScale,
+          node.x! - bckgDimensions[0] / 2,
+          node.y! + r + 2 / globalScale,
           bckgDimensions[0],
           bckgDimensions[1],
           3 / globalScale,
@@ -474,11 +504,11 @@ function App() {
         ctx.textBaseline = 'middle';
         ctx.fillStyle = isSelected ? '#ffffff' : `${baseColor}`;
         ctx.globalAlpha = alpha;
-        ctx.fillText(label, node.x, node.y + r + 2 / globalScale + bckgDimensions[1] / 2);
+        ctx.fillText(label, node.x!, node.y! + r + 2 / globalScale + bckgDimensions[1] / 2);
         ctx.globalAlpha = 1;
       }
     },
-    [selectedNode, hoveredNode, searchQuery, spotlightActive, highlightNodes],
+    [selectedNode, hoveredNode, searchQuery, spotlightActive, highlightNodes, colorMode],
   );
 
   return (
@@ -562,6 +592,22 @@ function App() {
           </button>
         </div>
 
+        {/* Color Mode Switch */}
+        <div className="toggle-container" style={{ marginTop: '6px' }}>
+          <button
+            className={`toggle-btn ${colorMode === 'language' ? 'active' : ''}`}
+            onClick={() => setColorMode('language')}
+          >
+            Languages
+          </button>
+          <button
+            className={`toggle-btn ${colorMode === 'cluster' ? 'active' : ''}`}
+            onClick={() => setColorMode('cluster')}
+          >
+            Clusters
+          </button>
+        </div>
+
         {/* Spotlight & Rotation Toggles */}
         <div className="action-row">
           <button
@@ -587,28 +633,40 @@ function App() {
           </button>
         </div>
 
-        {/* Language Color Legend */}
+        {/* Color Legend */}
         <div className="legend-box">
-          <div className="legend-title">Languages & Types</div>
+          <div className="legend-title">
+            {colorMode === 'cluster' ? 'Community Clusters' : 'Languages & Types'}
+          </div>
           <div className="legend-items">
-            <div className="legend-item">
-              <span className="dot" style={{ backgroundColor: '#c084fc' }}></span>Folder
-            </div>
-            <div className="legend-item">
-              <span className="dot" style={{ backgroundColor: '#a78bfa' }}></span>PHP
-            </div>
-            <div className="legend-item">
-              <span className="dot" style={{ backgroundColor: '#38bdf8' }}></span>TS/TSX
-            </div>
-            <div className="legend-item">
-              <span className="dot" style={{ backgroundColor: '#facc15' }}></span>JS/JSX
-            </div>
-            <div className="legend-item">
-              <span className="dot" style={{ backgroundColor: '#f43f5e' }}></span>CSS
-            </div>
-            <div className="legend-item">
-              <span className="dot" style={{ backgroundColor: '#fb923c' }}></span>HTML
-            </div>
+            {colorMode === 'cluster' ? (
+              CLUSTER_PALETTE.slice(0, 6).map((color, idx) => (
+                <div className="legend-item" key={color}>
+                  <span className="dot" style={{ backgroundColor: color }}></span>Cluster {idx + 1}
+                </div>
+              ))
+            ) : (
+              <>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#c084fc' }}></span>Folder
+                </div>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#38bdf8' }}></span>TS/JS
+                </div>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#34d399' }}></span>Python
+                </div>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#9333ea' }}></span>C#
+                </div>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#2563eb' }}></span>C++
+                </div>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#ea580c' }}></span>Java
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -661,7 +719,7 @@ function App() {
                 Open in Editor
               </button>
             )}
-            <button className="btn-secondary" onClick={() => handleNodeClick(selectedNode)}>
+            <button className="btn-secondary" onClick={() => onNodeClick(selectedNode)}>
               Focus Camera
             </button>
           </div>
@@ -674,59 +732,59 @@ function App() {
           ref={fg3DRef}
           graphData={filteredData}
           nodeThreeObject={nodeThreeObject}
-          nodeLabel={(n: any) => `
+          nodeLabel={(n: unknown) => `
             <div class="node-tooltip">
               <div class="tt-title" style="color:${getLanguageColor(n)}">${n.name}</div>
               <div class="tt-sub">${n.path || n.id}</div>
               <div class="tt-meta">${n.type} • ${n.language || ''}</div>
             </div>
           `}
-          linkColor={(l: any) => {
+          linkColor={(l: unknown) => {
             const isHighlighted = !spotlightActive || highlightLinks.has(l);
             if (!isHighlighted) return 'rgba(255, 255, 255, 0.04)';
             if (l.type === 'contains' || l.type === 'sibling') return 'rgba(192, 132, 252, 0.6)';
             return 'rgba(56, 189, 248, 0.75)';
           }}
-          linkWidth={(l: any) => (!spotlightActive || highlightLinks.has(l) ? 1.6 : 0.5)}
-          linkDirectionalParticles={(l: any) => (!spotlightActive || highlightLinks.has(l) ? 3 : 0)}
+          linkWidth={(l: unknown) => (!spotlightActive || highlightLinks.has(l) ? 1.6 : 0.5)}
+          linkDirectionalParticles={(l: unknown) => (!spotlightActive || highlightLinks.has(l) ? 3 : 0)}
           linkDirectionalParticleSpeed={0.005}
           linkDirectionalParticleWidth={2.2}
-          linkDirectionalParticleColor={(l: any) =>
+          linkDirectionalParticleColor={(l: unknown) =>
             l.type === 'contains' || l.type === 'sibling' ? '#c084fc' : '#38bdf8'
           }
           onNodeClick={handleNodeClick}
-          onNodeHover={(n: any) => setHoveredNode(n)}
+          onNodeHover={(n: unknown) => setHoveredNode(n)}
           backgroundColor="#040508"
         />
       ) : (
         <ForceGraph2D
-          ref={fg2DRef as any}
+          ref={fg2DRef as unknown}
           graphData={filteredData}
           nodeCanvasObject={draw2DNode}
-          nodePointerAreaPaint={(node: any, color: string, ctx: CanvasRenderingContext2D) => {
+          nodePointerAreaPaint={(node: unknown, color: string, ctx: CanvasRenderingContext2D) => {
             const r = Math.max(2.5, (node.val || 4) * 0.9);
             ctx.fillStyle = color;
             ctx.beginPath();
             ctx.arc(node.x, node.y, r + 4, 0, 2 * Math.PI, false);
             ctx.fill();
           }}
-          linkColor={(l: any) => {
+          linkColor={(l: unknown) => {
             const isHighlighted = !spotlightActive || highlightLinks.has(l);
             if (!isHighlighted) return 'rgba(255, 255, 255, 0.04)';
             if (l.type === 'contains' || l.type === 'sibling') return 'rgba(192, 132, 252, 0.5)';
             return 'rgba(56, 189, 248, 0.7)';
           }}
-          linkWidth={(l: any) => (!spotlightActive || highlightLinks.has(l) ? 1.5 : 0.5)}
+          linkWidth={(l: unknown) => (!spotlightActive || highlightLinks.has(l) ? 1.5 : 0.5)}
           linkDirectionalArrowLength={3.5}
           linkDirectionalArrowRelPos={1}
-          linkDirectionalParticles={(l: any) => (!spotlightActive || highlightLinks.has(l) ? 2 : 0)}
+          linkDirectionalParticles={(l: unknown) => (!spotlightActive || highlightLinks.has(l) ? 2 : 0)}
           linkDirectionalParticleSpeed={0.006}
           linkDirectionalParticleWidth={2.2}
-          linkDirectionalParticleColor={(l: any) =>
+          linkDirectionalParticleColor={(l: unknown) =>
             l.type === 'contains' || l.type === 'sibling' ? '#c084fc' : '#38bdf8'
           }
           onNodeClick={handleNodeClick}
-          onNodeHover={(n: any) => setHoveredNode(n)}
+          onNodeHover={(n: unknown) => setHoveredNode(n)}
           backgroundColor="#040508"
         />
       )}

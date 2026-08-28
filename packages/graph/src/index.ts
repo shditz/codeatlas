@@ -1,4 +1,4 @@
-export { DependencyGraph } from './dependency-graph.js';
+export { DependencyGraph, type CommunityCluster } from './dependency-graph.js';
 export { Lexer } from './query/lexer.js';
 export { Parser } from './query/parser.js';
 export { GraphQueryEngine } from './query/executor.js';

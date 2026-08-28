@@ -5,6 +5,13 @@ export type Language =
   | 'go'
   | 'rust'
   | 'java'
+  | 'csharp'
+  | 'cpp'
+  | 'c'
+  | 'ruby'
+  | 'kotlin'
+  | 'swift'
+  | 'php'
   | 'json'
   | 'yaml'
   | 'toml'
@@ -15,7 +22,6 @@ export type Language =
   | 'sql'
   | 'shell'
   | 'dockerfile'
-  | 'php'
   | 'unknown'
   | (string & {});
 

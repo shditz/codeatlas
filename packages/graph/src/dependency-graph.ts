@@ -142,4 +142,82 @@ export class DependencyGraph {
       this.traverseIncoming(edge.source, maxDepth, currentDepth + 1, visited);
     }
   }
+
+  /**
+   * Fast Label Propagation Algorithm for community detection and clustering.
+   * Partitions tightly connected nodes into shared community IDs for visual clustering.
+   */
+  detectCommunities(iterations: number = 10): Map<string, number> {
+    const nodes = Array.from(this.nodes);
+    const communityMap = new Map<string, number>();
+
+    // Initial state: Each node has unique community ID
+    nodes.forEach((node, idx) => {
+      communityMap.set(node, idx);
+    });
+
+    for (let iter = 0; iter < iterations; iter++) {
+      let changed = false;
+
+      for (const node of nodes) {
+        const neighborCommunities = new Map<number, number>();
+
+        // Outgoing neighbors
+        const outEdges = this.outgoing.get(node) ?? [];
+        for (const edge of outEdges) {
+          const c = communityMap.get(edge.target);
+          if (c !== undefined) {
+            neighborCommunities.set(c, (neighborCommunities.get(c) ?? 0) + (edge.weight || 1));
+          }
+        }
+
+        // Incoming neighbors
+        const inEdges = this.incoming.get(node) ?? [];
+        for (const edge of inEdges) {
+          const c = communityMap.get(edge.source);
+          if (c !== undefined) {
+            neighborCommunities.set(c, (neighborCommunities.get(c) ?? 0) + (edge.weight || 1));
+          }
+        }
+
+        if (neighborCommunities.size > 0) {
+          let maxWeight = -1;
+          let bestCommunity = communityMap.get(node)!;
+
+          for (const [c, weight] of neighborCommunities.entries()) {
+            if (weight > maxWeight || (weight === maxWeight && c < bestCommunity)) {
+              maxWeight = weight;
+              bestCommunity = c;
+            }
+          }
+
+          if (bestCommunity !== communityMap.get(node)) {
+            communityMap.set(node, bestCommunity);
+            changed = true;
+          }
+        }
+      }
+
+      if (!changed) break;
+    }
+
+    // Remap community IDs to dense 0..N-1 indexes
+    const uniqueIds = Array.from(new Set(communityMap.values())).sort((a, b) => a - b);
+    const idMap = new Map<number, number>();
+    uniqueIds.forEach((id, idx) => idMap.set(id, idx));
+
+    const finalMap = new Map<string, number>();
+    for (const [node, id] of communityMap.entries()) {
+      finalMap.set(node, idMap.get(id) ?? 0);
+    }
+
+    return finalMap;
+  }
+}
+
+export interface CommunityCluster {
+  id: number;
+  name: string;
+  nodes: string[];
+  size: number;
 }

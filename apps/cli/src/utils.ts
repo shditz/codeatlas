@@ -6,7 +6,6 @@ import { AtlasDatabase, runMigrations } from '@codeatlas/storage';
 
 const ATLAS_DIR = '.atlas';
 const CONFIG_FILE = 'config.toml';
-const DB_FILE = 'index.db';
 
 export function getAtlasDir(cwd: string = process.cwd()): string {
   return path.join(cwd, ATLAS_DIR);
@@ -17,7 +16,10 @@ export function getConfigPath(cwd: string = process.cwd()): string {
 }
 
 export function getDbPath(cwd: string = process.cwd()): string {
-  return path.join(getAtlasDir(cwd), DB_FILE);
+  const dir = getAtlasDir(cwd);
+  if (fs.existsSync(path.join(dir, 'atlas.db'))) return path.join(dir, 'atlas.db');
+  if (fs.existsSync(path.join(dir, 'codeatlas.db'))) return path.join(dir, 'codeatlas.db');
+  return path.join(dir, 'atlas.db');
 }
 
 export function isInitialized(cwd: string = process.cwd()): boolean {

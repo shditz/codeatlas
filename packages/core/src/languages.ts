@@ -13,6 +13,17 @@ const EXTENSION_TO_LANGUAGE: Record<string, Language> = {
   '.go': 'go',
   '.rs': 'rust',
   '.java': 'java',
+  '.cs': 'csharp',
+  '.cpp': 'cpp',
+  '.cc': 'cpp',
+  '.cxx': 'cpp',
+  '.hpp': 'cpp',
+  '.h': 'c',
+  '.c': 'c',
+  '.rb': 'ruby',
+  '.kt': 'kotlin',
+  '.kts': 'kotlin',
+  '.swift': 'swift',
   '.json': 'json',
   '.yaml': 'yaml',
   '.yml': 'yaml',
@@ -61,13 +72,7 @@ export function detectLanguage(filePath: string): Language {
 }
 
 export function isParseableLanguage(language: Language): boolean {
-  return (
-    language === 'typescript' ||
-    language === 'javascript' ||
-    language === 'python' ||
-    language === 'go' ||
-    language === 'rust'
-  );
+  return PARSEABLE_LANGUAGES.has(language);
 }
 
 export function isTestFile(filePath: string): boolean {
@@ -111,6 +116,13 @@ const PARSEABLE_LANGUAGES: Set<Language> = new Set([
   'python',
   'go',
   'rust',
+  'java',
+  'csharp',
+  'cpp',
+  'c',
+  'ruby',
+  'kotlin',
+  'swift',
 ]);
 
 export function canParse(language: Language): boolean {
