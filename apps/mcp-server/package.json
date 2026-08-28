@@ -1,6 +1,6 @@
 {
   "name": "@codeatlas/mcp-server",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Universal Model Context Protocol (MCP) Server for CodeAtlas — AI context intelligence for Cursor, Claude, Windsurf, Devin, Kimi, Antigravity, and all AI coding agents.",
   "type": "module",
   "bin": {
