@@ -12,7 +12,12 @@ import {
   SearchRepository,
 } from '@codeatlas/storage';
 import { Scanner, Indexer } from '@codeatlas/indexer';
-import { DependencyGraph, GraphQueryEngine, type GraphNodeItem, type GraphEdgeItem } from '@codeatlas/graph';
+import {
+  DependencyGraph,
+  GraphQueryEngine,
+  type GraphNodeItem,
+  type GraphEdgeItem,
+} from '@codeatlas/graph';
 import { RetrievalEngine } from '@codeatlas/retrieval';
 import { Ranker } from '@codeatlas/ranking';
 import { ContextEngine } from '@codeatlas/context';
@@ -80,7 +85,8 @@ export class McpServer {
     return [
       {
         name: 'atlas_scan',
-        description: 'Scan repository to detect languages, frameworks, workspaces, and project architecture.',
+        description:
+          'Scan repository to detect languages, frameworks, workspaces, and project architecture.',
         inputSchema: {
           type: 'object',
           properties: {},
@@ -88,7 +94,8 @@ export class McpServer {
       },
       {
         name: 'atlas_index',
-        description: 'Build or incrementally update CodeAtlas AST symbols, imports, and dependency graph.',
+        description:
+          'Build or incrementally update CodeAtlas AST symbols, imports, and dependency graph.',
         inputSchema: {
           type: 'object',
           properties: {},
@@ -96,32 +103,48 @@ export class McpServer {
       },
       {
         name: 'atlas_search',
-        description: 'Full-text and symbol search across the codebase using SQLite FTS5 BM25 ranking.',
+        description:
+          'Full-text and symbol search across the codebase using SQLite FTS5 BM25 ranking.',
         inputSchema: {
           type: 'object',
           properties: {
-            query: { type: 'string', description: 'Search term, symbol name, or natural language keywords' },
-            limit: { type: 'number', description: 'Maximum number of results to return (default: 20)' },
+            query: {
+              type: 'string',
+              description: 'Search term, symbol name, or natural language keywords',
+            },
+            limit: {
+              type: 'number',
+              description: 'Maximum number of results to return (default: 20)',
+            },
           },
           required: ['query'],
         },
       },
       {
         name: 'atlas_get_context',
-        description: 'Retrieve and pack token-budgeted, explainable code context relevant to a specific coding task.',
+        description:
+          'Retrieve and pack token-budgeted, explainable code context relevant to a specific coding task.',
         inputSchema: {
           type: 'object',
           properties: {
-            task: { type: 'string', description: 'Description of the coding task or feature to implement' },
+            task: {
+              type: 'string',
+              description: 'Description of the coding task or feature to implement',
+            },
             maxTokens: { type: 'number', description: 'Total token budget (default: 12000)' },
-            mode: { type: 'string', description: 'Context packing mode: full, signature, summary, or digest (default: full)' },
+            mode: {
+              type: 'string',
+              description:
+                'Context packing mode: full, signature, summary, or digest (default: full)',
+            },
           },
           required: ['task'],
         },
       },
       {
         name: 'atlas_graph_query',
-        description: 'Execute Cypher-like graph query over the AST and dependency graph (e.g. MATCH (f:File)-[:IMPORTS]->(t:File) RETURN f, t).',
+        description:
+          'Execute Cypher-like graph query over the AST and dependency graph (e.g. MATCH (f:File)-[:IMPORTS]->(t:File) RETURN f, t).',
         inputSchema: {
           type: 'object',
           properties: {
@@ -132,17 +155,22 @@ export class McpServer {
       },
       {
         name: 'atlas_pr_diff',
-        description: 'Analyze Pull Request / Git branch diff with architectural impact, affected modules, and unified diff.',
+        description:
+          'Analyze Pull Request / Git branch diff with architectural impact, affected modules, and unified diff.',
         inputSchema: {
           type: 'object',
           properties: {
-            baseBranch: { type: 'string', description: 'Base git branch to compare against (default: main)' },
+            baseBranch: {
+              type: 'string',
+              description: 'Base git branch to compare against (default: main)',
+            },
           },
         },
       },
       {
         name: 'atlas_compress',
-        description: 'Compress code file into signature skeletons and interface contracts to save token budget.',
+        description:
+          'Compress code file into signature skeletons and interface contracts to save token budget.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -164,7 +192,8 @@ export class McpServer {
       },
       {
         name: 'atlas_get_rules',
-        description: 'Discover and validate AI coding agent rules (AGENTS.md, CLAUDE.md, Cursor, etc.).',
+        description:
+          'Discover and validate AI coding agent rules (AGENTS.md, CLAUDE.md, Cursor, etc.).',
         inputSchema: {
           type: 'object',
           properties: {},
@@ -180,7 +209,8 @@ export class McpServer {
       },
       {
         name: 'atlas_analyze',
-        description: 'Analyze codebase graph architecture for dead code, circular dependencies, and complexity hotspots.',
+        description:
+          'Analyze codebase graph architecture for dead code, circular dependencies, and complexity hotspots.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -225,7 +255,8 @@ export class McpServer {
       },
       {
         name: 'plan_feature',
-        description: 'Generate an implementation plan for a new feature with relevant codebase context',
+        description:
+          'Generate an implementation plan for a new feature with relevant codebase context',
         arguments: [
           {
             name: 'task',
@@ -344,7 +375,8 @@ export class McpServer {
         }
 
         case 'prompts/get': {
-          const params = req.params as { name?: string; arguments?: Record<string, string> } | undefined;
+          const params = req.params as
+            { name?: string; arguments?: Record<string, string> } | undefined;
           const promptName = params?.name;
           const args = params?.arguments ?? {};
 
@@ -365,7 +397,8 @@ export class McpServer {
         }
 
         case 'tools/call': {
-          const params = req.params as { name?: string; arguments?: Record<string, unknown> } | undefined;
+          const params = req.params as
+            { name?: string; arguments?: Record<string, unknown> } | undefined;
           const toolName = params?.name;
           const args = params?.arguments ?? {};
 
@@ -441,7 +474,15 @@ export class McpServer {
         const fileRepo = new FileRepository(db);
         const files = fileRepo.getAll(projectId);
         db.close();
-        return JSON.stringify({ root: this.rootDir, fileCount: files.length, files: files.map((f: FileInfo) => f.relativePath) }, null, 2);
+        return JSON.stringify(
+          {
+            root: this.rootDir,
+            fileCount: files.length,
+            files: files.map((f: FileInfo) => f.relativePath),
+          },
+          null,
+          2,
+        );
       }
 
       case 'atlas://architecture/rules': {
@@ -455,7 +496,11 @@ export class McpServer {
         const depRepo = new DependencyRepository(db);
         const deps = depRepo.getAll(projectId);
         db.close();
-        return JSON.stringify({ totalDependencies: deps.length, edges: deps.slice(0, 100) }, null, 2);
+        return JSON.stringify(
+          { totalDependencies: deps.length, edges: deps.slice(0, 100) },
+          null,
+          2,
+        );
       }
 
       default:
@@ -463,7 +508,13 @@ export class McpServer {
     }
   }
 
-  public async getPrompt(name: string, args: Record<string, string>): Promise<{ description?: string; messages: Array<{ role: string; content: { type: string; text: string } }> }> {
+  public async getPrompt(
+    name: string,
+    args: Record<string, string>,
+  ): Promise<{
+    description?: string;
+    messages: Array<{ role: string; content: { type: string; text: string } }>;
+  }> {
     switch (name) {
       case 'explain_codebase': {
         const scanner = new Scanner({ root: this.rootDir });
@@ -556,7 +607,10 @@ export class McpServer {
         const task = String(args.task ?? '');
         const budget = typeof args.maxTokens === 'number' ? args.maxTokens : 12000;
         const rawMode = String(args.mode ?? 'full');
-        const mode: ContextMode = rawMode === 'signature' || rawMode === 'summary' || rawMode === 'digest' ? rawMode : 'full';
+        const mode: ContextMode =
+          rawMode === 'signature' || rawMode === 'summary' || rawMode === 'digest'
+            ? rawMode
+            : 'full';
 
         const { db, projectId } = this.openDb();
 
@@ -565,7 +619,9 @@ export class McpServer {
         const searchRepo = new SearchRepository(db);
 
         const files = fileRepo.getAll(projectId);
-        const filesByPath = new Map<string, FileInfo>(files.map((f: FileInfo) => [f.relativePath, f]));
+        const filesByPath = new Map<string, FileInfo>(
+          files.map((f: FileInfo) => [f.relativePath, f]),
+        );
         const deps = depRepo.getAll(projectId);
 
         const graph = new DependencyGraph();
@@ -692,7 +748,11 @@ export class McpServer {
         const result = engine.execute(targetQuery);
         db.close();
 
-        return JSON.stringify({ ...result, originalQuery: queryStr, executedCypher: targetQuery }, null, 2);
+        return JSON.stringify(
+          { ...result, originalQuery: queryStr, executedCypher: targetQuery },
+          null,
+          2,
+        );
       }
 
       case 'atlas_pr_diff': {
@@ -732,7 +792,8 @@ export class McpServer {
 
       case 'atlas_compress': {
         const filePath = String(args.filePath ?? '');
-        const maxBudgetTokens = typeof args.maxBudgetTokens === 'number' ? args.maxBudgetTokens : undefined;
+        const maxBudgetTokens =
+          typeof args.maxBudgetTokens === 'number' ? args.maxBudgetTokens : undefined;
         const absPath = path.resolve(this.rootDir, filePath);
 
         if (!fs.existsSync(absPath)) {
@@ -742,7 +803,12 @@ export class McpServer {
         const source = fs.readFileSync(absPath, 'utf-8');
         const compressor = new CodeCompressor();
         const ext = path.extname(filePath);
-        const lang = ext === '.ts' || ext === '.tsx' ? 'typescript' : ext === '.js' || ext === '.jsx' ? 'javascript' : 'typescript';
+        const lang =
+          ext === '.ts' || ext === '.tsx'
+            ? 'typescript'
+            : ext === '.js' || ext === '.jsx'
+              ? 'javascript'
+              : 'typescript';
         const res = compressor.compress(source, lang, maxBudgetTokens);
 
         return JSON.stringify(res, null, 2);
@@ -802,10 +868,18 @@ export class McpServer {
           return JSON.stringify({ cycles: report.cycles, count: report.cycles.length }, null, 2);
         }
         if (args.deadCode) {
-          return JSON.stringify({ deadCode: report.deadCode, count: report.deadCode.length }, null, 2);
+          return JSON.stringify(
+            { deadCode: report.deadCode, count: report.deadCode.length },
+            null,
+            2,
+          );
         }
         if (args.hotspots) {
-          return JSON.stringify({ hotspots: report.hotspots, instabilities: report.instabilities }, null, 2);
+          return JSON.stringify(
+            { hotspots: report.hotspots, instabilities: report.instabilities },
+            null,
+            2,
+          );
         }
         return JSON.stringify(report, null, 2);
       }

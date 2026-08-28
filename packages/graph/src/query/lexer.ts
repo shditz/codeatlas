@@ -1,6 +1,18 @@
 import type { Token, TokenType } from './types.js';
 
-const KEYWORDS = new Set(['MATCH', 'WHERE', 'RETURN', 'AND', 'OR', 'NOT', 'CONTAINS', 'STARTS_WITH', 'ENDS_WITH', 'TRUE', 'FALSE']);
+const KEYWORDS = new Set([
+  'MATCH',
+  'WHERE',
+  'RETURN',
+  'AND',
+  'OR',
+  'NOT',
+  'CONTAINS',
+  'STARTS_WITH',
+  'ENDS_WITH',
+  'TRUE',
+  'FALSE',
+]);
 
 export class Lexer {
   private input: string;
@@ -36,7 +48,11 @@ export class Lexer {
       }
 
       // Comparison operators
-      if (this.input.startsWith('!=', this.pos) || this.input.startsWith('>=', this.pos) || this.input.startsWith('<=', this.pos)) {
+      if (
+        this.input.startsWith('!=', this.pos) ||
+        this.input.startsWith('>=', this.pos) ||
+        this.input.startsWith('<=', this.pos)
+      ) {
         const op = this.input.substring(this.pos, this.pos + 2);
         tokens.push(this.makeToken('OPERATOR', op, 2));
         continue;

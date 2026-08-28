@@ -57,7 +57,7 @@ function generateTypeScriptSkeleton(code: string): string {
       line.startsWith('interface ') ||
       line.startsWith('export enum ') ||
       line.startsWith('enum ') ||
-      line.startsWith('export default ') && !line.includes('function')
+      (line.startsWith('export default ') && !line.includes('function'))
     ) {
       result.push(rawLine);
       continue;
@@ -66,8 +66,12 @@ function generateTypeScriptSkeleton(code: string): string {
     // Check if line defines a function or method start
     const isFunctionHeader =
       /^(export\s+)?(async\s+)?function\b/.test(line) ||
-      /^(public\s+|private\s+|protected\s+|static\s+|async\s+)*(constructor|get\s+\w+|set\s+\w+|\w+)\s*\([^)]*\)\s*(:\s*[^;{]+)?\s*\{?$/.test(line) ||
-      /^(export\s+)?(const|let|var)\s+\w+\s*=\s*(async\s*)?\([^)]*\)\s*(:\s*[^=>]+)?\s*=>\s*\{?$/.test(line);
+      /^(public\s+|private\s+|protected\s+|static\s+|async\s+)*(constructor|get\s+\w+|set\s+\w+|\w+)\s*\([^)]*\)\s*(:\s*[^;{]+)?\s*\{?$/.test(
+        line,
+      ) ||
+      /^(export\s+)?(const|let|var)\s+\w+\s*=\s*(async\s*)?\([^)]*\)\s*(:\s*[^=>]+)?\s*=>\s*\{?$/.test(
+        line,
+      );
 
     // If currently skipping function body
     if (inFunctionBody) {
@@ -88,7 +92,7 @@ function generateTypeScriptSkeleton(code: string): string {
       const headerPart = rawLine.substring(0, rawLine.indexOf('{')).trimEnd();
       const openCount = (rawLine.match(/\{/g) || []).length;
       const closeCount = (rawLine.match(/\}/g) || []).length;
-      
+
       // If closed on same line (e.g. () => {})
       if (openCount === closeCount && openCount > 0) {
         result.push(`${headerPart} { /* ... */ }`);

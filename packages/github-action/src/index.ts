@@ -7,7 +7,13 @@ import { Indexer } from '@codeatlas/indexer';
 import { ContextEngine } from '@codeatlas/context';
 import { RuleEngine } from '@codeatlas/rules';
 import { createExporter } from '@codeatlas/exporters';
-import { AtlasDatabase, runMigrations, FileRepository, SymbolRepository, DependencyRepository } from '@codeatlas/storage';
+import {
+  AtlasDatabase,
+  runMigrations,
+  FileRepository,
+  SymbolRepository,
+  DependencyRepository,
+} from '@codeatlas/storage';
 import type { ExportTarget, ProjectMeta } from '@codeatlas/core';
 
 function getOrCreateProject(db: AtlasDatabase, cwd: string): number {
@@ -73,7 +79,9 @@ export async function run(): Promise<void> {
       filePath: file,
       score: 1.0,
       relevance: 1.0,
-      explanations: [{ signal: 'git-diff', score: 1.0, weight: 1.0, reason: 'Changed in Pull Request' }],
+      explanations: [
+        { signal: 'git-diff', score: 1.0, weight: 1.0, reason: 'Changed in Pull Request' },
+      ],
       candidate: {
         filePath: file,
         file: fileRepo.getByPath(projectId, file),
@@ -114,14 +122,17 @@ export async function run(): Promise<void> {
     core.setOutput('token-usage', pack.tokenUsage);
     core.setOutput('files-analyzed', pack.files.length);
 
-    core.info(`✅ Generated Context Pack: ${pack.files.length} files, ${pack.tokenUsage} tokens -> ${outFile}`);
+    core.info(
+      `✅ Generated Context Pack: ${pack.files.length} files, ${pack.tokenUsage} tokens -> ${outFile}`,
+    );
 
     // Post comment if applicable
     if (postComment && token && github.context.payload.pull_request) {
       const prNumber = github.context.payload.pull_request.number;
       const octokit = github.getOctokit(token);
 
-      const commentBody = `### 🗺️ CodeAtlas AI PR Context Pack\n\n` +
+      const commentBody =
+        `### 🗺️ CodeAtlas AI PR Context Pack\n\n` +
         `> **Target Agent**: \`${targetAgent}\` | **Token Usage**: \`${pack.tokenUsage} / ${tokenBudget}\` | **Files Analyzed**: \`${pack.files.length}\`\n\n` +
         `<details>\n<summary>Click to view structured AI context for this PR</summary>\n\n` +
         `\`\`\`markdown\n${outputContent.slice(0, 50000)}\n\`\`\`\n\n` +
@@ -138,7 +149,9 @@ export async function run(): Promise<void> {
 
     db.close();
   } catch (error) {
-    core.setFailed(`CodeAtlas GitHub Action failed: ${error instanceof Error ? error.message : String(error)}`);
+    core.setFailed(
+      `CodeAtlas GitHub Action failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 

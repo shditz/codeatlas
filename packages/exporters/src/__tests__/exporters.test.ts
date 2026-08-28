@@ -59,7 +59,9 @@ describe('Exporters', () => {
 
   it('exports to Markdown, Claude, Cursor, and Antigravity formats', () => {
     const md = createExporter('markdown');
-    expect(md.export(samplePack, { target: 'markdown' })).toContain('# Context Pack: Add Google OAuth login');
+    expect(md.export(samplePack, { target: 'markdown' })).toContain(
+      '# Context Pack: Add Google OAuth login',
+    );
 
     const claude = createExporter('claude');
     expect(claude.export(samplePack, { target: 'claude' })).toContain('# Project Context');
@@ -68,20 +70,28 @@ describe('Exporters', () => {
     expect(cursor.export(samplePack, { target: 'cursor' })).toContain('# Relevant Context');
 
     const antigravity = createExporter('antigravity');
-    expect(antigravity.export(samplePack, { target: 'antigravity' })).toContain('# Antigravity Context Injection');
+    expect(antigravity.export(samplePack, { target: 'antigravity' })).toContain(
+      '# Antigravity Context Injection',
+    );
   });
 
   it('exports to Chinese AI coding agents (Trae, DeepSeek, Qwen/Lingma, Comate, CodeGeeX, Kimi)', () => {
     const trae = createExporter('trae');
-    expect(trae.export(samplePack, { target: 'trae' })).toContain('# ByteDance Trae Workspace Context');
+    expect(trae.export(samplePack, { target: 'trae' })).toContain(
+      '# ByteDance Trae Workspace Context',
+    );
     expect(trae.defaultFilename()).toBe('.traerules');
 
     const deepseek = createExporter('deepseek');
-    expect(deepseek.export(samplePack, { target: 'deepseek' })).toContain('# DeepSeek Coder Context Pack');
+    expect(deepseek.export(samplePack, { target: 'deepseek' })).toContain(
+      '# DeepSeek Coder Context Pack',
+    );
     expect(deepseek.defaultFilename()).toBe('DEEPSEEK.atlas.md');
 
     const qwen = createExporter('qwen');
-    expect(qwen.export(samplePack, { target: 'qwen' })).toContain('# Alibaba Tongyi Lingma / Qwen Context');
+    expect(qwen.export(samplePack, { target: 'qwen' })).toContain(
+      '# Alibaba Tongyi Lingma / Qwen Context',
+    );
     expect(qwen.defaultFilename()).toBe('.lingmarules');
 
     const comate = createExporter('comate');
@@ -89,7 +99,9 @@ describe('Exporters', () => {
     expect(comate.defaultFilename()).toBe('.comaterules');
 
     const codegeex = createExporter('codegeex');
-    expect(codegeex.export(samplePack, { target: 'codegeex' })).toContain('# Zhipu AI CodeGeeX Context');
+    expect(codegeex.export(samplePack, { target: 'codegeex' })).toContain(
+      '# Zhipu AI CodeGeeX Context',
+    );
     expect(codegeex.defaultFilename()).toBe('.codegeexrules');
 
     const kimi = createExporter('kimi');
@@ -102,30 +114,44 @@ describe('Exporters', () => {
     expect(grok.export(samplePack, { target: 'grok' })).toContain('# xAI Grok Build Context');
 
     const replit = createExporter('replit');
-    expect(replit.export(samplePack, { target: 'replit' })).toContain('# Replit Agent Project Context');
+    expect(replit.export(samplePack, { target: 'replit' })).toContain(
+      '# Replit Agent Project Context',
+    );
 
     const devin = createExporter('devin');
-    expect(devin.export(samplePack, { target: 'devin' })).toContain('# Cognition Devin Workspace Context');
+    expect(devin.export(samplePack, { target: 'devin' })).toContain(
+      '# Cognition Devin Workspace Context',
+    );
 
     const openhands = createExporter('openhands');
-    expect(openhands.export(samplePack, { target: 'openhands' })).toContain('# OpenHands (OpenDevin) Context');
+    expect(openhands.export(samplePack, { target: 'openhands' })).toContain(
+      '# OpenHands (OpenDevin) Context',
+    );
 
     const opencode = createExporter('opencode');
     expect(opencode.export(samplePack, { target: 'opencode' })).toContain('# OpenCode AI Context');
 
     const vellum = createExporter('vellum');
-    expect(vellum.export(samplePack, { target: 'vellum' })).toContain('# Vellum AI Context Injection');
+    expect(vellum.export(samplePack, { target: 'vellum' })).toContain(
+      '# Vellum AI Context Injection',
+    );
 
     const cont = createExporter('continue');
-    expect(cont.export(samplePack, { target: 'continue' })).toContain('# Continue.dev Context Rules');
+    expect(cont.export(samplePack, { target: 'continue' })).toContain(
+      '# Continue.dev Context Rules',
+    );
 
     const roo = createExporter('roo');
-    expect(roo.export(samplePack, { target: 'roo' })).toContain('# Roo Code Context & Custom Rules');
+    expect(roo.export(samplePack, { target: 'roo' })).toContain(
+      '# Roo Code Context & Custom Rules',
+    );
 
     const augment = createExporter('augment');
     expect(augment.export(samplePack, { target: 'augment' })).toContain('# Augment Code Context');
 
     const amazonq = createExporter('amazonq');
-    expect(amazonq.export(samplePack, { target: 'amazonq' })).toContain('# Amazon Q Developer Context');
+    expect(amazonq.export(samplePack, { target: 'amazonq' })).toContain(
+      '# Amazon Q Developer Context',
+    );
   });
 });

@@ -1,12 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { DependencyGraph } from '@codeatlas/graph';
 import type { DependencyEdge, FileInfo } from '@codeatlas/core';
-import {
-  CycleDetector,
-  DeadCodeDetector,
-  MetricsCalculator,
-  CodebaseAnalyzer,
-} from '../index.js';
+import { CycleDetector, DeadCodeDetector, MetricsCalculator, CodebaseAnalyzer } from '../index.js';
 
 describe('Analytics Engine', () => {
   let graph: DependencyGraph;

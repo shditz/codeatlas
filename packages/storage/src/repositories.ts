@@ -360,7 +360,11 @@ export class ProjectRepository {
     }
 
     const projectName = name || normalizedRoot.split('/').pop() || 'project';
-    const result = this.db.run('INSERT INTO projects (name, root) VALUES (?, ?)', projectName, normalizedRoot);
+    const result = this.db.run(
+      'INSERT INTO projects (name, root) VALUES (?, ?)',
+      projectName,
+      normalizedRoot,
+    );
     return {
       id: Number(result.lastInsertRowid),
       name: projectName,
@@ -375,7 +379,10 @@ export class ProjectRepository {
 
   getByRoot(root: string): ProjectRecord | undefined {
     const normalized = root.replace(/\\/g, '/');
-    const row = this.db.get<Record<string, unknown>>('SELECT * FROM projects WHERE root = ?', normalized);
+    const row = this.db.get<Record<string, unknown>>(
+      'SELECT * FROM projects WHERE root = ?',
+      normalized,
+    );
     return row ? this.mapRow(row) : undefined;
   }
 
@@ -401,4 +408,3 @@ export class ProjectRepository {
     };
   }
 }
-

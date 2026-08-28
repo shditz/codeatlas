@@ -13,11 +13,7 @@ export class GraphQueryEngine {
   private nodesMap = new Map<string, GraphNodeItem>();
   private edgesList: GraphEdgeItem[] = [];
 
-  constructor(
-    graph: DependencyGraph,
-    nodes?: GraphNodeItem[],
-    edges?: GraphEdgeItem[],
-  ) {
+  constructor(graph: DependencyGraph, nodes?: GraphNodeItem[], edges?: GraphEdgeItem[]) {
     this.graph = graph;
 
     if (nodes) {
@@ -109,7 +105,10 @@ export class GraphQueryEngine {
     return results;
   }
 
-  private findMatchingNodes(pattern: { label?: string; properties?: Record<string, any> }): GraphNodeItem[] {
+  private findMatchingNodes(pattern: {
+    label?: string;
+    properties?: Record<string, any>;
+  }): GraphNodeItem[] {
     const matched: GraphNodeItem[] = [];
 
     for (const node of this.nodesMap.values()) {
@@ -121,7 +120,10 @@ export class GraphQueryEngine {
     return matched;
   }
 
-  private matchesNodePattern(node: GraphNodeItem, pattern: { label?: string; properties?: Record<string, any> }): boolean {
+  private matchesNodePattern(
+    node: GraphNodeItem,
+    pattern: { label?: string; properties?: Record<string, any> },
+  ): boolean {
     if (pattern.label && pattern.label.toLowerCase() !== node.label.toLowerCase()) {
       return false;
     }
@@ -137,7 +139,10 @@ export class GraphQueryEngine {
     return true;
   }
 
-  private findMatchingEdges(nodeId: string, edgePattern: { type?: string; direction: 'outgoing' | 'incoming' | 'both' }): GraphEdgeItem[] {
+  private findMatchingEdges(
+    nodeId: string,
+    edgePattern: { type?: string; direction: 'outgoing' | 'incoming' | 'both' },
+  ): GraphEdgeItem[] {
     let candidateEdges: GraphEdgeItem[] = [];
 
     if (this.edgesList.length > 0) {

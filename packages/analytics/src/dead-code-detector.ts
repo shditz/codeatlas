@@ -45,7 +45,18 @@ export class DeadCodeDetector {
     const deadItems: DeadCodeItem[] = [];
 
     // 1. Detect dead files
-    const nonCodeLangs = new Set(['markdown', 'yaml', 'toml', 'json', 'html', 'css', 'scss', 'unknown', 'dockerfile', 'shell']);
+    const nonCodeLangs = new Set([
+      'markdown',
+      'yaml',
+      'toml',
+      'json',
+      'html',
+      'css',
+      'scss',
+      'unknown',
+      'dockerfile',
+      'shell',
+    ]);
     for (const file of this.files) {
       if (this.ignoreTestFiles && file.isTest) continue;
       if (this.ignoreGeneratedFiles && file.isGenerated) continue;

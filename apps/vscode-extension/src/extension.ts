@@ -1,13 +1,25 @@
 import * as vscode from 'vscode';
 import path from 'node:path';
 import fs from 'node:fs';
-import { AtlasDatabase, runMigrations, FileRepository, SymbolRepository, DependencyRepository, SearchRepository } from '@codeatlas/storage';
+import {
+  AtlasDatabase,
+  runMigrations,
+  FileRepository,
+  SymbolRepository,
+  DependencyRepository,
+  SearchRepository,
+} from '@codeatlas/storage';
 import { Indexer, RepositoryWatcher } from '@codeatlas/indexer';
 import { ContextEngine } from '@codeatlas/context';
 import { RuleEngine } from '@codeatlas/rules';
 import { createExporter } from '@codeatlas/exporters';
 import { GitService } from '@codeatlas/git';
-import { DependencyGraph, GraphQueryEngine, type GraphNodeItem, type GraphEdgeItem } from '@codeatlas/graph';
+import {
+  DependencyGraph,
+  GraphQueryEngine,
+  type GraphNodeItem,
+  type GraphEdgeItem,
+} from '@codeatlas/graph';
 import { RetrievalEngine } from '@codeatlas/retrieval';
 import type { ExportTarget, ProjectMeta, SymbolInfo } from '@codeatlas/core';
 import { CodeAtlasOverviewProvider, CodeAtlasRulesProvider } from './providers/tree-provider.js';
@@ -20,10 +32,17 @@ let outputChannel: vscode.OutputChannel;
 
 function getOrCreateProject(database: AtlasDatabase, cwd: string): number {
   const normalizedRoot = cwd.replace(/\\/g, '/');
-  const existing = database.get<{ id: number }>('SELECT id FROM projects WHERE root = ?', normalizedRoot);
+  const existing = database.get<{ id: number }>(
+    'SELECT id FROM projects WHERE root = ?',
+    normalizedRoot,
+  );
   if (existing) return existing.id;
   const name = path.basename(cwd);
-  const result = database.run('INSERT INTO projects (name, root) VALUES (?, ?)', name, normalizedRoot);
+  const result = database.run(
+    'INSERT INTO projects (name, root) VALUES (?, ?)',
+    name,
+    normalizedRoot,
+  );
   return Number(result.lastInsertRowid);
 }
 
@@ -104,7 +123,9 @@ export function activate(context: vscode.ExtensionContext): void {
       const activeFile = uri?.fsPath || vscode.window.activeTextEditor?.document.uri.fsPath;
       const task = await vscode.window.showInputBox({
         prompt: 'Describe your coding task for the AI agent',
-        value: activeFile ? `Work on ${path.relative(workspaceRoot, activeFile)}` : 'Analyze codebase',
+        value: activeFile
+          ? `Work on ${path.relative(workspaceRoot, activeFile)}`
+          : 'Analyze codebase',
       });
 
       if (!task) return;
@@ -139,7 +160,9 @@ export function activate(context: vscode.ExtensionContext): void {
             const fileRepo = new FileRepository(db);
             const symbolRepo = new SymbolRepository(db);
             const files = fileRepo.getAll(projectId);
-            const symbols: SymbolInfo[] = files.flatMap((f) => (f.id ? symbolRepo.getByFile(f.id) : []));
+            const symbols: SymbolInfo[] = files.flatMap((f) =>
+              f.id ? symbolRepo.getByFile(f.id) : [],
+            );
 
             const ruleEngine = new RuleEngine(workspaceRoot);
             const rules = ruleEngine.discover();
@@ -228,9 +251,13 @@ export function activate(context: vscode.ExtensionContext): void {
           })) || 'main';
 
         const changed = await gitService.getBranchChangedFiles(baseBranch);
-        vscode.window.showInformationMessage(`CodeAtlas: Found ${changed.length} changed files vs ${baseBranch}.`);
+        vscode.window.showInformationMessage(
+          `CodeAtlas: Found ${changed.length} changed files vs ${baseBranch}.`,
+        );
       } catch (err) {
-        vscode.window.showErrorMessage(`CodeAtlas Git Service: ${err instanceof Error ? err.message : String(err)}`);
+        vscode.window.showErrorMessage(
+          `CodeAtlas Git Service: ${err instanceof Error ? err.message : String(err)}`,
+        );
       }
     }),
   );
@@ -240,10 +267,26 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('codeatlas.queryGraph', async () => {
       const presets = [
         { label: '🔍 Custom Cypher Query...', description: 'Write custom graph query', query: '' },
-        { label: '📁 List All Files & Languages', description: 'Overview of indexed files', query: 'MATCH (f:File) RETURN f.name, f.language, f.lines' },
-        { label: '🏗️ File Dependency Relations', description: 'Show which files import which', query: 'MATCH (a:File)-[r:DEPENDS_ON]->(b:File) RETURN a.name, b.name' },
-        { label: '🧩 List All Symbols (Functions/Classes)', description: 'Extract all declared symbols', query: 'MATCH (s:Symbol) RETURN s.name, s.kind, s.file' },
-        { label: '⚡ Core Architecture Hubs', description: 'Files with dependencies', query: 'MATCH (f:File)-[r:DEPENDS_ON]->(target) RETURN f.name, target.name' },
+        {
+          label: '📁 List All Files & Languages',
+          description: 'Overview of indexed files',
+          query: 'MATCH (f:File) RETURN f.name, f.language, f.lines',
+        },
+        {
+          label: '🏗️ File Dependency Relations',
+          description: 'Show which files import which',
+          query: 'MATCH (a:File)-[r:DEPENDS_ON]->(b:File) RETURN a.name, b.name',
+        },
+        {
+          label: '🧩 List All Symbols (Functions/Classes)',
+          description: 'Extract all declared symbols',
+          query: 'MATCH (s:Symbol) RETURN s.name, s.kind, s.file',
+        },
+        {
+          label: '⚡ Core Architecture Hubs',
+          description: 'Files with dependencies',
+          query: 'MATCH (f:File)-[r:DEPENDS_ON]->(target) RETURN f.name, target.name',
+        },
       ];
 
       const selected = await vscode.window.showQuickPick(presets, {
@@ -318,11 +361,15 @@ export function activate(context: vscode.ExtensionContext): void {
 
         const result = engine.execute(queryString);
         outputChannel.clear();
-        outputChannel.appendLine(`=== CodeAtlas Graph Query Results (${result.count} rows, ${result.executionTimeMs}ms) ===`);
+        outputChannel.appendLine(
+          `=== CodeAtlas Graph Query Results (${result.count} rows, ${result.executionTimeMs}ms) ===`,
+        );
         outputChannel.appendLine(JSON.stringify(result.rows, null, 2));
         outputChannel.show();
       } catch (err) {
-        vscode.window.showErrorMessage(`Query Error: ${err instanceof Error ? err.message : String(err)}`);
+        vscode.window.showErrorMessage(
+          `Query Error: ${err instanceof Error ? err.message : String(err)}`,
+        );
       }
     }),
   );

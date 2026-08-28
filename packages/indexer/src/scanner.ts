@@ -364,7 +364,9 @@ export class Scanner {
         const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')) as Record<string, unknown>;
         if (pkg['workspaces']) return true;
       }
-    } catch {}
+    } catch {
+      // ignore parse error
+    }
 
     return false;
   }
@@ -381,7 +383,9 @@ export class Scanner {
           workspaces.push(...(ws as string[]));
         }
       }
-    } catch {}
+    } catch {
+      // ignore parse error
+    }
 
     return workspaces;
   }

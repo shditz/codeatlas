@@ -6,19 +6,19 @@
 
 ## Supported AI Coding Agents
 
-| AI Agent | Integration Protocol | Configuration File |
-| :--- | :--- | :--- |
-| **Claude Desktop** | MCP (stdio) | `claude_desktop_config.json` |
-| **Claude Code (CLI)** | MCP (stdio) | `claude mcp add` |
-| **Cursor** | MCP (stdio) | `.cursor/mcp.json` / Features Settings |
-| **Windsurf (Codeium)** | MCP (stdio) | `~/.codeium/windsurf/mcp_config.json` |
-| **Google Antigravity** | Native MCP / AGY CLI | `.gemini/config/mcp_config.json` |
-| **Devin** | MCP Client | Project Settings |
-| **OpenHands (OpenDevin)** | MCP Transport | `config.toml` |
-| **Replit Agent** | CLI / MCP | Agent Tools |
-| **Kimi Code / Moonshot** | Multi-LLM API & MCP | CodeAtlas API Bridge |
-| **Grok / xAI Build** | Multi-LLM API & MCP | CodeAtlas API Bridge |
-| **Vellum / OpenCode** | MCP Bridge | Workspace Config |
+| AI Agent                  | Integration Protocol | Configuration File                     |
+| :------------------------ | :------------------- | :------------------------------------- |
+| **Claude Desktop**        | MCP (stdio)          | `claude_desktop_config.json`           |
+| **Claude Code (CLI)**     | MCP (stdio)          | `claude mcp add`                       |
+| **Cursor**                | MCP (stdio)          | `.cursor/mcp.json` / Features Settings |
+| **Windsurf (Codeium)**    | MCP (stdio)          | `~/.codeium/windsurf/mcp_config.json`  |
+| **Google Antigravity**    | Native MCP / AGY CLI | `.gemini/config/mcp_config.json`       |
+| **Devin**                 | MCP Client           | Project Settings                       |
+| **OpenHands (OpenDevin)** | MCP Transport        | `config.toml`                          |
+| **Replit Agent**          | CLI / MCP            | Agent Tools                            |
+| **Kimi Code / Moonshot**  | Multi-LLM API & MCP  | CodeAtlas API Bridge                   |
+| **Grok / xAI Build**      | Multi-LLM API & MCP  | CodeAtlas API Bridge                   |
+| **Vellum / OpenCode**     | MCP Bridge           | Workspace Config                       |
 
 ---
 
@@ -38,6 +38,7 @@
 ```
 
 Or via global CLI:
+
 ```json
 {
   "mcpServers": {
@@ -52,6 +53,7 @@ Or via global CLI:
 ### 2. Cursor (`.cursor/mcp.json` or Settings > Features > MCP)
 
 Add new MCP Server:
+
 - **Name**: `codeatlas`
 - **Type**: `stdio`
 - **Command**: `atlas mcp`

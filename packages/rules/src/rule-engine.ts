@@ -195,7 +195,15 @@ export class RuleEngine {
   }
 
   private discoverNestedRules(): void {
-    const nestedPatterns = ['AGENTS.md', 'CLAUDE.md', 'GEMINI.md', 'TRAE.md', 'DEEPSEEK.md', 'QWEN.md', 'KIMI.md'];
+    const nestedPatterns = [
+      'AGENTS.md',
+      'CLAUDE.md',
+      'GEMINI.md',
+      'TRAE.md',
+      'DEEPSEEK.md',
+      'QWEN.md',
+      'KIMI.md',
+    ];
     this.walkForRules(this.root, nestedPatterns, 0, 3);
   }
 
@@ -238,7 +246,9 @@ export class RuleEngine {
             priority: this.getPriority(source, 'path'),
             pathPattern: pathPrefix,
           });
-        } catch {}
+        } catch {
+          // ignore read error
+        }
       }
 
       if (entry.isDirectory()) {
@@ -300,7 +310,10 @@ export class RuleEngine {
         ruleB,
         reason: 'Conflicting indentation rules (tabs vs spaces)',
         severity: 'warning',
-        suggestion: ruleA.priority >= ruleB.priority ? `Prefer ${ruleA.filePath}` : `Prefer ${ruleB.filePath}`,
+        suggestion:
+          ruleA.priority >= ruleB.priority
+            ? `Prefer ${ruleA.filePath}`
+            : `Prefer ${ruleB.filePath}`,
       };
     }
 
@@ -316,7 +329,10 @@ export class RuleEngine {
         ruleB,
         reason: 'Conflicting quote style rules (single vs double quotes)',
         severity: 'warning',
-        suggestion: ruleA.priority >= ruleB.priority ? `Prefer ${ruleA.filePath}` : `Prefer ${ruleB.filePath}`,
+        suggestion:
+          ruleA.priority >= ruleB.priority
+            ? `Prefer ${ruleA.filePath}`
+            : `Prefer ${ruleB.filePath}`,
       };
     }
 
@@ -332,7 +348,10 @@ export class RuleEngine {
         ruleB,
         reason: 'Conflicting semicolon rules',
         severity: 'warning',
-        suggestion: ruleA.priority >= ruleB.priority ? `Prefer ${ruleA.filePath}` : `Prefer ${ruleB.filePath}`,
+        suggestion:
+          ruleA.priority >= ruleB.priority
+            ? `Prefer ${ruleA.filePath}`
+            : `Prefer ${ruleB.filePath}`,
       };
     }
 

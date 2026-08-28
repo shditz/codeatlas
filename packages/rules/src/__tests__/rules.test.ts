@@ -14,7 +14,9 @@ describe('Rules Engine', () => {
   afterEach(() => {
     try {
       fs.rmSync(tempDir, { recursive: true, force: true });
-    } catch {}
+    } catch {
+      // ignore cleanup error
+    }
   });
 
   it('discovers AGENTS.md, CLAUDE.md, and Cursor rules', () => {

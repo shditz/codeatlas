@@ -3,10 +3,12 @@
 > **Give AI a map of your codebase.**  
 > Local-first context intelligence and architecture platform for AI coding agents.
 
-[![CI](https://github.com/codeatlas/codeatlas/actions/workflows/ci.yml/badge.svg)](https://github.com/codeatlas/codeatlas/actions)
+[![CI](https://github.com/shditz/codeatlas/actions/workflows/ci.yml/badge.svg)](https://github.com/shditz/codeatlas/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![Local First](https://img.shields.io/badge/Privacy-100%25%20Local-success)](https://github.com/codeatlas/codeatlas)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D22.0.0-green?logo=node.js)](https://nodejs.org/)
+[![Tests](https://img.shields.io/badge/Tests-73%2F73%20Passed-success?logo=vitest)](https://vitest.dev)
+[![Local First](https://img.shields.io/badge/Privacy-100%25%20Local-success)](https://github.com/shditz/codeatlas)
 
 ---
 
@@ -43,23 +45,27 @@ CodeAtlas is **not** an AI chat assistant—it is the **context layer** that mak
 ## ✨ Key Features
 
 ### 🔍 Deep Code Intelligence
+
 - AST parsing for **TypeScript, JavaScript, Python, Go, and Rust**.
 - Universal full-text indexing supporting **all programming languages and file formats** (PHP, CSS, HTML, Vue, Svelte, Ruby, C++, Markdown, etc.).
 - Symbol extraction (classes, methods, functions, interfaces, types, enums, exports).
 - Comprehensive dependency graph resolution.
 
 ### 🧠 Smart Multi-Signal Retrieval
+
 - **SQLite FTS5 Full-Text Search**: Fast BM25-ranked keyword retrieval across source files.
 - **Architectural Centrality Scoring**: Prioritizes core modules with high inbound dependency counts.
 - **Graph Expansion**: Recursively retrieves 1-hop and 2-hop dependencies and dependents.
 - **Symbol Matching**: Directly scores files matching query symbol signatures.
 
 ### 🎛️ Progressive Context & Token Budgeting
+
 - Configurable token budgets (e.g. 4k, 8k, 16k, 32k tokens).
 - Dynamic mode downgrade: `full` ➔ `signature` (skeleton) ➔ `digest` (summary) to fit maximum architectural depth within budget.
 - Automatic rule discovery (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, Cursor rules, Copilot instructions).
 
 ### 🌐 Graph Query Engine & Natural Language (NL2Cypher)
+
 - Query your codebase like a graph database directly inside VS Code, CLI, or MCP:
   ```cypher
   MATCH (f:File)-[r:IMPORTS]->(b:File) RETURN f.name, b.name
@@ -73,11 +79,13 @@ CodeAtlas is **not** an AI chat assistant—it is the **context layer** that mak
   ```
 
 ### 🔬 Deep Architecture Analytics (`atlas analyze`)
+
 - **Circular Dependency Detection**: Identifies single and multi-hop import cycles before they break production.
 - **Dead Code Detection**: Discovers orphaned source files and unreferenced symbols with 0 incoming dependencies.
 - **Hotspots & Coupling Metrics**: Computes Fan-in, Fan-out, Instability ($I$), and detects God Objects.
 
 ### 🔒 Local-First Privacy Guarantee
+
 - **100% Offline**: All parsing, indexing, and querying run entirely on your local machine.
 - **Zero Telemetry**: No tracking, no data collection, no code leaves your device.
 - **Ignore Rules**: Honors `.gitignore` and custom `.atlasignore` patterns.
@@ -88,19 +96,19 @@ CodeAtlas is **not** an AI chat assistant—it is the **context layer** that mak
 
 CodeAtlas exports structured context packs for all major AI coding platforms:
 
-| Target | Description | Output Format / Destination |
-| :--- | :--- | :--- |
-| `cursor` | Cursor IDE rules & context | `.cursorrules` / Clipboard |
-| `claude` | Anthropic Claude Projects | `CLAUDE.atlas.md` / Clipboard |
-| `antigravity`| Antigravity AI IDE / Agent | Context Pack injection / Clipboard |
-| `copilot` | GitHub Copilot instructions | `.github/copilot-instructions.md` |
-| `gemini` | Google Gemini CLI / Studio | `GEMINI.atlas.md` / Clipboard |
-| `deepseek` | DeepSeek AI coder | `DEEPSEEK.atlas.md` / Clipboard |
-| `trae` | Trae IDE instructions | `TRAE.atlas.md` / Clipboard |
-| `qwen` | Qwen / Tongyi Lingma | `QWEN.atlas.md` / Clipboard |
-| `kimi` | Kimi / Moonshot AI | `KIMI.atlas.md` / Clipboard |
-| `grok` | xAI Grok coding context | `GROK.atlas.md` / Clipboard |
-| `markdown` | Generic Markdown documentation | Standard Markdown |
+| Target        | Description                    | Output Format / Destination        |
+| :------------ | :----------------------------- | :--------------------------------- |
+| `cursor`      | Cursor IDE rules & context     | `.cursorrules` / Clipboard         |
+| `claude`      | Anthropic Claude Projects      | `CLAUDE.atlas.md` / Clipboard      |
+| `antigravity` | Antigravity AI IDE / Agent     | Context Pack injection / Clipboard |
+| `copilot`     | GitHub Copilot instructions    | `.github/copilot-instructions.md`  |
+| `gemini`      | Google Gemini CLI / Studio     | `GEMINI.atlas.md` / Clipboard      |
+| `deepseek`    | DeepSeek AI coder              | `DEEPSEEK.atlas.md` / Clipboard    |
+| `trae`        | Trae IDE instructions          | `TRAE.atlas.md` / Clipboard        |
+| `qwen`        | Qwen / Tongyi Lingma           | `QWEN.atlas.md` / Clipboard        |
+| `kimi`        | Kimi / Moonshot AI             | `KIMI.atlas.md` / Clipboard        |
+| `grok`        | xAI Grok coding context        | `GROK.atlas.md` / Clipboard        |
+| `markdown`    | Generic Markdown documentation | Standard Markdown                  |
 
 ---
 
@@ -112,13 +120,13 @@ The official CodeAtlas VS Code extension provides a visual interface and integra
 
 #### Available Commands (Command Palette: `Ctrl+Shift+P` / `Cmd+Shift+P`)
 
-| Command | Description | How to Use |
-| :--- | :--- | :--- |
-| **`CodeAtlas: Index / Refresh Codebase`** | Scans the workspace, parses AST symbols, and generates `.atlas/atlas.db`. | Run once on a new workspace or after major codebase changes. |
-| **`CodeAtlas: Export Context for AI Agent`** | Builds a smart, token-budgeted context pack matching your task. | Run command, type task description, and select target AI agent format. |
-| **`CodeAtlas: Run Cypher Graph Query`** | Executes relational graph queries across files and symbols. | Choose from smart presets or type custom Cypher/NL query. |
-| **`CodeAtlas: Generate Git PR Context`** | Analyzes git diff against a base branch to produce PR review context. | Select base branch (e.g. `main`), and CodeAtlas maps affected files. |
-| **`CodeAtlas: Toggle Real-time Watcher`** | Automatically updates the index on file save (`Ctrl+S`). | Run to toggle the background file watcher on/off. |
+| Command                                      | Description                                                               | How to Use                                                             |
+| :------------------------------------------- | :------------------------------------------------------------------------ | :--------------------------------------------------------------------- |
+| **`CodeAtlas: Index / Refresh Codebase`**    | Scans the workspace, parses AST symbols, and generates `.atlas/atlas.db`. | Run once on a new workspace or after major codebase changes.           |
+| **`CodeAtlas: Export Context for AI Agent`** | Builds a smart, token-budgeted context pack matching your task.           | Run command, type task description, and select target AI agent format. |
+| **`CodeAtlas: Run Cypher Graph Query`**      | Executes relational graph queries across files and symbols.               | Choose from smart presets or type custom Cypher/NL query.              |
+| **`CodeAtlas: Generate Git PR Context`**     | Analyzes git diff against a base branch to produce PR review context.     | Select base branch (e.g. `main`), and CodeAtlas maps affected files.   |
+| **`CodeAtlas: Toggle Real-time Watcher`**    | Automatically updates the index on file save (`Ctrl+S`).                  | Run to toggle the background file watcher on/off.                      |
 
 ---
 
@@ -152,19 +160,19 @@ atlas watch
 
 #### CLI Command Reference
 
-| Command | Options | Description |
-| :--- | :--- | :--- |
-| `atlas init` | `--force` | Initializes `.atlas/config.toml` in the repository root. |
-| `atlas scan` | `--json` | Detects languages, package managers, and directory structures. |
-| `atlas index` | `--watch` | Parses files and builds `.atlas/atlas.db` SQLite knowledge graph. |
-| `atlas analyze` | `--cycles`, `--dead-code`, `--hotspots`, `--json` | Runs deep architectural analysis (cycles, dead code, coupling). |
-| `atlas query <query>` | `-n, --nl`, `--json` | Executes Cypher queries or plain natural language graph search. |
-| `atlas search <query>` | `--limit <n>` | Performs full-text BM25 search across source code. |
-| `atlas context <task>` | `--target <t>`, `--budget <n>` | Builds an optimized context pack for the specified task. |
-| `atlas export` | `--target <t>`, `--output <f>` | Writes agent instructions to target configuration files. |
-| `atlas watch` | — | Starts background watcher for incremental real-time indexing. |
-| `atlas rules list` | `--all` | Displays discovered AI instruction rules. |
-| `atlas rules validate` | — | Checks for conflicting rules (e.g. tabs vs spaces). |
+| Command                | Options                                           | Description                                                       |
+| :--------------------- | :------------------------------------------------ | :---------------------------------------------------------------- |
+| `atlas init`           | `--force`                                         | Initializes `.atlas/config.toml` in the repository root.          |
+| `atlas scan`           | `--json`                                          | Detects languages, package managers, and directory structures.    |
+| `atlas index`          | `--watch`                                         | Parses files and builds `.atlas/atlas.db` SQLite knowledge graph. |
+| `atlas analyze`        | `--cycles`, `--dead-code`, `--hotspots`, `--json` | Runs deep architectural analysis (cycles, dead code, coupling).   |
+| `atlas query <query>`  | `-n, --nl`, `--json`                              | Executes Cypher queries or plain natural language graph search.   |
+| `atlas search <query>` | `--limit <n>`                                     | Performs full-text BM25 search across source code.                |
+| `atlas context <task>` | `--target <t>`, `--budget <n>`                    | Builds an optimized context pack for the specified task.          |
+| `atlas export`         | `--target <t>`, `--output <f>`                    | Writes agent instructions to target configuration files.          |
+| `atlas watch`          | —                                                 | Starts background watcher for incremental real-time indexing.     |
+| `atlas rules list`     | `--all`                                           | Displays discovered AI instruction rules.                         |
+| `atlas rules validate` | —                                                 | Checks for conflicting rules (e.g. tabs vs spaces).               |
 
 ---
 

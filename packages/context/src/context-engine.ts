@@ -39,7 +39,10 @@ export class ContextEngine {
     const tokenBreakdown = { architecture: 0, rules: 0, repositoryMap: 0, code: 0 };
 
     // 1. Intelligent rule filtering and token allocation
-    const taskTerms = input.task.toLowerCase().split(/\s+/).filter((t) => t.length > 2);
+    const taskTerms = input.task
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((t) => t.length > 2);
     const prioritizedRules = [...input.rules].sort((a, b) => {
       const matchA = taskTerms.some((t) => a.content.toLowerCase().includes(t)) ? 1 : 0;
       const matchB = taskTerms.some((t) => b.content.toLowerCase().includes(t)) ? 1 : 0;
@@ -83,7 +86,9 @@ export class ContextEngine {
 
       // Progressive strategy: Top 3 results get maximum budget allowed; subsequent results are compressed to signature if budget is getting tight
       const isTopResult = i < 3 && result.relevance > 0.5;
-      const maxFileBudget = isTopResult ? remainingTokens : Math.min(remainingTokens, Math.floor(this.options.tokenBudget * 0.25));
+      const maxFileBudget = isTopResult
+        ? remainingTokens
+        : Math.min(remainingTokens, Math.floor(this.options.tokenBudget * 0.25));
 
       const compressionResult = this.compressor.compress(content, lang, maxFileBudget);
 

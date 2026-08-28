@@ -110,7 +110,9 @@ describe('Model Context Protocol (MCP) Server', () => {
       params: { name: 'explain_codebase' },
     });
     expect(getRes?.result).toBeDefined();
-    const getResult = getRes?.result as { messages: Array<{ role: string; content: { text: string } }> };
+    const getResult = getRes?.result as {
+      messages: Array<{ role: string; content: { text: string } }>;
+    };
     expect(getResult.messages.length).toBeGreaterThan(0);
   });
 

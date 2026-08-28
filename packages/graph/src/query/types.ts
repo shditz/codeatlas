@@ -36,7 +36,8 @@ export interface EdgePattern {
   direction: 'outgoing' | 'incoming' | 'both';
 }
 
-export type ComparisonOperator = '=' | '!=' | 'CONTAINS' | 'STARTS_WITH' | 'ENDS_WITH' | '>' | '<' | '>=' | '<=';
+export type ComparisonOperator =
+  '=' | '!=' | 'CONTAINS' | 'STARTS_WITH' | 'ENDS_WITH' | '>' | '<' | '>=' | '<=';
 
 export interface WhereClause {
   variable: string;

@@ -22,7 +22,9 @@ describe('RepositoryWatcher', () => {
     try {
       db.close();
       fs.rmSync(tmpDir, { recursive: true, force: true });
-    } catch {}
+    } catch {
+      // ignore cleanup errors
+    }
   });
 
   it('initializes and stops without throwing', () => {

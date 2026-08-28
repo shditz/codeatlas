@@ -21,11 +21,7 @@ export class CodeCompressor {
   /**
    * Compress source code using semantic skeleton extraction if required by token budget.
    */
-  compress(
-    code: string,
-    language: Language,
-    maxBudgetTokens?: number,
-  ): CompressionResult {
+  compress(code: string, language: Language, maxBudgetTokens?: number): CompressionResult {
     const originalTokens = this.tokenCounter.count(code);
 
     // If already within budget and budget is provided, return original

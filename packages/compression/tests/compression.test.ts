@@ -34,7 +34,9 @@ export function helper(val: number): number {
     const skeleton = generateSkeleton(tsCode, 'typescript');
     expect(skeleton).toContain('export interface User');
     expect(skeleton).toContain('export class AuthService');
-    expect(skeleton).toContain('public async login(username: string, pass: string): Promise<boolean>');
+    expect(skeleton).toContain(
+      'public async login(username: string, pass: string): Promise<boolean>',
+    );
     expect(skeleton).toContain('/* [implementation hidden] */');
     expect(skeleton).not.toContain('const valid = checkPass(pass);');
     expect(skeleton).not.toContain('return val * 2;');

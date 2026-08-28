@@ -33,3 +33,9 @@ coverage/
 # Temporary
 tmp/
 temp/
+scratch/
+
+# Local generated artifacts
+*.atlas.md
+.*rules
+context-pack.md

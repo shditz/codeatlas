@@ -1,10 +1,6 @@
 import { DependencyGraph } from '@codeatlas/graph';
 import type { AtlasDatabase } from '@codeatlas/storage';
-import {
-  FileRepository,
-  SymbolRepository,
-  DependencyRepository,
-} from '@codeatlas/storage';
+import { FileRepository, SymbolRepository, DependencyRepository } from '@codeatlas/storage';
 import type {
   CodebaseAnalytics,
   CycleDetectionResult,
@@ -20,11 +16,7 @@ export class CodebaseAnalyzer {
   private db?: AtlasDatabase;
   private projectId: number;
 
-  constructor(options: {
-    graph?: DependencyGraph;
-    db?: AtlasDatabase;
-    projectId?: number;
-  }) {
+  constructor(options: { graph?: DependencyGraph; db?: AtlasDatabase; projectId?: number }) {
     this.db = options.db;
     this.projectId = options.projectId ?? 1;
 

@@ -2,7 +2,12 @@ import type { Command } from 'commander';
 import chalk from 'chalk';
 import { ensureInitialized, openDatabase, getOrCreateProject, loadConfig } from '../utils.js';
 import { FileRepository, SymbolRepository, DependencyRepository } from '@codeatlas/storage';
-import { DependencyGraph, GraphQueryEngine, type GraphNodeItem, type GraphEdgeItem } from '@codeatlas/graph';
+import {
+  DependencyGraph,
+  GraphQueryEngine,
+  type GraphNodeItem,
+  type GraphEdgeItem,
+} from '@codeatlas/graph';
 import { NaturalLanguageToCypher } from '@codeatlas/nl2cypher';
 import { createLLMProvider } from '@codeatlas/llm';
 
@@ -32,7 +37,9 @@ export function registerQueryCommand(program: Command): void {
 
         if (!options.json) {
           console.log(
-            chalk.dim(`[NL2Cypher] Converted to: `) + chalk.cyan.bold(targetCypher) + chalk.dim(` (${translation.source})`),
+            chalk.dim(`[NL2Cypher] Converted to: `) +
+              chalk.cyan.bold(targetCypher) +
+              chalk.dim(` (${translation.source})`),
           );
         }
       }
@@ -92,7 +99,9 @@ export function registerQueryCommand(program: Command): void {
         console.log('');
         console.log(chalk.bold.cyan('CodeAtlas Graph Query Execution'));
         console.log(chalk.dim(`Query: ${targetCypher}`));
-        console.log(chalk.dim(`Execution Time: ${result.executionTimeMs}ms | Returned Rows: ${result.count}`));
+        console.log(
+          chalk.dim(`Execution Time: ${result.executionTimeMs}ms | Returned Rows: ${result.count}`),
+        );
         console.log('');
 
         if (result.count === 0) {
@@ -102,7 +111,9 @@ export function registerQueryCommand(program: Command): void {
         }
         console.log('');
       } catch (err) {
-        console.error(chalk.red(`Query Execution Error: ${err instanceof Error ? err.message : String(err)}`));
+        console.error(
+          chalk.red(`Query Execution Error: ${err instanceof Error ? err.message : String(err)}`),
+        );
       } finally {
         db.close();
       }

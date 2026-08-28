@@ -49,11 +49,11 @@ export function detectLanguage(filePath: string): Language {
   }
 
   const ext = basename.slice(dotIndex).toLowerCase();
-  
+
   if (EXTENSION_TO_LANGUAGE[ext]) {
     return EXTENSION_TO_LANGUAGE[ext];
   }
-  
+
   // Return the extension without the dot (e.g., '.vue' -> 'vue')
   // Ensure we only return alphanumeric extensions, otherwise 'unknown'
   const extName = ext.slice(1);

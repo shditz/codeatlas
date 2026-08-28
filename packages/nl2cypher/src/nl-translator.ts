@@ -74,7 +74,10 @@ export class NaturalLanguageToCypher {
   private cleanQuery(raw: string): string {
     let clean = raw.trim();
     // Remove markdown code blocks if any
-    clean = clean.replace(/```(?:cypher|sql)?/gi, '').replace(/```/g, '').trim();
+    clean = clean
+      .replace(/```(?:cypher|sql)?/gi, '')
+      .replace(/```/g, '')
+      .trim();
     // Take only the first MATCH query if multiple lines returned
     const matchIndex = clean.indexOf('MATCH');
     if (matchIndex !== -1) {

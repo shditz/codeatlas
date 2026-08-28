@@ -145,7 +145,15 @@ export function registerPrCommand(program: Command): void {
 
       let prHeader = `\n# Pull Request Review Guide\n\n- **Base Branch**: \`${options.base}\`\n- **Files Modified**: ${changedFiles.length}\n`;
       if (recentCommits.length > 0) {
-        prHeader += `\n### Recent PR Commits\n` + recentCommits.map((c: { shortHash: string; message: string; author: string }) => `- \`${c.shortHash}\` ${c.message} (${c.author})`).join('\n') + '\n';
+        prHeader +=
+          `\n### Recent PR Commits\n` +
+          recentCommits
+            .map(
+              (c: { shortHash: string; message: string; author: string }) =>
+                `- \`${c.shortHash}\` ${c.message} (${c.author})`,
+            )
+            .join('\n') +
+          '\n';
       }
       if (diffContent) {
         prHeader += `\n### Unified Diff\n\`\`\`diff\n${diffContent.slice(0, 20000)}\n\`\`\`\n`;
@@ -153,10 +161,17 @@ export function registerPrCommand(program: Command): void {
 
       content = `${content}\n${prHeader}`;
 
-      const outputPath = options.output ?? path.join(cwd, `pr-review-context.${exporter.defaultFilename()}`);
+      const outputPath =
+        options.output ?? path.join(cwd, `pr-review-context.${exporter.defaultFilename()}`);
       fs.writeFileSync(outputPath, content, 'utf-8');
 
-      console.log(chalk.green(`  ✓ Exported PR review context to ${path.relative(cwd, outputPath)}`));
-      console.log(chalk.dim(`  ${contextPack.files.length} relevant files included (${contextPack.tokenUsage.toLocaleString()} tokens)`));
+      console.log(
+        chalk.green(`  ✓ Exported PR review context to ${path.relative(cwd, outputPath)}`),
+      );
+      console.log(
+        chalk.dim(
+          `  ${contextPack.files.length} relevant files included (${contextPack.tokenUsage.toLocaleString()} tokens)`,
+        ),
+      );
     });
 }

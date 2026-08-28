@@ -17,7 +17,9 @@ export class CodeAtlasTreeItem extends vscode.TreeItem {
 }
 
 export class CodeAtlasOverviewProvider implements vscode.TreeDataProvider<CodeAtlasTreeItem> {
-  private _onDidChangeTreeData = new vscode.EventEmitter<CodeAtlasTreeItem | undefined | null | void>();
+  private _onDidChangeTreeData = new vscode.EventEmitter<
+    CodeAtlasTreeItem | undefined | null | void
+  >();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
   constructor(
@@ -47,7 +49,12 @@ export class CodeAtlasOverviewProvider implements vscode.TreeDataProvider<CodeAt
 
     if (!this.db) {
       return [
-        new CodeAtlasTreeItem('CodeAtlas not indexed', vscode.TreeItemCollapsibleState.None, 'not_indexed', 'Click to index'),
+        new CodeAtlasTreeItem(
+          'CodeAtlas not indexed',
+          vscode.TreeItemCollapsibleState.None,
+          'not_indexed',
+          'Click to index',
+        ),
       ];
     }
 
@@ -60,8 +67,16 @@ export class CodeAtlasOverviewProvider implements vscode.TreeDataProvider<CodeAt
       const symbolCount = symbolRepo.count();
 
       return [
-        new CodeAtlasTreeItem(`📁 Files (${fileCount})`, vscode.TreeItemCollapsibleState.Collapsed, 'category_files'),
-        new CodeAtlasTreeItem(`🔣 Symbols (${symbolCount})`, vscode.TreeItemCollapsibleState.Collapsed, 'category_symbols'),
+        new CodeAtlasTreeItem(
+          `📁 Files (${fileCount})`,
+          vscode.TreeItemCollapsibleState.Collapsed,
+          'category_files',
+        ),
+        new CodeAtlasTreeItem(
+          `🔣 Symbols (${symbolCount})`,
+          vscode.TreeItemCollapsibleState.Collapsed,
+          'category_symbols',
+        ),
       ];
     }
 
@@ -81,7 +96,9 @@ export class CodeAtlasOverviewProvider implements vscode.TreeDataProvider<CodeAt
     if (element.contextValue === 'category_symbols') {
       const files = fileRepo.getAll(this.projectId);
       const symbols: SymbolInfo[] = files
-        .flatMap((f) => (f.id ? symbolRepo.getByFile(f.id).map((s) => ({ ...s, filePath: f.relativePath })) : []))
+        .flatMap((f) =>
+          f.id ? symbolRepo.getByFile(f.id).map((s) => ({ ...s, filePath: f.relativePath })) : [],
+        )
         .slice(0, 50);
       return symbols.map(
         (s: SymbolInfo) =>
@@ -99,7 +116,9 @@ export class CodeAtlasOverviewProvider implements vscode.TreeDataProvider<CodeAt
 }
 
 export class CodeAtlasRulesProvider implements vscode.TreeDataProvider<CodeAtlasTreeItem> {
-  private _onDidChangeTreeData = new vscode.EventEmitter<CodeAtlasTreeItem | undefined | null | void>();
+  private _onDidChangeTreeData = new vscode.EventEmitter<
+    CodeAtlasTreeItem | undefined | null | void
+  >();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
   constructor(private workspaceRoot: string) {}

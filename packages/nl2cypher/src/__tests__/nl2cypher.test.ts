@@ -4,7 +4,10 @@ import { NaturalLanguageToCypher, HeuristicQueryGenerator } from '../index.js';
 
 class MockLLMProvider implements LLMProvider {
   name = 'mock';
-  constructor(private response: string, private available = true) {}
+  constructor(
+    private response: string,
+    private available = true,
+  ) {}
 
   async complete(_prompt: string, _options?: LLMOptions): Promise<string> {
     return this.response;
@@ -31,26 +34,32 @@ describe('NL2Cypher Engine', () => {
 
     it('generates query for caller inspection', () => {
       const q = heuristics.generate('who calls handleLogin');
-      expect(q).toBe("MATCH (caller:Symbol)-[:CALLS]->(target:Symbol) WHERE target.name = 'handleLogin' RETURN caller");
+      expect(q).toBe(
+        "MATCH (caller:Symbol)-[:CALLS]->(target:Symbol) WHERE target.name = 'handleLogin' RETURN caller",
+      );
     });
 
     it('generates query for imported files', () => {
       const q = heuristics.generate('which files import database.ts');
-      expect(q).toBe("MATCH (f:File)-[:IMPORTS]->(t:File) WHERE t.name CONTAINS 'database.ts' RETURN f");
+      expect(q).toBe(
+        "MATCH (f:File)-[:IMPORTS]->(t:File) WHERE t.name CONTAINS 'database.ts' RETURN f",
+      );
     });
   });
 
   describe('NaturalLanguageToCypher', () => {
     it('uses LLM when available and cleans up markdown formatting', async () => {
       const mockLLM = new MockLLMProvider(
-        '```cypher\nMATCH (s:Symbol)-[:EXTENDS]->(b:Symbol) WHERE b.name = \'BaseController\' RETURN s\n```',
+        "```cypher\nMATCH (s:Symbol)-[:EXTENDS]->(b:Symbol) WHERE b.name = 'BaseController' RETURN s\n```",
       );
       const translator = new NaturalLanguageToCypher(mockLLM);
       const res = await translator.translate('classes extending BaseController');
 
       expect(res.source).toBe('llm');
       expect(res.isValid).toBe(true);
-      expect(res.query).toBe("MATCH (s:Symbol)-[:EXTENDS]->(b:Symbol) WHERE b.name = 'BaseController' RETURN s");
+      expect(res.query).toBe(
+        "MATCH (s:Symbol)-[:EXTENDS]->(b:Symbol) WHERE b.name = 'BaseController' RETURN s",
+      );
     });
 
     it('falls back to heuristics when LLM is unavailable', async () => {

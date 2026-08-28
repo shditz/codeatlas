@@ -48,23 +48,23 @@ export class RepositoryWatcher {
     logger.info(`Starting realtime repository watcher for ${root}`);
 
     try {
-      this.watcher = fs.watch(
-        root,
-        { recursive: true },
-        (_eventType, filename) => {
-          if (!filename) return;
-          const normalized = normalizePath(filename);
+      this.watcher = fs.watch(root, { recursive: true }, (_eventType, filename) => {
+        if (!filename) return;
+        const normalized = normalizePath(filename);
 
-          // Check ignore patterns
-          for (const pattern of IGNORE_PATTERNS) {
-            if (normalized.startsWith(pattern) || normalized.includes(`/${pattern}/`) || normalized.endsWith(pattern)) {
-              return;
-            }
+        // Check ignore patterns
+        for (const pattern of IGNORE_PATTERNS) {
+          if (
+            normalized.startsWith(pattern) ||
+            normalized.includes(`/${pattern}/`) ||
+            normalized.endsWith(pattern)
+          ) {
+            return;
           }
+        }
 
-          this.queueChange(normalized);
-        },
-      );
+        this.queueChange(normalized);
+      });
     } catch (err) {
       logger.error('Failed to start native recursive file watcher', err);
       this.options.onError?.(err instanceof Error ? err : new Error(String(err)));

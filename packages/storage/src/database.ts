@@ -31,7 +31,9 @@ function getDatabaseSyncConstructor(): new (path: string) => NativeDatabaseSync 
   } catch {
     // fallback
   }
-  throw new Error('node:sqlite is not supported in this Node runtime. CodeAtlas requires Node.js >= 22.0.0');
+  throw new Error(
+    'node:sqlite is not supported in this Node runtime. CodeAtlas requires Node.js >= 22.0.0',
+  );
 }
 
 export class AtlasDatabase {

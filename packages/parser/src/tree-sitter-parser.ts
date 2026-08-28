@@ -269,11 +269,7 @@ function extractTypeScriptVariableDeclarations(
   }
 }
 
-function extractTypeScriptImports(
-  node: AstNode,
-  filePath: string,
-  imports: ImportInfo[],
-): void {
+function extractTypeScriptImports(node: AstNode, filePath: string, imports: ImportInfo[]): void {
   for (const child of node.namedChildren) {
     if (child.type === 'import_statement') {
       const source = child.childForFieldName('source')?.text?.replace(/['"]/g, '') ?? '';
@@ -322,10 +318,7 @@ function extractTypeScriptImports(
   }
 }
 
-function extractTypeScriptExportedNames(
-  node: AstNode,
-  exportedNames: string[],
-): void {
+function extractTypeScriptExportedNames(node: AstNode, exportedNames: string[]): void {
   for (const child of node.namedChildren) {
     if (child.type === 'export_clause') {
       for (const spec of child.namedChildren) {
@@ -401,11 +394,7 @@ function extractPythonSymbols(
   }
 }
 
-function extractPythonImports(
-  node: AstNode,
-  filePath: string,
-  imports: ImportInfo[],
-): void {
+function extractPythonImports(node: AstNode, filePath: string, imports: ImportInfo[]): void {
   for (const child of node.namedChildren) {
     if (child.type === 'import_statement') {
       for (const nameNode of child.namedChildren) {
@@ -503,11 +492,7 @@ function extractGoSymbols(
   }
 }
 
-function extractGoImports(
-  node: AstNode,
-  filePath: string,
-  imports: ImportInfo[],
-): void {
+function extractGoImports(node: AstNode, filePath: string, imports: ImportInfo[]): void {
   for (const child of node.namedChildren) {
     if (child.type === 'import_declaration') {
       const specs: AstNode[] = [];
@@ -616,14 +601,12 @@ function extractRustSymbols(
   }
 }
 
-function extractRustImports(
-  node: AstNode,
-  filePath: string,
-  imports: ImportInfo[],
-): void {
+function extractRustImports(node: AstNode, filePath: string, imports: ImportInfo[]): void {
   for (const child of node.namedChildren) {
     if (child.type === 'use_declaration') {
-      const path = child.childForFieldName('argument')?.text ?? child.text.replace(/^pub\s+use\s+|use\s+|;$/g, '').trim();
+      const path =
+        child.childForFieldName('argument')?.text ??
+        child.text.replace(/^pub\s+use\s+|use\s+|;$/g, '').trim();
       imports.push({
         filePath,
         importPath: path,

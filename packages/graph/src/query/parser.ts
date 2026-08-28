@@ -146,10 +146,15 @@ export class Parser {
         props[keyToken.value] = this.advance().value;
       } else if (valToken.type === 'NUMBER') {
         props[keyToken.value] = Number(this.advance().value);
-      } else if (valToken.type === 'KEYWORD' && (valToken.value === 'TRUE' || valToken.value === 'FALSE')) {
+      } else if (
+        valToken.type === 'KEYWORD' &&
+        (valToken.value === 'TRUE' || valToken.value === 'FALSE')
+      ) {
         props[keyToken.value] = this.advance().value === 'TRUE';
       } else {
-        throw new Error(`Expected literal property value at line ${valToken.line}, col ${valToken.column}`);
+        throw new Error(
+          `Expected literal property value at line ${valToken.line}, col ${valToken.column}`,
+        );
       }
     } while (this.match('COMMA'));
 
@@ -167,7 +172,10 @@ export class Parser {
 
     if (token.type === 'OPERATOR') {
       operator = this.advance().value as ComparisonOperator;
-    } else if (token.type === 'KEYWORD' && ['CONTAINS', 'STARTS_WITH', 'ENDS_WITH'].includes(token.value)) {
+    } else if (
+      token.type === 'KEYWORD' &&
+      ['CONTAINS', 'STARTS_WITH', 'ENDS_WITH'].includes(token.value)
+    ) {
       operator = this.advance().value as ComparisonOperator;
     } else {
       throw new Error(`Expected comparison operator, found ${token.value}`);
@@ -180,7 +188,10 @@ export class Parser {
       value = this.advance().value;
     } else if (valueToken.type === 'NUMBER') {
       value = Number(this.advance().value);
-    } else if (valueToken.type === 'KEYWORD' && (valueToken.value === 'TRUE' || valueToken.value === 'FALSE')) {
+    } else if (
+      valueToken.type === 'KEYWORD' &&
+      (valueToken.value === 'TRUE' || valueToken.value === 'FALSE')
+    ) {
       value = this.advance().value === 'TRUE';
     } else {
       value = this.advance().value;
@@ -197,7 +208,9 @@ export class Parser {
   private expect(type: string): Token {
     const token = this.peek();
     if (token.type !== type) {
-      throw new Error(`Expected ${type}, found ${token.type} (${token.value}) at line ${token.line}`);
+      throw new Error(
+        `Expected ${type}, found ${token.type} (${token.value}) at line ${token.line}`,
+      );
     }
     return this.advance();
   }
