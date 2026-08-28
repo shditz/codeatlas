@@ -3,11 +3,11 @@
   "displayName": "CodeAtlas - AI Context Intelligence",
   "description": "Give AI a map of your codebase. Native VS Code integration for context intelligence, AST indexing, graph navigation, and rule management.",
   "version": "0.1.0",
-  "publisher": "codeatlas",
+  "publisher": "shditz",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/codeatlas/codeatlas"
+    "url": "https://github.com/shditz/codeatlas"
   },
   "engines": {
     "vscode": "^1.90.0"

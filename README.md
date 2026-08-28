@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="assets/banner.jpg" alt="CodeAtlas Banner" width="100%" />
+</div>
+
 # CodeAtlas
 
 > **Give AI a map of your codebase.**  
