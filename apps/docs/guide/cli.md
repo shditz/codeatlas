@@ -32,6 +32,7 @@ Commands:
 ## 📋 Detailed Command Documentation
 
 ### 1. `atlas init`
+
 Initializes a new CodeAtlas project by creating the `.atlas/` folder, local database `atlas.db`, and `config.toml`.
 
 ```bash
@@ -45,7 +46,9 @@ atlas init --force
 ---
 
 ### 2. `atlas scan`
+
 Scans the current repository without building a database. It quickly identifies:
+
 - Programming languages & file counts
 - Detected frameworks (React, Next.js, Express, NestJS, etc.)
 - Package manager (pnpm, npm, yarn, bun)
@@ -58,6 +61,7 @@ atlas scan
 ---
 
 ### 3. `atlas index`
+
 Parses all source code using Tree-sitter AST parsers and commits symbols, imports, and relationships to `.atlas/atlas.db`.
 
 ```bash
@@ -74,6 +78,7 @@ atlas index packages/core
 ---
 
 ### 4. `atlas doctor`
+
 Runs a comprehensive repository health check and gives your project a health score (0–100).
 
 ```bash
@@ -81,6 +86,7 @@ atlas doctor
 ```
 
 **What it checks:**
+
 - Index freshness & tracked files
 - Dependency graph completeness
 - AI rules presence and conflicts
@@ -89,7 +95,9 @@ atlas doctor
 ---
 
 ### 5. `atlas analyze`
+
 Audits the architectural health of your codebase. It detects:
+
 1. **Circular Dependencies**: Recursive import cycles that cause runtime bugs (can output Mermaid diagrams).
 2. **Dead / Orphaned Code**: Files and functions with 0 incoming dependencies.
 3. **High Coupling & God Objects**: Modules with excessive in-degree or out-degree connections.
@@ -118,6 +126,7 @@ atlas analyze --fail-on-cycles
 ---
 
 ### 6. `atlas context`
+
 Generates a token-optimized Context Pack tailored specifically for a prompt or task you want an AI to solve.
 
 ```bash
@@ -137,6 +146,7 @@ atlas context "build shopping cart" --output prompt-context.md
 ---
 
 ### 7. `atlas export`
+
 Exports repository context into structured formats optimized for specific AI platforms.
 
 ```bash
@@ -150,6 +160,7 @@ atlas export --target cursor --output cursor-prompt.md
 ---
 
 ### 8. `atlas query`
+
 Runs graph queries against your codebase. You can ask in plain English (Natural Language to Cypher) or write Cypher queries directly!
 
 ```bash
@@ -163,6 +174,7 @@ atlas query "MATCH (f:File)-[:IMPORTS]->(t:File) WHERE t.path CONTAINS 'storage'
 ---
 
 ### 9. `atlas search`
+
 Performs ultra-fast full-text and symbol search using SQLite FTS5 with BM25 ranking.
 
 ```bash
@@ -176,6 +188,7 @@ atlas search "authenticate" --limit 10
 ---
 
 ### 10. `atlas map`
+
 Prints a clean ASCII visual tree of your codebase and its exported symbols directly in the terminal.
 
 ```bash
@@ -189,22 +202,29 @@ atlas map --depth 5
 ---
 
 ### 11. `atlas rules`
+
 Manages AI prompt rules and system instructions across different platforms.
 
 #### `atlas rules list`
+
 Lists all discovered rule files in the current repository:
+
 ```bash
 atlas rules list
 ```
 
 #### `atlas rules validate`
+
 Validates your AI rules and detects conflicting instructions:
+
 ```bash
 atlas rules validate
 ```
 
 #### `atlas rules generate [target]`
+
 Auto-generates customized rule templates for AI editors:
+
 ```bash
 # Generate for Google Antigravity (creates AGENTS.md)
 atlas rules generate antigravity
@@ -227,6 +247,7 @@ atlas rules generate all --force
 ---
 
 ### 12. `atlas diff`
+
 Analyzes your git working directory or branch diff and calculates the **Blast Radius**—showing which other files and modules are impacted by your changes.
 
 ```bash
@@ -240,6 +261,7 @@ atlas diff --base main
 ---
 
 ### 13. `atlas pr`
+
 Generates a comprehensive Pull Request architectural summary suitable for AI Code Reviewers.
 
 ```bash
@@ -253,6 +275,7 @@ atlas pr --base develop
 ---
 
 ### 14. `atlas clean`
+
 Cleans up the `.atlas/` directory to reclaim disk space.
 
 ```bash
@@ -266,6 +289,7 @@ atlas clean --snapshots
 ---
 
 ### 15. `atlas mcp`
+
 Starts the Model Context Protocol (MCP) server over `stdio` for real-time integration with AI assistants.
 
 ```bash

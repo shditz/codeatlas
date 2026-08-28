@@ -916,8 +916,7 @@ export class McpServer {
           throw new Error('Only read-only SELECT or PRAGMA statements are permitted.');
         }
 
-        const limit =
-          typeof args.limit === 'number' ? Math.min(Math.max(1, args.limit), 500) : 100;
+        const limit = typeof args.limit === 'number' ? Math.min(Math.max(1, args.limit), 500) : 100;
         const { db } = this.openDb();
 
         let executableSql = sql.replace(/;+$/, '');

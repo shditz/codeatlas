@@ -43,11 +43,13 @@ features:
 ## ⚡ Quick Start in 3 Steps
 
 ### 1. Install Globally
+
 ```bash
 npm install -g @codeatlas-ai/cli
 ```
 
 ### 2. Initialize & Index Your Project
+
 ```bash
 cd /path/to/my-project
 atlas init
@@ -55,6 +57,7 @@ atlas index
 ```
 
 ### 3. Generate AI Guidelines
+
 ```bash
 atlas rules generate all
 ```

@@ -17,7 +17,7 @@ flowchart LR
 ```
 
 1. You install and configure the CodeAtlas MCP server once.
-2. When you ask your AI assistant a question (e.g. *"Fix the database connection issue"*), the AI calls CodeAtlas MCP tools automatically.
+2. When you ask your AI assistant a question (e.g. _"Fix the database connection issue"_), the AI calls CodeAtlas MCP tools automatically.
 3. CodeAtlas extracts the exact AST definitions, functions, and import graphs from SQLite and returns a compressed summary.
 4. Your AI writes accurate code without hallucinations and saves up to 80% on tokens!
 
@@ -97,16 +97,16 @@ Add to your editor's MCP settings:
 
 Once connected, your AI assistant will have access to the following 11 tools:
 
-| Tool Name | Description | What the AI Uses It For |
-| :--- | :--- | :--- |
-| `atlas_scan` | Scans workspace metadata, languages, and monorepo structure. | Discovering project layout and stack. |
-| `atlas_index` | Updates the local AST symbol and dependency graph. | Refreshing index after editing files. |
-| `atlas_search` | Full-text FTS5 BM25 search across symbols and files. | Finding specific classes, functions, or keywords. |
-| `atlas_get_context` | Retrieves token-budgeted, explainable code context packs. | Gathering all relevant files before implementing a feature. |
-| `atlas_graph_query` | Executes Cypher queries over the codebase graph. | Answering complex relationship questions (e.g. *Who calls this API?*). |
-| `atlas_pr_diff` | Analyzes git diffs and calculates blast radius. | Pre-commit impact analysis and code review. |
-| `atlas_compress` | Compresses source code into AST signature skeletons. | Reading large files within tight token budgets. |
-| `atlas_get_map` | Returns hierarchical directory tree and exported symbols. | High-level codebase navigation. |
-| `atlas_get_rules` | Discovers and validates project AI coding rules. | Ensuring adherence to project coding standards. |
-| `atlas_doctor` | Runs repository health checks. | Diagnosing missing indexes or rule conflicts. |
-| `atlas_analyze` | Audits dead code, circular dependencies, and hotspots. | Architecture quality control before completing tasks. |
+| Tool Name           | Description                                                  | What the AI Uses It For                                                |
+| :------------------ | :----------------------------------------------------------- | :--------------------------------------------------------------------- |
+| `atlas_scan`        | Scans workspace metadata, languages, and monorepo structure. | Discovering project layout and stack.                                  |
+| `atlas_index`       | Updates the local AST symbol and dependency graph.           | Refreshing index after editing files.                                  |
+| `atlas_search`      | Full-text FTS5 BM25 search across symbols and files.         | Finding specific classes, functions, or keywords.                      |
+| `atlas_get_context` | Retrieves token-budgeted, explainable code context packs.    | Gathering all relevant files before implementing a feature.            |
+| `atlas_graph_query` | Executes Cypher queries over the codebase graph.             | Answering complex relationship questions (e.g. _Who calls this API?_). |
+| `atlas_pr_diff`     | Analyzes git diffs and calculates blast radius.              | Pre-commit impact analysis and code review.                            |
+| `atlas_compress`    | Compresses source code into AST signature skeletons.         | Reading large files within tight token budgets.                        |
+| `atlas_get_map`     | Returns hierarchical directory tree and exported symbols.    | High-level codebase navigation.                                        |
+| `atlas_get_rules`   | Discovers and validates project AI coding rules.             | Ensuring adherence to project coding standards.                        |
+| `atlas_doctor`      | Runs repository health checks.                               | Diagnosing missing indexes or rule conflicts.                          |
+| `atlas_analyze`     | Audits dead code, circular dependencies, and hotspots.       | Architecture quality control before completing tasks.                  |

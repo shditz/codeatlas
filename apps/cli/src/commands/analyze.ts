@@ -84,24 +84,26 @@ export function registerAnalyzeCommand(program: Command): void {
             );
 
             if (options.mermaid) {
-               console.log('');
-               console.log(chalk.cyan('```mermaid'));
-               console.log(chalk.cyan('flowchart TD'));
-               report.cycles.forEach((cycle) => {
-                 for (let i = 0; i < cycle.length - 1; i++) {
-                   const from = cycle[i]!.split('/').pop() || cycle[i]!;
-                   const to = cycle[i + 1]!.split('/').pop() || cycle[i + 1]!;
-                   console.log(chalk.cyan(`  "${from}" --> "${to}"`));
-                 }
-                 const first = cycle[0]!.split('/').pop() || cycle[0]!;
-                 const last = cycle[cycle.length - 1]!.split('/').pop() || cycle[cycle.length - 1]!;
-                 console.log(chalk.cyan(`  "${last}" --> "${first}"`));
-               });
-               console.log(chalk.cyan('```'));
-               console.log('');
+              console.log('');
+              console.log(chalk.cyan('```mermaid'));
+              console.log(chalk.cyan('flowchart TD'));
+              report.cycles.forEach((cycle) => {
+                for (let i = 0; i < cycle.length - 1; i++) {
+                  const from = cycle[i]!.split('/').pop() || cycle[i]!;
+                  const to = cycle[i + 1]!.split('/').pop() || cycle[i + 1]!;
+                  console.log(chalk.cyan(`  "${from}" --> "${to}"`));
+                }
+                const first = cycle[0]!.split('/').pop() || cycle[0]!;
+                const last = cycle[cycle.length - 1]!.split('/').pop() || cycle[cycle.length - 1]!;
+                console.log(chalk.cyan(`  "${last}" --> "${first}"`));
+              });
+              console.log(chalk.cyan('```'));
+              console.log('');
             } else {
               report.cycles.forEach((cycle, idx) => {
-                console.log(chalk.yellow(`    [Cycle ${idx + 1}] `) + cycle.join(chalk.dim(' -> ')));
+                console.log(
+                  chalk.yellow(`    [Cycle ${idx + 1}] `) + cycle.join(chalk.dim(' -> ')),
+                );
               });
             }
           }
@@ -118,14 +120,14 @@ export function registerAnalyzeCommand(program: Command): void {
                 `  ⚠ Found ${report.deadCode.length} candidate file(s) with 0 incoming dependencies:`,
               ),
             );
-            
+
             const table = new Table({
-                head: [chalk.bold('File Path'), chalk.bold('Reason')],
-                style: { head: [], border: ['dim'] }
+              head: [chalk.bold('File Path'), chalk.bold('Reason')],
+              style: { head: [], border: ['dim'] },
             });
 
             report.deadCode.slice(0, 15).forEach((item) => {
-                table.push([chalk.cyan(item.filePath), chalk.dim(item.reason)]);
+              table.push([chalk.cyan(item.filePath), chalk.dim(item.reason)]);
             });
             console.log(table.toString());
 
@@ -142,24 +144,24 @@ export function registerAnalyzeCommand(program: Command): void {
             console.log(chalk.dim('  No hotspots identified.'));
           } else {
             const table = new Table({
-                head: [
-                  chalk.bold('Module'), 
-                  chalk.bold('In-Degree'), 
-                  chalk.bold('Out-Degree'), 
-                  chalk.bold('Instability (0-1)'),
-                  chalk.bold('GodObject')
-                ],
-                style: { head: [], border: ['dim'] }
+              head: [
+                chalk.bold('Module'),
+                chalk.bold('In-Degree'),
+                chalk.bold('Out-Degree'),
+                chalk.bold('Instability (0-1)'),
+                chalk.bold('GodObject'),
+              ],
+              style: { head: [], border: ['dim'] },
             });
 
-            report.hotspots.slice(0, 8).forEach(h => {
-                table.push([
-                    h.id,
-                    h.inDegree.toString(),
-                    h.outDegree.toString(),
-                    h.instability.toFixed(2),
-                    h.isGodObject ? chalk.red('YES') : chalk.green('no')
-                ]);
+            report.hotspots.slice(0, 8).forEach((h) => {
+              table.push([
+                h.id,
+                h.inDegree.toString(),
+                h.outDegree.toString(),
+                h.instability.toFixed(2),
+                h.isGodObject ? chalk.red('YES') : chalk.green('no'),
+              ]);
             });
             console.log(table.toString());
           }
@@ -168,27 +170,32 @@ export function registerAnalyzeCommand(program: Command): void {
 
         if ((showAll || options.hotspots) && report.gitHotspots && report.gitHotspots.length > 0) {
           console.log(chalk.bold.underline('4. Git Technical Debt & Churn Hotspots:'));
-          
+
           const table = new Table({
-              head: [
-                  chalk.bold('File'),
-                  chalk.bold('Churn'),
-                  chalk.bold('Hotspot Score'),
-                  chalk.bold('Risk'),
-                  chalk.bold('Recommendation')
-              ],
-              style: { head: [], border: ['dim'] }
+            head: [
+              chalk.bold('File'),
+              chalk.bold('Churn'),
+              chalk.bold('Hotspot Score'),
+              chalk.bold('Risk'),
+              chalk.bold('Recommendation'),
+            ],
+            style: { head: [], border: ['dim'] },
           });
 
           report.gitHotspots.slice(0, 8).forEach((gh) => {
-              const riskColor = gh.riskLevel === 'high' ? chalk.red : gh.riskLevel === 'medium' ? chalk.yellow : chalk.green;
-              table.push([
-                  gh.filePath,
-                  gh.churnScore.toString(),
-                  gh.hotspotScore.toFixed(2),
-                  riskColor(gh.riskLevel.toUpperCase()),
-                  chalk.dim(gh.recommendation)
-              ]);
+            const riskColor =
+              gh.riskLevel === 'high'
+                ? chalk.red
+                : gh.riskLevel === 'medium'
+                  ? chalk.yellow
+                  : chalk.green;
+            table.push([
+              gh.filePath,
+              gh.churnScore.toString(),
+              gh.hotspotScore.toFixed(2),
+              riskColor(gh.riskLevel.toUpperCase()),
+              chalk.dim(gh.recommendation),
+            ]);
           });
           console.log(table.toString());
           console.log('');
@@ -197,7 +204,7 @@ export function registerAnalyzeCommand(program: Command): void {
         db.close();
 
         if (options.failOnCycles && report.cycles.length > 0) {
-            process.exit(1);
+          process.exit(1);
         }
       },
     );

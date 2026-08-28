@@ -162,7 +162,11 @@ export function registerRulesCommand(program: Command): void {
         }
 
         if (fs.existsSync(fullFilePath) && !options.force) {
-          console.log(chalk.yellow(`  ⚠ Skipped ${relativeFilePath} (already exists, use --force to overwrite)`));
+          console.log(
+            chalk.yellow(
+              `  ⚠ Skipped ${relativeFilePath} (already exists, use --force to overwrite)`,
+            ),
+          );
           continue;
         }
 

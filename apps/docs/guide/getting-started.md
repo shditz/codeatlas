@@ -6,7 +6,7 @@ Welcome to **CodeAtlas**! This guide is designed for **beginners, junior develop
 
 ## 💡 What is CodeAtlas?
 
-Imagine your codebase as a giant city. Without a map, your AI assistant is walking through every alleyway trying to find the right building—wasting your time and burning expensive tokens. 
+Imagine your codebase as a giant city. Without a map, your AI assistant is walking through every alleyway trying to find the right building—wasting your time and burning expensive tokens.
 
 **CodeAtlas is the GPS navigation system for your AI.** It scans your project, builds a local map of all functions, classes, and imports, and tells your AI exactly where to go.
 
@@ -23,6 +23,7 @@ npm install -g @codeatlas-ai/cli
 ```
 
 Verify that it works:
+
 ```bash
 atlas --version
 ```
@@ -49,6 +50,7 @@ pnpm --filter @codeatlas-ai/cli link --global
 Let's set up CodeAtlas on an existing project on your machine!
 
 ### Step 1: Initialize Your Workspace
+
 Navigate to your project's folder and run:
 
 ```bash
@@ -60,6 +62,7 @@ atlas init
 > CodeAtlas created a hidden `.atlas/` folder containing your local database (`atlas.db`) and configuration file (`config.toml`). Everything is stored on your machine—no code ever leaves your computer!
 
 ### Step 2: Index the Codebase
+
 Now tell CodeAtlas to scan and understand your code:
 
 ```bash
@@ -67,6 +70,7 @@ atlas index
 ```
 
 You will see output like this:
+
 ```
 14:37:14 INFO [indexer:scanner] Scan complete: 242 files in 60ms
 14:37:14 INFO [indexer] Indexing complete: 242 files, 740 symbols, 155 deps
@@ -77,6 +81,7 @@ Index Results
 ```
 
 ### Step 3: Check Codebase Health
+
 Run the doctor diagnostic to make sure everything is healthy:
 
 ```bash
@@ -86,6 +91,7 @@ atlas doctor
 CodeAtlas will give your repository a health score (0-100) and tell you if anything needs attention.
 
 ### Step 4: Teach Your AI Coding Assistant
+
 Generate tailor-made instructions so your AI knows how to work with your project's tech stack:
 
 ```bash
@@ -109,7 +115,9 @@ atlas rules generate all
 The real magic happens when your AI Coding Assistant connects to CodeAtlas via **MCP (Model Context Protocol)**.
 
 ### For Google Antigravity:
+
 1. In your project root, create a file named `.agents/mcp_config.json`:
+
 ```json
 {
   "mcpServers": {
@@ -122,13 +130,17 @@ The real magic happens when your AI Coding Assistant connects to CodeAtlas via *
 ```
 
 ### For Claude Code CLI:
+
 Run in your terminal:
+
 ```bash
 claude mcp add codeatlas atlas -- mcp
 ```
 
 ### For Claude Desktop:
+
 Add this to your Claude Desktop config:
+
 ```json
 {
   "mcpServers": {

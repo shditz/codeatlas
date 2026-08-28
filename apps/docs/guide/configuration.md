@@ -42,24 +42,28 @@ model = "gpt-4o"
 ## 🛠️ Configuration Sections
 
 ### `[project]`
-- **`name`** *(string)*: Project name (defaults to repository folder name).
+
+- **`name`** _(string)_: Project name (defaults to repository folder name).
 
 ### `[index]`
-- **`follow_symlinks`** *(boolean, default: `false`)*: Whether to follow symbolic links during file traversal.
-- **`include_tests`** *(boolean, default: `true`)*: Whether to parse test files (`*.test.ts`, `*.spec.ts`, etc.).
-- **`max_file_size`** *(number, default: `1048576`)*: Maximum file size in bytes to index. Files larger than this (e.g. huge minified bundles) will be skipped safely.
+
+- **`follow_symlinks`** _(boolean, default: `false`)_: Whether to follow symbolic links during file traversal.
+- **`include_tests`** _(boolean, default: `true`)_: Whether to parse test files (`*.test.ts`, `*.spec.ts`, etc.).
+- **`max_file_size`** _(number, default: `1048576`)_: Maximum file size in bytes to index. Files larger than this (e.g. huge minified bundles) will be skipped safely.
 
 ### `[context]`
-- **`max_tokens`** *(number, default: `12000`)*: Default token budget when packing context for LLMs.
-- **`default_mode`** *(string, default: `"full"`)*: Default compression level:
+
+- **`max_tokens`** _(number, default: `12000`)_: Default token budget when packing context for LLMs.
+- **`default_mode`** _(string, default: `"full"`)_: Default compression level:
   - `"full"`: Complete file contents.
   - `"signature"`: AST skeletons containing only class, function, and interface signatures (saves up to 80% tokens).
   - `"summary"`: High-level overview of files and symbols.
   - `"digest"`: Ultra-compact token summary.
 
 ### `[security]`
-- **`scan_secrets`** *(boolean, default: `true`)*: Detects potential API keys or secrets before exporting context.
-- **`exclude_patterns`** *(array of strings)*: Glob patterns of sensitive files to never include in context packs.
+
+- **`scan_secrets`** _(boolean, default: `true`)_: Detects potential API keys or secrets before exporting context.
+- **`exclude_patterns`** _(array of strings)_: Glob patterns of sensitive files to never include in context packs.
 
 ---
 

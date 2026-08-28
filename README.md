@@ -18,10 +18,12 @@ CodeAtlas turns your codebase into a high-performance **Knowledge Graph** stored
 ## 🚀 Why CodeAtlas?
 
 When AI agents work on large codebases, they struggle with two main problems:
+
 1. **Blindness / Hallucination**: AI doesn't know which function imports what, often leading to broken dependencies and regressions.
 2. **Token Waste**: Dumping entire source files into an LLM context window is slow and expensive.
 
 **CodeAtlas solves this:**
+
 - ⚡ **Local-First & 100% Private**: Everything is indexed locally into SQLite with Tree-sitter. No code is uploaded to the cloud.
 - 🧠 **Smart Context Budgeting**: Compresses files into AST signatures so AI gets 100% of the architectural context using 20% of the tokens.
 - 🛡️ **Architectural Guardrails**: Automatically detects **Dead Code**, **Circular Dependencies**, and **God Objects**.
@@ -37,7 +39,7 @@ When AI agents work on large codebases, they struggle with two main problems:
 npm install -g @codeatlas-ai/cli
 ```
 
-*(Or build locally from source with `pnpm install && pnpm build && pnpm --filter @codeatlas-ai/cli link --global`)*
+_(Or build locally from source with `pnpm install && pnpm build && pnpm --filter @codeatlas-ai/cli link --global`)_
 
 ### 2. Initialize in Your Project
 
@@ -67,25 +69,25 @@ atlas rules generate all
 
 ## 🛠️ CLI Commands Cheat Sheet
 
-| Command | Category | Description |
-| :--- | :--- | :--- |
-| `atlas init` | **Setup** | Initializes `.atlas/` folder and `config.toml`. |
-| `atlas scan` | **Setup** | Fast scan detecting languages, frameworks, and monorepos. |
-| `atlas index` | **Core** | Parses AST with Tree-sitter and builds the SQLite graph. |
-| `atlas clean` | **Maintenance** | Cleans local cache, database, and snapshots. |
-| `atlas doctor` | **Quality** | Runs repository health checks and provides a readiness score. |
-| `atlas analyze` | **Quality** | Audits codebase for Dead Code, Circular Imports, and Git Churn Hotspots. |
-| `atlas diff` | **Quality** | Calculates blast radius and affected files from Git diffs. |
-| `atlas pr` | **Quality** | Generates an architectural PR summary for AI Code Reviews. |
-| `atlas context` | **AI Context** | Extracts token-budgeted prompt packs for a given coding task. |
-| `atlas export` | **AI Context** | Exports context packs into Markdown files for LLM chats. |
-| `atlas query` | **Search** | Natural language (NL2Cypher) or Cypher graph queries. |
-| `atlas search` | **Search** | Full-text keyword search via SQLite FTS5 (BM25 ranking). |
-| `atlas map` | **Visual** | Displays an ASCII tree map of directories and exported symbols. |
-| `atlas rules list` | **Rules** | Lists all discovered AI rule files. |
-| `atlas rules validate` | **Rules** | Checks for rule conflicts and consistency. |
-| `atlas rules generate` | **Rules** | Generates guideline files for specific AI editors (`cursor`, `claude`, `antigravity`, etc.). |
-| `atlas mcp` | **Integration** | Starts the official Model Context Protocol (MCP) server over `stdio`. |
+| Command                | Category        | Description                                                                                  |
+| :--------------------- | :-------------- | :------------------------------------------------------------------------------------------- |
+| `atlas init`           | **Setup**       | Initializes `.atlas/` folder and `config.toml`.                                              |
+| `atlas scan`           | **Setup**       | Fast scan detecting languages, frameworks, and monorepos.                                    |
+| `atlas index`          | **Core**        | Parses AST with Tree-sitter and builds the SQLite graph.                                     |
+| `atlas clean`          | **Maintenance** | Cleans local cache, database, and snapshots.                                                 |
+| `atlas doctor`         | **Quality**     | Runs repository health checks and provides a readiness score.                                |
+| `atlas analyze`        | **Quality**     | Audits codebase for Dead Code, Circular Imports, and Git Churn Hotspots.                     |
+| `atlas diff`           | **Quality**     | Calculates blast radius and affected files from Git diffs.                                   |
+| `atlas pr`             | **Quality**     | Generates an architectural PR summary for AI Code Reviews.                                   |
+| `atlas context`        | **AI Context**  | Extracts token-budgeted prompt packs for a given coding task.                                |
+| `atlas export`         | **AI Context**  | Exports context packs into Markdown files for LLM chats.                                     |
+| `atlas query`          | **Search**      | Natural language (NL2Cypher) or Cypher graph queries.                                        |
+| `atlas search`         | **Search**      | Full-text keyword search via SQLite FTS5 (BM25 ranking).                                     |
+| `atlas map`            | **Visual**      | Displays an ASCII tree map of directories and exported symbols.                              |
+| `atlas rules list`     | **Rules**       | Lists all discovered AI rule files.                                                          |
+| `atlas rules validate` | **Rules**       | Checks for rule conflicts and consistency.                                                   |
+| `atlas rules generate` | **Rules**       | Generates guideline files for specific AI editors (`cursor`, `claude`, `antigravity`, etc.). |
+| `atlas mcp`            | **Integration** | Starts the official Model Context Protocol (MCP) server over `stdio`.                        |
 
 ---
 
@@ -94,7 +96,9 @@ atlas rules generate all
 Connect CodeAtlas directly to your AI Coding Assistant so it can query the codebase on-demand:
 
 ### Google Antigravity
+
 Add to your project's `.agents/mcp_config.json` or global `~/.gemini/config/mcp_config.json`:
+
 ```json
 {
   "mcpServers": {
@@ -107,12 +111,15 @@ Add to your project's `.agents/mcp_config.json` or global `~/.gemini/config/mcp_
 ```
 
 ### Claude Code CLI
+
 ```bash
 claude mcp add codeatlas atlas -- mcp
 ```
 
 ### Claude Desktop
+
 Add to `%APPDATA%\Claude\claude_desktop_config.json` (Windows) or `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
+
 ```json
 {
   "mcpServers": {
@@ -157,6 +164,7 @@ To run the full interactive documentation portal locally:
 ```bash
 pnpm run docs:dev
 ```
+
 Then visit [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---

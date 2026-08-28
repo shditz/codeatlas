@@ -234,7 +234,13 @@ export async function parseFile(
       switch (language) {
         case 'typescript':
         case 'javascript':
-          extractTypeScriptSymbolsAndImportsRegex(content, filePath, symbols, imports, exportedNames);
+          extractTypeScriptSymbolsAndImportsRegex(
+            content,
+            filePath,
+            symbols,
+            imports,
+            exportedNames,
+          );
           break;
         case 'python':
           extractPythonSymbolsAndImportsRegex(content, filePath, symbols, imports, exportedNames);
@@ -1336,11 +1342,7 @@ function extractPhpClassMembersTreeSitter(
   }
 }
 
-function extractPhpImportsTreeSitter(
-  node: AstNode,
-  filePath: string,
-  imports: ImportInfo[],
-): void {
+function extractPhpImportsTreeSitter(node: AstNode, filePath: string, imports: ImportInfo[]): void {
   for (const child of node.namedChildren) {
     if (child.type === 'namespace_use_declaration') {
       for (const clause of child.namedChildren) {
@@ -1377,11 +1379,19 @@ function extractPhpSymbolsAndImports(
   for (let i = 0; i < lines.length; i++) {
     const rawLine = lines[i] ?? '';
     const line = rawLine.trim();
-    if (!line || line.startsWith('//') || line.startsWith('#') || line.startsWith('/*') || line.startsWith('*')) {
+    if (
+      !line ||
+      line.startsWith('//') ||
+      line.startsWith('#') ||
+      line.startsWith('/*') ||
+      line.startsWith('*')
+    ) {
       continue;
     }
 
-    const useMatch = line.match(/^use\s+(?:function\s+|const\s+)?([A-Za-z0-9_\\]+)(?:\s+as\s+([A-Za-z0-9_]+))?;/);
+    const useMatch = line.match(
+      /^use\s+(?:function\s+|const\s+)?([A-Za-z0-9_\\]+)(?:\s+as\s+([A-Za-z0-9_]+))?;/,
+    );
     if (useMatch && useMatch[1]) {
       const fullPath = useMatch[1];
       const alias = useMatch[2];
@@ -1397,7 +1407,9 @@ function extractPhpSymbolsAndImports(
       continue;
     }
 
-    const reqMatch = line.match(/^(?:require|require_once|include|include_once)\s*\(?\s*['"]([^'"]+)['"]\s*\)?;/);
+    const reqMatch = line.match(
+      /^(?:require|require_once|include|include_once)\s*\(?\s*['"]([^'"]+)['"]\s*\)?;/,
+    );
     if (reqMatch && reqMatch[1]) {
       imports.push({
         filePath,
@@ -1476,12 +1488,21 @@ function extractTypeScriptSymbolsAndImportsRegex(
       continue;
     }
 
-    const importNamedMatch = line.match(/^import\s+(?:type\s+)?\{([^}]+)\}\s+from\s+['"]([^'"]+)['"]/);
-    const importMatch = line.match(/^import\s+(?:type\s+)?(?:([^{}\n]+)\s+from\s+)?['"]([^'"]+)['"]/);
+    const importNamedMatch = line.match(
+      /^import\s+(?:type\s+)?\{([^}]+)\}\s+from\s+['"]([^'"]+)['"]/,
+    );
+    const importMatch = line.match(
+      /^import\s+(?:type\s+)?(?:([^{}\n]+)\s+from\s+)?['"]([^'"]+)['"]/,
+    );
     if (importNamedMatch && importNamedMatch[1] && importNamedMatch[2]) {
       const symbolsList = importNamedMatch[1]
         .split(',')
-        .map((s) => s.trim().split(/\s+as\s+/)[0]?.trim())
+        .map((s) =>
+          s
+            .trim()
+            .split(/\s+as\s+/)[0]
+            ?.trim(),
+        )
         .filter((s): s is string => Boolean(s));
       imports.push({
         filePath,
@@ -1505,11 +1526,16 @@ function extractTypeScriptSymbolsAndImportsRegex(
       continue;
     }
 
-    const requireMatch = line.match(/(?:const|let|var)\s+(?:\{([^}]+)\}|([A-Za-z0-9_$]+))\s*=\s*require\(['"]([^'"]+)['"]\)/);
+    const requireMatch = line.match(
+      /(?:const|let|var)\s+(?:\{([^}]+)\}|([A-Za-z0-9_$]+))\s*=\s*require\(['"]([^'"]+)['"]\)/,
+    );
     if (requireMatch && requireMatch[3]) {
       const isDestructured = Boolean(requireMatch[1]);
       const syms = isDestructured
-        ? requireMatch[1]!.split(',').map((s) => s.trim()).filter(Boolean)
+        ? requireMatch[1]!
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
         : requireMatch[2]
           ? [requireMatch[2]]
           : [];
@@ -1592,9 +1618,7 @@ function extractTypeScriptSymbolsAndImportsRegex(
       continue;
     }
 
-    const constMatch = line.match(
-      /^(?:export\s+)?(?:const|let|var)\s+([A-Za-z0-9_$]+)/,
-    );
+    const constMatch = line.match(/^(?:export\s+)?(?:const|let|var)\s+([A-Za-z0-9_$]+)/);
     if (constMatch && constMatch[1]) {
       const name = constMatch[1];
       const isExported = line.startsWith('export');
@@ -1629,7 +1653,10 @@ function extractPythonSymbolsAndImportsRegex(
 
     const fromMatch = line.match(/^from\s+([A-Za-z0-9_.]+)\s+import\s+([^#]+)/);
     if (fromMatch && fromMatch[1] && fromMatch[2]) {
-      const syms = fromMatch[2].split(',').map((s) => s.trim()).filter(Boolean);
+      const syms = fromMatch[2]
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
       imports.push({
         filePath,
         importPath: fromMatch[1],
@@ -1676,7 +1703,9 @@ function extractPythonSymbolsAndImportsRegex(
     if (defMatch && defMatch[1]) {
       const name = defMatch[1];
       const isExported = !name.startsWith('_');
-      const isMethod = Boolean(currentClass && (rawLine.startsWith('    ') || rawLine.startsWith('\t')));
+      const isMethod = Boolean(
+        currentClass && (rawLine.startsWith('    ') || rawLine.startsWith('\t')),
+      );
       symbols.push({
         name,
         kind: isMethod ? 'method' : 'function',
@@ -1685,7 +1714,7 @@ function extractPythonSymbolsAndImportsRegex(
         column: rawLine.indexOf(name),
         exported: isExported,
         signature: line,
-        parentSymbol: isMethod ? currentClass ?? undefined : undefined,
+        parentSymbol: isMethod ? (currentClass ?? undefined) : undefined,
       });
       if (isExported && !isMethod) exportedNames.push(name);
     }
@@ -1782,9 +1811,7 @@ function extractRustSymbolsAndImportsRegex(
       continue;
     }
 
-    const typeMatch = line.match(
-      /^(?:pub(?:\([^)]+\))?\s+)?(struct|enum|trait)\s+([A-Za-z0-9_]+)/,
-    );
+    const typeMatch = line.match(/^(?:pub(?:\([^)]+\))?\s+)?(struct|enum|trait)\s+([A-Za-z0-9_]+)/);
     if (typeMatch && typeMatch[1] && typeMatch[2]) {
       const name = typeMatch[2];
       const kind: SymbolKind =
@@ -1803,7 +1830,9 @@ function extractRustSymbolsAndImportsRegex(
       continue;
     }
 
-    const fnMatch = line.match(/^(?:pub(?:\([^)]+\))?\s+)?(?:async\s+)?fn\s+([A-Za-z0-9_]+)\s*(?:<[^>]*>)?\s*\(/);
+    const fnMatch = line.match(
+      /^(?:pub(?:\([^)]+\))?\s+)?(?:async\s+)?fn\s+([A-Za-z0-9_]+)\s*(?:<[^>]*>)?\s*\(/,
+    );
     if (fnMatch && fnMatch[1]) {
       const name = fnMatch[1];
       const isExported = line.startsWith('pub');
@@ -1820,4 +1849,3 @@ function extractRustSymbolsAndImportsRegex(
     }
   }
 }
-
