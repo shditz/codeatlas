@@ -39,44 +39,60 @@ export class Ranker {
       const lexicalScore = this.computeLexicalScore(candidate);
       if (lexicalScore > 0) {
         totalScore += lexicalScore * this.weights.lexical_weight;
+        const keywordDetails = candidate.sources
+          .filter((s: RetrievalSource) => s.type === 'keyword')
+          .map((s) => s.detail)
+          .join('; ');
         explanations.push({
           signal: 'lexical',
           score: lexicalScore,
           weight: this.weights.lexical_weight,
-          reason: 'Full-text search match',
+          reason: keywordDetails || 'Full-text search match',
         });
       }
 
       const symbolScore = this.computeSymbolScore(candidate);
       if (symbolScore > 0) {
         totalScore += symbolScore * this.weights.symbol_weight;
+        const symbolDetails = candidate.sources
+          .filter((s: RetrievalSource) => s.type === 'symbol')
+          .map((s) => s.detail)
+          .join('; ');
         explanations.push({
           signal: 'symbol',
           score: symbolScore,
           weight: this.weights.symbol_weight,
-          reason: 'Symbol name matches query terms',
+          reason: symbolDetails || 'Symbol name matches query terms',
         });
       }
 
       const pathScore = this.computePathScore(candidate);
       if (pathScore > 0) {
         totalScore += pathScore * this.weights.path_weight;
+        const pathDetails = candidate.sources
+          .filter((s: RetrievalSource) => s.type === 'path')
+          .map((s) => s.detail)
+          .join('; ');
         explanations.push({
           signal: 'path',
           score: pathScore,
           weight: this.weights.path_weight,
-          reason: 'File path contains query terms',
+          reason: pathDetails || 'File path contains query terms',
         });
       }
 
       const depScore = this.computeDependencyScore(candidate);
       if (depScore > 0) {
         totalScore += depScore * this.weights.dependency_weight;
+        const graphDetails = candidate.sources
+          .filter((s: RetrievalSource) => s.type === 'graph')
+          .map((s) => s.detail)
+          .join('; ');
         explanations.push({
           signal: 'dependency',
           score: depScore,
           weight: this.weights.dependency_weight,
-          reason: 'Connected via import/dependency graph',
+          reason: graphDetails || 'Connected via import/dependency graph',
         });
       }
 

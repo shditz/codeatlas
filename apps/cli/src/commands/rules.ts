@@ -107,110 +107,202 @@ export function registerRulesCommand(program: Command): void {
     .command('generate [target]')
     .alias('init')
     .description(
-      'Generate rule/instruction template files for AI targets (cursor, windsurf, copilot, claude, gemini, agents, cline, trae, roo, continue, all)',
+      'Generate evidence-based rule/instruction files for AI targets with human approval (cursor, windsurf, copilot, claude, gemini, agents, cline, trae, roo, continue, all)',
     )
     .option('--force', 'Overwrite existing files if present')
-    .action(async (target: string | undefined, options: { force?: boolean }) => {
-      const cwd = process.cwd();
-      const fs = await import('node:fs');
-      const path = await import('node:path');
-      const { Scanner } = await import('@codeatlas-ai/indexer');
+    .option('-y, --yes', 'Accept all evidence-based rules automatically (non-interactive)')
+    .option('--proposal', 'Save proposed rules with evidence citations to PROPOSED_RULES.md instead of overwriting')
+    .action(
+      async (
+        target: string | undefined,
+        options: { force?: boolean; yes?: boolean; proposal?: boolean },
+      ) => {
+        const cwd = process.cwd();
+        const fs = await import('node:fs');
+        const path = await import('node:path');
+        const { Scanner } = await import('@codeatlas-ai/indexer');
+        const { RuleGenerator } = await import('@codeatlas-ai/rules');
+        const { CodebaseAnalyzer } = await import('@codeatlas-ai/analytics');
+        const { isInitialized, openDatabase, getOrCreateProject, loadConfig } = await import(
+          '../utils.js'
+        );
 
-      const scanner = new Scanner({ root: cwd });
-      const scanResult = await scanner.scan();
+        console.log('');
+        console.log(chalk.bold.cyan('🔍 CodeAtlas Evidence-Based AI Rules Generator'));
+        console.log(chalk.dim('='.repeat(55)));
+        console.log(chalk.dim('Analyzing repository architecture, test runners, and conventions...\n'));
 
-      const targetMapping: Record<string, string> = {
-        cursor: '.cursorrules',
-        windsurf: '.windsurfrules',
-        copilot: '.github/copilot-instructions.md',
-        claude: 'CLAUDE.md',
-        gemini: 'GEMINI.md',
-        agents: 'AGENTS.md',
-        antigravity: 'ANTIGRAVITY.md',
-        cline: '.clinerules',
-        trae: '.traerules',
-        roo: '.roorules',
-        continue: '.continue/rules.md',
-        deepseek: 'DEEPSEEK.md',
-        lingma: '.lingmarules',
-      };
+        const scanner = new Scanner({ root: cwd });
+        const scanResult = await scanner.scan();
 
-      const selectedTarget = (target || 'all').toLowerCase();
-      let targetsToGenerate: string[] = [];
-
-      if (selectedTarget === 'all') {
-        targetsToGenerate = ['agents', 'claude', 'cursor', 'windsurf', 'copilot'];
-      } else if (targetMapping[selectedTarget]) {
-        targetsToGenerate = [selectedTarget];
-      } else {
-        console.log(chalk.red(`Unknown target: ${selectedTarget}`));
-        console.log(chalk.dim(`Supported targets: ${Object.keys(targetMapping).join(', ')}, all`));
-        return;
-      }
-
-      console.log('');
-      console.log(chalk.bold('Generating AI Rule Templates...'));
-      console.log('');
-
-      for (const t of targetsToGenerate) {
-        const relativeFilePath = targetMapping[t]!;
-        const fullFilePath = path.join(cwd, relativeFilePath);
-        const dirPath = path.dirname(fullFilePath);
-
-        if (!fs.existsSync(dirPath)) {
-          fs.mkdirSync(dirPath, { recursive: true });
+        let architectureReport = undefined;
+        if (isInitialized(cwd)) {
+          try {
+            const db = openDatabase(cwd);
+            const projectId = getOrCreateProject(db, cwd);
+            const config = loadConfig(cwd);
+            const analyzer = new CodebaseAnalyzer({
+              db,
+              projectId,
+              rootDir: cwd,
+              architectureConfig: config.architecture,
+            });
+            const report = analyzer.analyze();
+            architectureReport = report.architectureReport;
+            db.close();
+          } catch {
+            // Ignore DB error during rules generation
+          }
         }
 
-        if (fs.existsSync(fullFilePath) && !options.force) {
-          console.log(
-            chalk.yellow(
-              `  ⚠ Skipped ${relativeFilePath} (already exists, use --force to overwrite)`,
-            ),
-          );
-          continue;
+        const generator = new RuleGenerator({
+          rootDir: cwd,
+          scanResult,
+          architectureReport,
+        });
+
+        const proposedRules = generator.generateProposedRules();
+
+        if (proposedRules.length === 0) {
+          console.log(chalk.yellow('No specific evidence-based rules identified.'));
+          return;
         }
+
+        console.log(
+          chalk.bold(
+            `Found ${chalk.green(proposedRules.length)} evidence-backed engineering & architectural rules:\n`,
+          ),
+        );
+
+        for (const [idx, rule] of proposedRules.entries()) {
+          console.log(`  ${chalk.cyan(`[${idx + 1}]`)} ${chalk.bold(rule.title)} ${chalk.dim(`(${rule.category})`)}`);
+          console.log(`      ${chalk.white(rule.ruleText)}`);
+          console.log(`      ${chalk.dim('Evidence:')} ${chalk.italic.yellow(rule.evidence)}\n`);
+        }
+
+        let approvedRules = proposedRules;
+
+        // Interactive Human Approval Flow
+        const isInteractive = process.stdout.isTTY && !options.yes && !options.proposal;
+
+        if (isInteractive) {
+          try {
+            const { checkbox } = await import('@inquirer/prompts');
+            const selectedIds = await checkbox({
+              message:
+                'Select rules to approve for AI coding guidelines (Use Space to toggle, Enter to confirm):',
+              choices: proposedRules.map((r) => ({
+                name: `${r.title} — ${chalk.dim(r.evidence)}`,
+                value: r.id,
+                checked: r.recommended,
+              })),
+            });
+
+            approvedRules = proposedRules.filter((r) => selectedIds.includes(r.id));
+          } catch {
+            // If prompt fails or cancelled (e.g. SIGINT), fallback to recommended
+            approvedRules = proposedRules.filter((r) => r.recommended);
+          }
+        }
+
+        if (approvedRules.length === 0) {
+          console.log(chalk.yellow('\n⚠ No rules approved. Generation cancelled.\n'));
+          return;
+        }
+
+        const targetMapping: Record<string, string> = {
+          cursor: '.cursorrules',
+          windsurf: '.windsurfrules',
+          copilot: '.github/copilot-instructions.md',
+          claude: 'CLAUDE.md',
+          gemini: 'GEMINI.md',
+          agents: 'AGENTS.md',
+          antigravity: 'ANTIGRAVITY.md',
+          cline: '.clinerules',
+          trae: '.traerules',
+          roo: '.roorules',
+          continue: '.continue/rules.md',
+          deepseek: 'DEEPSEEK.md',
+          lingma: '.lingmarules',
+        };
 
         const name = scanResult.project?.name || path.basename(cwd);
-        const langs = Object.keys(scanResult.detectedLanguages || {}).join(', ') || 'TypeScript';
-        const frameworks = (scanResult.detectedFrameworks || []).join(', ') || 'Standard Libraries';
+        const langs = Object.keys(scanResult.detectedLanguages || {}).map((l) => l.toLowerCase());
+        const frameworks = (scanResult.detectedFrameworks || []).map((f) => String(f));
         const pm = scanResult.detectedPackageManager || 'npm';
 
-        const content = `# ${name} — AI Coding Guidelines (${t.toUpperCase()})
+        const metaInfo = {
+          name,
+          languages: langs.length > 0 ? langs : ['TypeScript'],
+          frameworks: frameworks.length > 0 ? frameworks : ['Standard Libraries'],
+          packageManager: pm,
+          isMonorepo: scanResult.isMonorepo,
+          workspaces: scanResult.workspaces,
+        };
 
-> Auto-generated by CodeAtlas (https://github.com/shditz/codeatlas)
+        // Proposal Mode: Write to PROPOSED_RULES.md for team review
+        if (options.proposal) {
+          const proposalDoc = generator.generateRuleDocument(approvedRules, metaInfo, 'PROPOSAL');
+          const proposalPath = path.join(cwd, 'PROPOSED_RULES.md');
+          fs.writeFileSync(proposalPath, proposalDoc, 'utf-8');
+          console.log(
+            chalk.green(
+              `\n✓ Successfully wrote ${approvedRules.length} proposed rules to ${chalk.bold('PROPOSED_RULES.md')}`,
+            ),
+          );
+          console.log(chalk.dim('Review and approve rules with your team before merging.\n'));
+          return;
+        }
 
-## 🏗️ Architecture & Tech Stack
-- **Project Name**: ${name}
-- **Primary Languages**: ${langs}
-- **Frameworks & Libraries**: ${frameworks}
-- **Package Manager**: ${pm}
-${scanResult.isMonorepo ? `- **Monorepo Workspaces**: ${(scanResult.workspaces || []).join(', ')}` : ''}
+        const selectedTarget = (target || 'all').toLowerCase();
+        let targetsToGenerate: string[] = [];
 
-## 🧠 CodeAtlas Context & MCP
-You have access to **CodeAtlas**, a local-first context intelligence engine for this repository.
-Always prioritize using CodeAtlas over guessing file locations or reading raw files linearly.
-1. **Context Retrieval**: Use the \`atlas_context\` tool (if available via MCP) or ask the user to run \`atlas context "<your query>"\` to fetch precise AST-based context packs.
-2. **Architecture Query**: Use \`atlas_query\` to traverse the dependency graph and understand relationships between packages/modules.
-3. **Quality Control**: Use \`atlas_analyze\` to ensure you haven't created dead code or circular dependencies before completing a task.
+        if (selectedTarget === 'all') {
+          targetsToGenerate = ['agents', 'claude', 'cursor', 'windsurf', 'copilot'];
+        } else if (targetMapping[selectedTarget]) {
+          targetsToGenerate = [selectedTarget];
+        } else {
+          console.log(chalk.red(`Unknown target: ${selectedTarget}`));
+          console.log(chalk.dim(`Supported targets: ${Object.keys(targetMapping).join(', ')}, all`));
+          return;
+        }
 
-## 🛠️ Engineering Guidelines
-1. **Type Safety**: Maintain strict typing, descriptive interfaces, and explicit return types. Avoid \`any\`.
-2. **Modular Architecture**: Preserve domain boundaries and clean abstractions across packages. Do not create circular dependencies.
-3. **Preserve Integrity**: Retain existing docstrings, comments, and project conventions.
-4. **Verification**: Always run linting, type checks, and tests before finalizing code changes.
+        console.log('');
+        for (const t of targetsToGenerate) {
+          const relativeFilePath = targetMapping[t]!;
+          const fullFilePath = path.join(cwd, relativeFilePath);
+          const dirPath = path.dirname(fullFilePath);
 
-## 💻 Useful Commands
-- **Build**: \`${pm} run build\`
-- **Test**: \`${pm} test\`
-- **Typecheck**: \`${pm} run typecheck\`
-`;
+          if (!fs.existsSync(dirPath)) {
+            fs.mkdirSync(dirPath, { recursive: true });
+          }
 
-        fs.writeFileSync(fullFilePath, content, 'utf-8');
-        console.log(chalk.green(`  ✓ Created ${chalk.bold(relativeFilePath)} for ${t}`));
-      }
+          if (fs.existsSync(fullFilePath) && !options.force) {
+            console.log(
+              chalk.yellow(
+                `  ⚠ Skipped ${relativeFilePath} (already exists, use --force to overwrite)`,
+              ),
+            );
+            continue;
+          }
 
-      console.log('');
-    });
+          const content = generator.generateRuleDocument(approvedRules, metaInfo, t);
+          fs.writeFileSync(fullFilePath, content, 'utf-8');
+          console.log(
+            chalk.green(
+              `  ✓ Generated ${chalk.bold(relativeFilePath)} with ${approvedRules.length} human-approved rules`,
+            ),
+          );
+        }
+
+        console.log(
+          chalk.cyan.bold(
+            `\n🎉 AI Rules generated with verified codebase evidence. Misinformation prevented.\n`,
+          ),
+        );
+      },
+    );
+
 
   rules.action(async () => {
     rules.commands.find((c) => c.name() === 'list')?.parse(process.argv);

@@ -1,61 +1,55 @@
-# Dependency Graph Visualizer
+# Dependency Graph & Topological Engine
 
-The `@codeatlas-ai/graph` and `@codeatlas-ai/webview` packages provide visual exploration and topological analysis of workspace files, folders, and code dependencies.
+The `@codeatlas-ai/graph` and `@codeatlas-ai/webview` packages provide high-performance in-memory graph algorithms, Cypher query execution, and visual exploration of workspace dependencies.
 
 ---
 
 ## Graph Data Model
 
-CodeAtlas models codebase relationships as a directed graph:
+CodeAtlas models codebase relationships as an attributed, directed property graph:
 
-- **Directory containment (`contains`)**: Represents hierarchical file-folder ownership.
-- **Direct code imports (`import`, `require`)**: Extracted from AST import statements across TypeScript, JavaScript, Python, PHP, Go, and Rust.
-- **Module dependencies (`calls`, `extends`)**: Cross-module invocations and interface implementations.
+- **Directory Containment (`contains`)**: Represents hierarchical file-folder ownership.
+- **Direct Code Imports (`import`, `require`)**: Extracted from AST import statements across TypeScript, JavaScript, Python, PHP, Go, Rust, and Prisma.
+- **Semantic Type Inheritance (`type_reference`)**: Derived classes (`extends`) and interface implementations (`implements`).
+- **Framework Relations**: NestJS provider injection and Prisma database model relations.
 
 ```text
 [Directory: /src]
    └── contains ──> [Directory: /src/auth]
-                        └── contains ──> [File: auth.ts]
-                                             └── import ──> [File: /src/db/client.ts]
+                        └── contains ──> [File: auth.service.ts]
+                                             ├── import ──> [File: /src/db/client.ts]
+                                             └── extends ──> [File: /src/common/base.service.ts]
 ```
 
-### Node Schema
+### Edge Attributes
 
-- `id`: Workspace relative path.
-- `name`: File or folder name.
-- `type`: `file` or `dir`.
-- `language`: Detected source language (e.g. `typescript`, `python`, `php`).
-- `val`: Visual node size proportional to file size and symbol count.
-- `color`: Distinct color coding categorized by file extension/language.
+Every dependency edge in CodeAtlas contains:
+- `source_path`: Originating source file.
+- `target_path`: Resolved destination file.
+- `kind`: `import`, `require`, `export_from`, `type_reference`, `call`.
+- `symbols`: List of imported or referenced symbol names.
+- `weight`: Edge strength metric based on import frequency.
+- `confidence`: Resolution confidence score (`1.0` for deterministic AST/tsconfig resolution, `0.7` for heuristic fallbacks).
+- `resolution_reason`: Explanatory metadata (e.g. `'tsconfig_paths'`, `'relative_import'`, `'type_inheritance'`).
 
 ---
 
-## Visualizer Capabilities
+## In-Memory Graph Algorithms
 
-### 1. 3D Force-Directed Mode
+1. **Topological Sort & Cycle Detection**:
+   - Tarjan's strongly connected components algorithm identifies circular import loops and outputs actionable Mermaid diagrams.
+2. **Blast Radius & Downstream Reachability**:
+   - Calculates transitive closure to show all modules impacted by editing a specific file or symbol (`atlas diff`, `atlas_calculate_change_surface`).
+3. **Graph Centrality & PageRank**:
+   - Calculates module importance to prioritize core domain abstractions during context retrieval.
+4. **Cypher & NL2Cypher Query Engine**:
+   - Executes Cypher graph queries (e.g. `MATCH (f:File)-[:IMPORTS]->(t:File) ...`) against the in-memory graph.
 
-- WebGL rendering using `three` and `react-force-graph-3d`.
-- Force-directed spatial layout with configurable repulsion physics to prevent node overlap.
-- Smooth camera orbit controls with auto-rotation toggle.
-- Animated particle streams along active dependency links.
+---
 
-### 2. 2D Planar Mode
+## Visualizer Capabilities (2D & 3D Webview)
 
-- High-performance 2D Canvas rendering using `react-force-graph-2d`.
-- Automatic text labels rendered as readable tags on zoom.
-- Sibling cluster linking: maintains directory groupings when filtering to file-only views.
-
-### 3. Spotlight & Path Isolation
-
-- Hovering or selecting any node highlights its direct dependency path at full opacity while dimming unrelated modules.
-- Allows engineers to trace multi-hop import chains without visual clutter.
-
-### 4. Search & Category Filters
-
-- Real-time search bar to filter by file path or symbol name.
-- Category buttons (`All`, `Files`, `Folders`) to quickly inspect directory structures or file topologies.
-
-### 5. Node Inspector & VS Code Bridge
-
-- Clicking a node displays a slide-in drawer showing file metadata, size, language, and connected neighbour count.
-- **"Open in Editor"** button sends an IPC message to VS Code to reveal and open the file immediately.
+1. **3D Force-Directed Mode**: WebGL rendering via Three.js with orbit controls, particle streams, and force physics.
+2. **2D Planar Mode**: High-performance HTML5 Canvas rendering with automatic text LOD tagging.
+3. **Spotlight & Path Isolation**: Highlighting connected dependencies while dimming unrelated nodes.
+4. **VS Code & IDE Bridge**: Clicking a node directly opens the source file in your active editor window.

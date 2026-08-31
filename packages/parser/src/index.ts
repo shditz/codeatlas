@@ -6,3 +6,4 @@ export {
   calculateTextCyclomaticComplexity,
 } from './tree-sitter-parser.js';
 export { detectLanguage, isParseableLanguage, canParse } from '@codeatlas-ai/core';
+export * from './semantic/index.js';

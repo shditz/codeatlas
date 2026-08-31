@@ -1,14 +1,14 @@
 # 🚀 Getting Started
 
-Welcome to **CodeAtlas**! This guide is designed for **beginners, junior developers, and vibe coders**. You will learn how to install CodeAtlas, scan your project, connect it to your favorite AI assistant (Claude Code, Google Antigravity, Cursor, Windsurf), and supercharge your coding workflow in less than 5 minutes.
+Welcome to **CodeAtlas**! This guide is designed for **developers, engineers, and AI agent builders**. You will learn how to install CodeAtlas, scan your project, connect it to your favorite AI assistant (Google Antigravity, Claude Code, Cursor, Windsurf), and supercharge your coding workflow in less than 3 minutes.
 
 ---
 
 ## 💡 What is CodeAtlas?
 
-Imagine your codebase as a giant city. Without a map, your AI assistant is walking through every alleyway trying to find the right building—wasting your time and burning expensive tokens.
+Imagine your codebase as a complex city. Without a structural map, your AI assistant is walking through every directory trying to guess where dependencies live—wasting expensive context tokens and introducing regressions.
 
-**CodeAtlas is the GPS navigation system for your AI.** It scans your project, builds a local map of all functions, classes, and imports, and tells your AI exactly where to go.
+**CodeAtlas is the architectural GPS for your AI.** It scans your project, builds a local SQLite knowledge graph of all functions, classes, imports, and DDD layers, and provides your AI with exact, secret-redacted context on demand.
 
 ---
 
@@ -47,8 +47,6 @@ pnpm --filter @codeatlas-ai/cli link --global
 
 ## 🏃 2. Your First CodeAtlas Project (Step-by-Step)
 
-Let's set up CodeAtlas on an existing project on your machine!
-
 ### Step 1: Initialize Your Workspace
 
 Navigate to your project's folder and run:
@@ -59,7 +57,7 @@ atlas init
 ```
 
 > **What just happened?**
-> CodeAtlas created a hidden `.atlas/` folder containing your local database (`atlas.db`) and configuration file (`config.toml`). Everything is stored on your machine—no code ever leaves your computer!
+> CodeAtlas created a hidden `.atlas/` folder containing your local database (`atlas.db`) and configuration file (`config.toml`). Everything is stored locally on your machine—no code ever leaves your computer!
 
 ### Step 2: Index the Codebase
 
@@ -69,54 +67,41 @@ Now tell CodeAtlas to scan and understand your code:
 atlas index
 ```
 
-You will see output like this:
+CodeAtlas extracts AST symbols, computes cyclomatic complexity, links dependency graphs, and automatically applies `SecretScanner` redaction.
 
-```
-14:37:14 INFO [indexer:scanner] Scan complete: 242 files in 60ms
-14:37:14 INFO [indexer] Indexing complete: 242 files, 740 symbols, 155 deps
-Index Results
-  ✓ Files indexed     242
-  ◆ Symbols          740
-  → Imports          155
-```
+### Step 3: Audit Architecture & Health
 
-### Step 3: Check Codebase Health
-
-Run the doctor diagnostic to make sure everything is healthy:
+Run health diagnostics and architecture layering audits:
 
 ```bash
+# Check overall index health and completeness
 atlas doctor
-```
 
-CodeAtlas will give your repository a health score (0-100) and tell you if anything needs attention.
+# Audit DDD layers and check for architectural regressions
+atlas analyze --architecture
+```
 
 ### Step 4: Teach Your AI Coding Assistant
 
-Generate tailor-made instructions so your AI knows how to work with your project's tech stack:
+Generate evidence-backed guideline files customized for your specific frameworks and monorepo structure:
 
 ```bash
-# If using Google Antigravity
-atlas rules generate antigravity
+# Generate a proposal document for review
+atlas rules generate --proposal
 
-# If using Claude Code / Claude Desktop
-atlas rules generate claude
-
-# If using Cursor
-atlas rules generate cursor
-
-# Or generate for everyone at once!
-atlas rules generate all
+# Or generate directly for all AI platforms
+atlas rules generate all -y
 ```
 
 ---
 
 ## 🤖 3. Hooking CodeAtlas into AI Coding Agents
 
-The real magic happens when your AI Coding Assistant connects to CodeAtlas via **MCP (Model Context Protocol)**.
+The real power happens when your AI Coding Assistant connects to CodeAtlas via **MCP (Model Context Protocol)**.
 
 ### For Google Antigravity:
 
-1. In your project root, create a file named `.agents/mcp_config.json`:
+In your project root, create `.agents/mcp_config.json`:
 
 ```json
 {
@@ -131,15 +116,13 @@ The real magic happens when your AI Coding Assistant connects to CodeAtlas via *
 
 ### For Claude Code CLI:
 
-Run in your terminal:
-
 ```bash
 claude mcp add codeatlas atlas -- mcp
 ```
 
 ### For Claude Desktop:
 
-Add this to your Claude Desktop config:
+Add this to your Claude Desktop config (`%APPDATA%\Claude\claude_desktop_config.json` on Windows):
 
 ```json
 {
@@ -158,17 +141,22 @@ Add this to your Claude Desktop config:
 
 Here is how you use CodeAtlas while coding every day:
 
-- **Need context for a prompt?**
+- **Need context for a specific task?**
   ```bash
-  atlas context "how does the user authentication token work?" --budget 3000
+  atlas context "fix authentication race condition" --intent bug --budget 4000
   ```
 - **Want to audit your code for circular dependencies or dead code?**
   ```bash
-  atlas analyze
+  atlas analyze --cycles
+  atlas analyze --dead-code
   ```
-- **Checking what your git changes might break?**
+- **Checking what your git changes might break before committing?**
   ```bash
   atlas diff
+  ```
+- **Want real-time indexing while you write code?**
+  ```bash
+  atlas watch
   ```
 
 ---
@@ -176,5 +164,5 @@ Here is how you use CodeAtlas while coding every day:
 ## ⏭️ Next Steps
 
 - Explore all 16 commands in the [CLI Reference](/guide/cli).
-- Learn about the [Agent Workflow Best Practices](/guide/agents-workflow).
-- Deep dive into the [Model Context Protocol (MCP)](/guide/mcp).
+- Learn about [System Architecture & DDD Layering](/guide/architecture).
+- Deep dive into the [16 Model Context Protocol (MCP) Tools](/guide/mcp).

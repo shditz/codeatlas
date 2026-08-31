@@ -7,7 +7,7 @@ import { RetrievalEngine } from '@codeatlas-ai/retrieval';
 import { Ranker } from '@codeatlas-ai/ranking';
 import { ContextEngine } from '@codeatlas-ai/context';
 import { RuleEngine } from '@codeatlas-ai/rules';
-import type { FileInfo, ProjectMeta } from '@codeatlas-ai/core';
+import type { FileInfo, ProjectMeta, RetrievalIntent } from '@codeatlas-ai/core';
 
 export function registerContextCommand(program: Command): void {
   program
@@ -15,12 +15,13 @@ export function registerContextCommand(program: Command): void {
     .description('Generate context pack for a coding task')
     .option('--budget <tokens>', 'Token budget', '12000')
     .option('--limit <n>', 'Max files', '30')
+    .option('--intent <type>', 'Task intent: bug, feature, refactor, or explore')
     .option('--json', 'Output as JSON')
     .option('--verbose', 'Show detailed scoring')
     .action(
       async (
         task: string,
-        options: { budget: string; limit: string; json?: boolean; verbose?: boolean },
+        options: { budget: string; limit: string; intent?: string; json?: boolean; verbose?: boolean },
       ) => {
         const cwd = process.cwd();
         ensureInitialized(cwd);
@@ -41,7 +42,10 @@ export function registerContextCommand(program: Command): void {
         const searchRepo = new SearchRepository(db);
 
         const retrieval = new RetrievalEngine(searchRepo, graph, filesByPath);
-        const retrievalResult = retrieval.retrieve(task, parseInt(options.limit, 10));
+        const retrievalResult = retrieval.retrieve(task, {
+          limit: parseInt(options.limit, 10),
+          intent: options.intent as RetrievalIntent | undefined,
+        });
 
         const ranker = new Ranker({
           weights: config.ranking,

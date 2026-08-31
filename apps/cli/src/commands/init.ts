@@ -32,7 +32,6 @@ export function registerInitCommand(program: Command): void {
 
       const spinner = ora('Analyzing repository environment & architecture...').start();
 
-      // 1. Run scanner to detect stack
       let scanResult;
       try {
         const scanner = new Scanner({ root: cwd });
@@ -43,13 +42,11 @@ export function registerInitCommand(program: Command): void {
         spinner.warn(`Scan warning: ${errorMsg}. Proceeding with default template.`);
       }
 
-      // 2. Prepare directories
       const atlasDir = getAtlasDir(cwd);
       fs.mkdirSync(atlasDir, { recursive: true });
       fs.mkdirSync(path.join(atlasDir, 'snapshots'), { recursive: true });
       fs.mkdirSync(path.join(atlasDir, 'cache'), { recursive: true });
 
-      // 3. Customize config based on project scan
       const config = defaultConfig();
       config.project.name = scanResult?.project.name || path.basename(cwd);
 
@@ -61,7 +58,6 @@ export function registerInitCommand(program: Command): void {
       const configContent = generateConfigTOML(config);
       fs.writeFileSync(getConfigPath(cwd), configContent, 'utf-8');
 
-      // 4. Initialize SQLite DB with schema & project record
       const db = new AtlasDatabase(getDbPath(cwd));
       runMigrations(db);
 
@@ -112,7 +108,6 @@ export function registerInitCommand(program: Command): void {
 
       db.close();
 
-      // 5. Smart .atlasignore generation based on detected stack
       const ignorePath = path.join(cwd, '.atlasignore');
       if (!fs.existsSync(ignorePath) || options.force) {
         const ignorePatterns = [
@@ -194,7 +189,6 @@ export function registerInitCommand(program: Command): void {
         fs.writeFileSync(ignorePath, ignorePatterns.join('\n'), 'utf-8');
       }
 
-      // 6. Pretty Summary Output
       console.log('');
       console.log(chalk.bold('  📦 Setup Completed'));
       console.log(`    ${chalk.green('✓')} Configuration  ${chalk.dim('.atlas/config.toml')}`);

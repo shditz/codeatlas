@@ -7,8 +7,10 @@ export {
   DependencyRepository,
   ProjectRepository,
   EmbeddingRepository,
+  GitMetricsRepository,
   type ProjectRecord,
   type EmbeddingRecord,
+  type GitMetricRecord,
 } from './repositories.js';
 export { SearchRepository, type FtsResult } from './search.js';
 export {

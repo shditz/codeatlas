@@ -4,54 +4,68 @@ Understanding how CodeAtlas works under the hood will help you get the most out 
 
 ---
 
-## 1. Abstract Syntax Tree (AST) vs Plain Text
+## 1. Abstract Syntax Tree (AST) & Semantic Resolution
 
-Most code search tools look at your code as **dumb text**—they just search for words.
+Most search tools treat code as **flat text**—they simply search for literal keywords.
 
-**CodeAtlas sees code as structure (AST):**
-Using [Tree-sitter](https://tree-sitter.github.io/tree-sitter/), CodeAtlas understands the semantic structure of your programming languages:
+**CodeAtlas understands code as structure and semantics:**
+Using [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) and TypeScript semantic resolvers:
 
-- It knows `class UserService` is a class definition, not just a random sentence.
-- It extracts function parameters, return types, and interface contracts.
-- It tracks exact import and export bindings across files.
-
----
-
-## 2. The Dependency Graph
-
-Every file in your project is a **Node**, and every `import` or `require` is an **Edge** connecting them.
-
-```mermaid
-flowchart LR
-    A["apps/cli/index.ts"] --> B["packages/core/index.ts"]
-    A --> C["packages/indexer/index.ts"]
-    C --> B
-```
-
-By storing this graph in a local embedded SQLite database (`.atlas/atlas.db`), CodeAtlas can answer complex architectural questions in milliseconds:
-
-- _What files will break if I change this function?_ (`atlas diff`)
-- _Are there any circular dependencies?_ (`atlas analyze --cycles`)
-- _Which files are completely unused?_ (`atlas analyze --dead-code`)
+- It recognizes `class UserService` as an architectural entity, not generic words.
+- It tracks type inheritance (`extends`, `implements`) and path mappings (`@/*`).
+- It extracts cyclomatic complexity, function signatures, and parameter contracts.
 
 ---
 
-## 3. Token Budgeting & AST Skeletons
+## 2. Framework-Specific Semantic Adapters
 
-LLMs charge money and run slower when given too much text.
+Real-world code follows framework conventions that go beyond language syntax:
 
-When you ask for context using `atlas context "task" --budget 4000`, CodeAtlas doesn't dump the whole repository. Instead:
-
-1. It uses BM25 full-text search and graph traversal to find the top most relevant files.
-2. If a file is too large, it compresses it into an **AST Skeleton**—keeping all class, method, and function signatures while stripping inner implementation details.
-3. The AI gets 100% of the type and interface context using only 20% of the token budget!
+- **React Custom Hooks**: Functions matching `use[A-Z0-9].*` are classified as `SymbolKind: 'hook'`.
+- **Next.js App Router**: Understands `page.tsx`, `layout.tsx`, and `route.ts` as architectural endpoints.
+- **NestJS Dependency Injection**: Decorators (`@Controller`, `@Injectable`, `@Module`) are parsed into DI graph relationships.
+- **Prisma Schema**: Parses database models, enums, and cross-model relations into the graph.
 
 ---
 
-## 4. Local-First & 100% Private
+## 3. True Architecture Model (DDD Layering)
 
-Your code never leaves your computer:
+CodeAtlas automatically categorizes codebase files into 5 Domain-Driven Design (DDD) layers:
 
-- No telemetry or cloud syncing.
-- All databases and indexes live inside the `.atlas/` folder in your project.
-- Works 100% offline on air-gapped machines.
+1. **Presentation Layer**: Controllers, Routes, Handlers, Pages, Views, APIs.
+2. **Application Layer**: Services, UseCases, Commands, Queries, Workflows.
+3. **Domain Layer**: Entities, Aggregates, Models, Value Objects.
+4. **Infrastructure Layer**: Repositories, Database Adapters, Storage, Network Clients.
+5. **Shared Layer**: Utilities, Types, Config, Common Helpers.
+
+Using `atlas analyze --architecture`, CodeAtlas flags architectural regressions (e.g. Presentation bypassing Services to call Repositories directly, or Domain depending on Infrastructure).
+
+---
+
+## 4. Automated Secret Redaction Layer
+
+Developer privacy and security are enforced at the ingestion boundary:
+
+- The built-in **`SecretScanner`** uses high-entropy regex patterns to scrub Private Keys, Cloud API keys (Anthropic, OpenAI, AWS, GCP, GitHub), JWTs, and database passwords.
+- Content is sanitized *before* writing to SQLite FTS5 search tables and before returning MCP outputs to external LLMs.
+
+---
+
+## 5. Token Budgeting & AST Skeletons
+
+LLMs charge per token and lose reasoning acuity when provided too much irrelevant text.
+
+When you run `atlas context "task" --intent feature --budget 4000`:
+
+1. CodeAtlas routes retrieval using task intent (`bug`, `feature`, `refactor`) across FTS5 and graph proximity.
+2. Primary files are provided in full.
+3. Secondary files are compressed into **AST Skeletons**—preserving class, method, and type signatures while stripping inner logic.
+4. The AI receives 100% of the type and architectural context while saving up to 92% on token budgets!
+
+---
+
+## 6. Local-First & 100% Private
+
+- **Zero Telemetry**: No cloud sync, external API calls, or tracking pings.
+- **Embedded Storage**: All databases and indexes live inside the `.atlas/` folder in your project.
+- **Offline Capable**: Works 100% offline on secure, air-gapped environments.

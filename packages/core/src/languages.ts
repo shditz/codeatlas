@@ -39,6 +39,7 @@ const EXTENSION_TO_LANGUAGE: Record<string, Language> = {
   '.zsh': 'shell',
   '.php': 'php',
   '.phtml': 'php',
+  '.prisma': 'prisma',
 };
 
 const FILENAME_TO_LANGUAGE: Record<string, Language> = {
@@ -121,6 +122,8 @@ const PARSEABLE_LANGUAGES: Set<Language> = new Set([
   'ruby',
   'kotlin',
   'swift',
+  'php',
+  'prisma',
 ]);
 
 export function canParse(language: Language): boolean {

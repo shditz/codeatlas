@@ -1,28 +1,35 @@
 import type { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
-import { ensureInitialized, openDatabase, getOrCreateProject } from '../utils.js';
+import { ensureInitialized, openDatabase, getOrCreateProject, loadConfig } from '../utils.js';
 import { CodebaseAnalyzer } from '@codeatlas-ai/analytics';
 
 export function registerAnalyzeCommand(program: Command): void {
   program
     .command('analyze')
     .description(
-      'Run deep architectural graph analytics (dead code, circular dependencies, complexity hotspots)',
+      'Run deep architectural graph analytics (dead code, circular dependencies, complexity hotspots, DDD layer regressions)',
     )
     .option('--cycles', 'Only check for circular dependencies')
     .option('--dead-code', 'Only check for dead / unreferenced code')
     .option('--hotspots', 'Only show complexity hotspots and unstable modules')
+    .option('--architecture', 'Only show architecture layer and bounded context violations')
     .option('--json', 'Output raw JSON result')
     .option('--fail-on-cycles', 'Exit with non-zero status if circular dependencies are found')
+    .option(
+      '--fail-on-architecture',
+      'Exit with non-zero status if critical or high architecture violations are found',
+    )
     .option('--mermaid', 'Output circular dependencies as a Mermaid graph')
     .action(
       async (options: {
         cycles?: boolean;
         deadCode?: boolean;
         hotspots?: boolean;
+        architecture?: boolean;
         json?: boolean;
         failOnCycles?: boolean;
+        failOnArchitecture?: boolean;
         mermaid?: boolean;
       }) => {
         const cwd = process.cwd();
@@ -30,8 +37,14 @@ export function registerAnalyzeCommand(program: Command): void {
 
         const db = openDatabase(cwd);
         const projectId = getOrCreateProject(db, cwd);
+        const config = loadConfig(cwd);
 
-        const analyzer = new CodebaseAnalyzer({ db, projectId });
+        const analyzer = new CodebaseAnalyzer({
+          db,
+          projectId,
+          rootDir: cwd,
+          architectureConfig: config.architecture,
+        });
         const report = analyzer.analyze();
 
         if (options.json) {
@@ -51,11 +64,21 @@ export function registerAnalyzeCommand(program: Command): void {
                 2,
               ),
             );
+          } else if (options.architecture) {
+            console.log(JSON.stringify(report.architectureReport || {}, null, 2));
           } else {
             console.log(JSON.stringify(report, null, 2));
           }
           db.close();
           if (options.failOnCycles && report.cycles.length > 0) {
+            process.exit(1);
+          }
+          if (
+            options.failOnArchitecture &&
+            report.architectureReport &&
+            (report.architectureReport.summary.critical > 0 ||
+              report.architectureReport.summary.high > 0)
+          ) {
             process.exit(1);
           }
           return;
@@ -72,7 +95,8 @@ export function registerAnalyzeCommand(program: Command): void {
         );
         console.log('');
 
-        const showAll = !options.cycles && !options.deadCode && !options.hotspots;
+        const showAll =
+          !options.cycles && !options.deadCode && !options.hotspots && !options.architecture;
 
         if (showAll || options.cycles) {
           console.log(chalk.bold.underline('1. Circular Dependency Analysis:'));
@@ -201,11 +225,101 @@ export function registerAnalyzeCommand(program: Command): void {
           console.log('');
         }
 
+        if ((showAll || options.architecture) && report.architectureReport) {
+          const arch = report.architectureReport;
+          const scoreColor =
+            arch.summary.cleanScore >= 90
+              ? chalk.bold.green
+              : arch.summary.cleanScore >= 70
+                ? chalk.bold.yellow
+                : chalk.bold.red;
+
+          console.log(
+            chalk.bold.underline(
+              `5. Architecture Model & DDD Boundary Analysis (Score: ${scoreColor(arch.summary.cleanScore + '/100')}):`,
+            ),
+          );
+
+          const activeLayers = arch.layers.filter((l) => l.files && l.files.length > 0);
+          if (activeLayers.length > 0) {
+            console.log(
+              chalk.dim(
+                `   Layers (${activeLayers.length}): ${activeLayers.map((l) => `${l.name} (${l.files?.length})`).join(' → ')}`,
+              ),
+            );
+          }
+          if (arch.boundedContexts.length > 0) {
+            console.log(
+              chalk.dim(
+                `   Bounded Contexts (${arch.boundedContexts.length}): ${arch.boundedContexts.map((c) => c.name).join(', ')}`,
+              ),
+            );
+          }
+          console.log('');
+
+          if (arch.violations.length === 0) {
+            console.log(
+              chalk.green(
+                '  ✓ Perfect architectural compliance! No layer regressions or bounded context leaks.',
+              ),
+            );
+          } else {
+            console.log(
+              chalk.yellow.bold(
+                `  ⚠ Found ${arch.violations.length} architectural regression(s) & boundary violation(s):`,
+              ),
+            );
+
+            const table = new Table({
+              head: [
+                chalk.bold('Severity'),
+                chalk.bold('Type'),
+                chalk.bold('Source → Target'),
+                chalk.bold('Rule & Remediation'),
+              ],
+              colWidths: [12, 22, 36, 45],
+              wordWrap: true,
+              style: { head: [], border: ['dim'] },
+            });
+
+            arch.violations.forEach((v) => {
+              const sevColor =
+                v.severity === 'CRITICAL'
+                  ? chalk.bold.red
+                  : v.severity === 'HIGH'
+                    ? chalk.red
+                    : v.severity === 'MEDIUM'
+                      ? chalk.yellow
+                      : chalk.dim;
+
+              table.push([
+                sevColor(v.severity),
+                v.violationType,
+                `${chalk.cyan(v.sourceFile)}\n${chalk.dim('→')} ${chalk.magenta(v.targetFile)}`,
+                `${chalk.bold(v.rule)}\n${chalk.dim('Fix:')} ${chalk.green(v.remediation)}`,
+              ]);
+            });
+
+            console.log(table.toString());
+            console.log('');
+          }
+        }
+
         db.close();
 
         if (options.failOnCycles && report.cycles.length > 0) {
           process.exit(1);
         }
+
+        if (
+          options.failOnArchitecture &&
+          report.architectureReport &&
+          (report.architectureReport.summary.critical > 0 ||
+            report.architectureReport.summary.high > 0)
+        ) {
+          process.exit(1);
+        }
       },
     );
 }
+

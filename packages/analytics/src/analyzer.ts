@@ -7,6 +7,8 @@ import {
   ProjectRepository,
 } from '@codeatlas-ai/storage';
 import type {
+  ArchitectureConfig,
+  ArchitectureReport,
   CodebaseAnalytics,
   CycleDetectionResult,
   DeadCodeItem,
@@ -17,22 +19,26 @@ import { CycleDetector } from './cycle-detector.js';
 import { DeadCodeDetector, type DeadCodeDetectorOptions } from './dead-code-detector.js';
 import { MetricsCalculator, type GraphMetricsSummary } from './metrics.js';
 import { GitMetricsAnalyzer } from './git-metrics.js';
+import { ArchitectureAnalyzer } from './architecture-analyzer.js';
 
 export class CodebaseAnalyzer {
   private graph: DependencyGraph;
   private db?: AtlasDatabase;
   private projectId: number;
   private rootDir?: string;
+  private architectureConfig?: ArchitectureConfig;
 
   constructor(options: {
     graph?: DependencyGraph;
     db?: AtlasDatabase;
     projectId?: number;
     rootDir?: string;
+    architectureConfig?: ArchitectureConfig;
   }) {
     this.db = options.db;
     this.projectId = options.projectId ?? 1;
     this.rootDir = options.rootDir;
+    this.architectureConfig = options.architectureConfig;
 
     if (options.graph) {
       this.graph = options.graph;
@@ -79,12 +85,12 @@ export class CodebaseAnalyzer {
     const hotspots = metricsCalculator.getHotspots(10);
     const instabilities = metricsCalculator.getHighInstabilities(10);
 
-    let gitHotspots: TechnicalDebtHotspot[] | undefined;
     const projectRoot =
       this.rootDir ||
       (this.db ? new ProjectRepository(this.db).getById(this.projectId)?.root : undefined) ||
       process.cwd();
 
+    let gitHotspots: TechnicalDebtHotspot[] | undefined;
     if (projectRoot) {
       try {
         const gitAnalyzer = new GitMetricsAnalyzer(projectRoot);
@@ -96,6 +102,19 @@ export class CodebaseAnalyzer {
       }
     }
 
+    let architectureReport: ArchitectureReport | undefined;
+    try {
+      const archAnalyzer = new ArchitectureAnalyzer({
+        graph: this.graph,
+        files,
+        config: this.architectureConfig,
+        projectRoot,
+      });
+      architectureReport = archAnalyzer.analyze();
+    } catch {
+      // Fallback gracefully if architecture analysis encounters issues
+    }
+
     return {
       summary,
       cycles: cycleRes.cycles,
@@ -103,8 +122,10 @@ export class CodebaseAnalyzer {
       hotspots,
       instabilities,
       gitHotspots,
+      architectureReport,
     };
   }
+
 
   detectCycles(): CycleDetectionResult {
     return new CycleDetector(this.graph).detectCycles();

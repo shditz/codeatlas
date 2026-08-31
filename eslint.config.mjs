@@ -15,6 +15,7 @@ export default tseslint.config(
       '**/.vitepress/cache/**',
       '**/.vitepress/dist/**',
       'apps/jetbrains-plugin/**',
+      '**/.benchmarks/**',
     ],
   },
   {

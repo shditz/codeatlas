@@ -1,6 +1,6 @@
 # 💻 CLI Reference Manual
 
-The `atlas` CLI is your command center for indexing codebases, analyzing architecture, running graph queries, and integrating with AI coding assistants.
+The `atlas` CLI is your command center for indexing codebases, analyzing architecture, running graph queries, generating AI guidelines, and integrating with AI coding assistants.
 
 ---
 
@@ -12,19 +12,20 @@ Usage: atlas [options] [command]
 Commands:
   init [options]               Initialize CodeAtlas in the current directory
   scan                         Fast scan to detect project metadata and structure
-  index [options] [path]       Index repository files, symbols, and dependencies
-  clean [options]              Clean index database, cache, or snapshots
-  doctor                       Run health checks on repository index and rules
-  analyze [options]            Analyze codebase for dead code, circular dependencies, & hotspots
-  context <task> [options]     Retrieve token-budgeted context pack for a task
+  index [options] [path]       Index repository files, symbols, and dependencies (with secret redaction)
+  watch [options]              Watch directory and update the knowledge graph in real time
+  context <task> [options]     Retrieve intent-aware, token-budgeted context pack for a task
   export [options]             Export context pack to markdown or AI formats
-  query <query> [options]      Query the codebase graph using natural language or Cypher
-  search <query> [options]     Full-text search for symbols and files (BM25 ranking)
-  map [options]                Display ASCII codebase tree and symbol map
-  rules                        Manage AI rules and instructions
+  analyze [options]            Analyze codebase for DDD layer regressions, dead code, & hotspots
   diff [options]               Analyze git diff and show architectural blast radius
+  doctor                       Run health checks on repository index and rules
   pr [options]                 Generate PR architecture summary for AI code review
-  mcp                          Start the Model Context Protocol (MCP) server
+  search <query> [options]     Full-text search for symbols and files (BM25 ranking)
+  query <query> [options]      Query the codebase graph using natural language or Cypher
+  map [options]                Display ASCII codebase tree and symbol map
+  rules                        Manage and generate evidence-backed AI rules and guidelines
+  clean [options]              Clean index database, cache, or snapshots
+  mcp                          Start the Model Context Protocol (MCP) server (16 tools)
 ```
 
 ---
@@ -50,7 +51,7 @@ atlas init --force
 Scans the current repository without building a database. It quickly identifies:
 
 - Programming languages & file counts
-- Detected frameworks (React, Next.js, Express, NestJS, etc.)
+- Detected frameworks (React, Next.js, Express, NestJS, Prisma, etc.)
 - Package manager (pnpm, npm, yarn, bun)
 - Monorepo workspace configuration
 
@@ -62,7 +63,7 @@ atlas scan
 
 ### 3. `atlas index`
 
-Parses all source code using Tree-sitter AST parsers and commits symbols, imports, and relationships to `.atlas/atlas.db`.
+Parses all source code using Tree-sitter AST parsers, applies automated `SecretScanner` redaction, computes cyclomatic complexity, and commits symbols and relationships to `.atlas/atlas.db`.
 
 ```bash
 # Incremental index (only updates modified files)
@@ -77,20 +78,13 @@ atlas index packages/core
 
 ---
 
-### 4. `atlas doctor`
+### 4. `atlas watch`
 
-Runs a comprehensive repository health check and gives your project a health score (0–100).
+Watches your workspace for filesystem modifications and updates AST symbols, dependencies, and temporal metrics incrementally in real time.
 
 ```bash
-atlas doctor
+atlas watch
 ```
-
-**What it checks:**
-
-- Index freshness & tracked files
-- Dependency graph completeness
-- AI rules presence and conflicts
-- Symbol coverage ratio
 
 ---
 
@@ -98,14 +92,20 @@ atlas doctor
 
 Audits the architectural health of your codebase. It detects:
 
-1. **Circular Dependencies**: Recursive import cycles that cause runtime bugs (can output Mermaid diagrams).
-2. **Dead / Orphaned Code**: Files and functions with 0 incoming dependencies.
-3. **High Coupling & God Objects**: Modules with excessive in-degree or out-degree connections.
-4. **Git Churn Hotspots**: Merges git history with coupling to highlight high-risk technical debt.
+1. **True Architecture Regressions (`--architecture`)**: Domain-Driven Design (DDD) layer violations (e.g. Presentation calling Infrastructure directly, Domain depending on outer layers, or Public API bypasses).
+2. **Circular Dependencies (`--cycles`)**: Recursive import cycles that cause runtime initialization bugs.
+3. **Dead / Orphaned Code (`--dead-code`)**: Files and functions with 0 incoming dependencies.
+4. **Git Churn Hotspots (`--hotspots`)**: Merges git commit frequency with coupling to highlight high-risk technical debt.
 
 ```bash
 # Run full analysis
 atlas analyze
+
+# Audit DDD architecture layering and print clean score
+atlas analyze --architecture
+
+# Automatically fail CI pipeline if architectural regressions are detected
+atlas analyze --architecture --fail-on-architecture
 
 # Only check for circular dependencies
 atlas analyze --cycles
@@ -118,9 +118,6 @@ atlas analyze --dead-code
 
 # Only check for structural hotspots
 atlas analyze --hotspots
-
-# Automatically fail CI pipeline if circular dependencies are detected
-atlas analyze --fail-on-cycles
 ```
 
 ---
@@ -132,6 +129,11 @@ Generates a token-optimized Context Pack tailored specifically for a prompt or t
 ```bash
 # Basic task context with default token budget (12,000 tokens)
 atlas context "add Stripe webhook verification"
+
+# Route retrieval specifically for a bug, feature, or refactoring intent
+atlas context "fix auth token race condition" --intent bug
+atlas context "implement shopping cart checkout" --intent feature
+atlas context "extract database repository interface" --intent refactor
 
 # Set a custom token budget limit
 atlas context "refactor auth token" --budget 4000
@@ -159,51 +161,9 @@ atlas export --target cursor --output cursor-prompt.md
 
 ---
 
-### 8. `atlas query`
+### 8. `atlas rules`
 
-Runs graph queries against your codebase. You can ask in plain English (Natural Language to Cypher) or write Cypher queries directly!
-
-```bash
-# Natural language query
-atlas query "find all files that import @codeatlas-ai/core"
-
-# Cypher query
-atlas query "MATCH (f:File)-[:IMPORTS]->(t:File) WHERE t.path CONTAINS 'storage' RETURN f.path"
-```
-
----
-
-### 9. `atlas search`
-
-Performs ultra-fast full-text and symbol search using SQLite FTS5 with BM25 ranking.
-
-```bash
-# Search for symbols, functions, or files
-atlas search "UserRepository"
-
-# Limit result count
-atlas search "authenticate" --limit 10
-```
-
----
-
-### 10. `atlas map`
-
-Prints a clean ASCII visual tree of your codebase and its exported symbols directly in the terminal.
-
-```bash
-# Show map with default depth (3 levels)
-atlas map
-
-# Show deep map up to 5 directory levels
-atlas map --depth 5
-```
-
----
-
-### 11. `atlas rules`
-
-Manages AI prompt rules and system instructions across different platforms.
+Manages AI prompt rules and generates evidence-backed guidelines for AI coding assistants.
 
 #### `atlas rules list`
 
@@ -223,30 +183,33 @@ atlas rules validate
 
 #### `atlas rules generate [target]`
 
-Auto-generates customized rule templates for AI editors:
+Inspects codebase evidence (`tsconfig.json`, `package.json`, test configurations, architecture layers) and generates anti-hallucination rules with citations:
 
 ```bash
-# Generate for Google Antigravity (creates AGENTS.md)
+# Interactive selection with prompts
+atlas rules generate
+
+# Generate a proposal document (PROPOSED_RULES.md) for team code review
+atlas rules generate --proposal
+
+# Auto-accept all evidence-backed rules without prompts (for CI)
+atlas rules generate all -y
+
+# Generate specifically for Google Antigravity (creates AGENTS.md)
 atlas rules generate antigravity
 
-# Generate for Claude (creates CLAUDE.md)
+# Generate specifically for Claude (creates CLAUDE.md)
 atlas rules generate claude
 
-# Generate for Cursor (creates .cursorrules)
+# Generate specifically for Cursor (creates .cursorrules)
 atlas rules generate cursor
-
-# Generate for all supported platforms
-atlas rules generate all
-
-# Overwrite existing files
-atlas rules generate all --force
 ```
 
 **Supported Targets:** `antigravity`, `agents`, `claude`, `cursor`, `windsurf`, `copilot`, `cline`, `trae`, `roo`, `continue`, `deepseek`, `lingma`, `all`.
 
 ---
 
-### 12. `atlas diff`
+### 9. `atlas diff`
 
 Analyzes your git working directory or branch diff and calculates the **Blast Radius**—showing which other files and modules are impacted by your changes.
 
@@ -260,7 +223,17 @@ atlas diff --base main
 
 ---
 
-### 13. `atlas pr`
+### 10. `atlas doctor`
+
+Runs a comprehensive repository health check and gives your project a health score (0–100).
+
+```bash
+atlas doctor
+```
+
+---
+
+### 11. `atlas pr`
 
 Generates a comprehensive Pull Request architectural summary suitable for AI Code Reviewers.
 
@@ -274,23 +247,57 @@ atlas pr --base develop
 
 ---
 
-### 14. `atlas clean`
+### 12. `atlas search`
 
-Cleans up the `.atlas/` directory to reclaim disk space.
+Performs ultra-fast full-text and symbol search using SQLite FTS5 with BM25 ranking (secrets automatically redacted).
 
 ```bash
-# Clean database and caches
-atlas clean
+# Search for symbols, functions, or files
+atlas search "UserRepository"
 
-# Remove all snapshots
-atlas clean --snapshots
+# Limit result count
+atlas search "authenticate" --limit 10
 ```
 
 ---
 
-### 15. `atlas mcp`
+### 13. `atlas query`
 
-Starts the Model Context Protocol (MCP) server over `stdio` for real-time integration with AI assistants.
+Runs graph queries against your codebase using plain English (Natural Language to Cypher) or Cypher directly:
+
+```bash
+# Natural language query
+atlas query "find all files that import @codeatlas-ai/core"
+
+# Cypher query
+atlas query "MATCH (f:File)-[:IMPORTS]->(t:File) WHERE t.path CONTAINS 'storage' RETURN f.path"
+```
+
+---
+
+### 14. `atlas map`
+
+Prints a clean ASCII visual tree of your codebase and its exported symbols directly in the terminal.
+
+```bash
+atlas map --depth 4
+```
+
+---
+
+### 15. `atlas clean`
+
+Cleans up the `.atlas/` directory to reclaim disk space.
+
+```bash
+atlas clean
+```
+
+---
+
+### 16. `atlas mcp`
+
+Starts the Model Context Protocol (MCP) server over `stdio` exposing 16 tools for real-time integration with AI assistants.
 
 ```bash
 atlas mcp

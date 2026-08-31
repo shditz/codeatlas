@@ -78,7 +78,6 @@ export function registerDiffCommand(program: Command): void {
         const graph = new DependencyGraph();
         graph.addEdges(deps);
 
-        // Compute Blast Radius
         const blastRadius = graph.getBlastRadius(changedFiles);
 
         if (options.json) {

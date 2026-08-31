@@ -8,6 +8,10 @@ export {
   type FileChurnInfo,
 } from './git-metrics.js';
 export {
+  ArchitectureAnalyzer,
+  type ArchitectureAnalyzerOptions,
+} from './architecture-analyzer.js';
+export {
   TaintAnalyzer,
   type TaintVulnerability,
   type SecurityAuditReport,
@@ -15,3 +19,4 @@ export {
   type VulnerabilitySeverity,
   type TaintAnalyzerOptions,
 } from './taint-analyzer.js';
+

@@ -26,6 +26,14 @@ export interface GitFileHistory {
   lastModified: string;
 }
 
+export interface GitFileMetrics {
+  filePath: string;
+  churnCount: number;
+  lastModified?: string;
+  primaryOwner?: string;
+  authors: Array<{ author: string; commits: number }>;
+}
+
 export class GitService {
   constructor(private readonly cwd: string) {}
 
@@ -209,6 +217,98 @@ export class GitService {
     } catch {
       return '';
     }
+  }
+
+  getBulkFileMetrics(limitCommits: number = 250): Map<string, GitFileMetrics> {
+    const metricsMap = new Map<
+      string,
+      {
+        churnCount: number;
+        lastModified?: string;
+        authorCounts: Map<string, number>;
+      }
+    >();
+
+    if (!this.isGitRepo()) return new Map();
+
+    try {
+      const output = this.exec([
+        'log',
+        '--name-only',
+        '--format=COMMIT_META|%an|%aI',
+        '-n',
+        String(limitCommits),
+      ]);
+
+      let currentAuthor = 'Unknown';
+      let currentDate = '';
+
+      for (const line of output.split('\n')) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+
+        if (trimmed.startsWith('COMMIT_META|')) {
+          const parts = trimmed.split('|');
+          currentAuthor = parts[1] || 'Unknown';
+          currentDate = parts[2] || '';
+        } else {
+          // File line
+          const normalizedFile = trimmed.replace(/\\/g, '/');
+          let fileMetric = metricsMap.get(normalizedFile);
+          if (!fileMetric) {
+            fileMetric = {
+              churnCount: 0,
+              lastModified: currentDate,
+              authorCounts: new Map(),
+            };
+            metricsMap.set(normalizedFile, fileMetric);
+          }
+
+          fileMetric.churnCount += 1;
+          if (!fileMetric.lastModified && currentDate) {
+            fileMetric.lastModified = currentDate;
+          }
+
+          const currentCount = fileMetric.authorCounts.get(currentAuthor) ?? 0;
+          fileMetric.authorCounts.set(currentAuthor, currentCount + 1);
+        }
+      }
+    } catch {
+      return new Map();
+    }
+
+    const resultMap = new Map<string, GitFileMetrics>();
+    for (const [filePath, data] of metricsMap.entries()) {
+      let primaryOwner = 'Unknown';
+      let maxCommits = 0;
+      const authors: Array<{ author: string; commits: number }> = [];
+
+      for (const [author, count] of data.authorCounts.entries()) {
+        authors.push({ author, commits: count });
+        if (count > maxCommits) {
+          maxCommits = count;
+          primaryOwner = author;
+        }
+      }
+
+      authors.sort((a, b) => b.commits - a.commits);
+
+      resultMap.set(filePath, {
+        filePath,
+        churnCount: data.churnCount,
+        lastModified: data.lastModified,
+        primaryOwner,
+        authors,
+      });
+    }
+
+    return resultMap;
+  }
+
+  getFileTemporalMetrics(filePath: string): GitFileMetrics | undefined {
+    const normalized = filePath.replace(/\\/g, '/');
+    const bulk = this.getBulkFileMetrics(150);
+    return bulk.get(normalized);
   }
 
   private exec(args: string[]): string {

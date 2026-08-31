@@ -32,21 +32,17 @@ describe('Dependency Graph', () => {
     expect(graph.getEdgeCount()).toBe(3);
     expect(graph.getAllNodes().size).toBe(4);
 
-    // Direct dependencies (depth 1)
     const directDeps = graph.getDependencies('src/auth/auth.controller.ts', 1);
     expect(directDeps.has('src/auth/auth.service.ts')).toBe(true);
     expect(directDeps.has('src/users/user.service.ts')).toBe(false);
 
-    // Transitive dependencies (depth 2)
     const transitive = graph.getDependencies('src/auth/auth.controller.ts', 2);
     expect(transitive.has('src/users/user.service.ts')).toBe(true);
 
-    // Reverse dependencies (dependents)
     const dependents = graph.getDependents('src/database/db.ts', 2);
     expect(dependents.has('src/users/user.service.ts')).toBe(true);
     expect(dependents.has('src/auth/auth.service.ts')).toBe(true);
 
-    // Shortest path
     const path = graph.getShortestPath('src/auth/auth.controller.ts', 'src/database/db.ts');
     expect(path).toEqual([
       'src/auth/auth.controller.ts',
@@ -59,7 +55,6 @@ describe('Dependency Graph', () => {
   it('detects communities and clusters nodes using label propagation', () => {
     const graph = new DependencyGraph();
 
-    // Cluster 1 (Auth domain)
     graph.addEdge({
       source: 'auth/a.ts',
       target: 'auth/b.ts',
@@ -82,7 +77,6 @@ describe('Dependency Graph', () => {
       weight: 2,
     });
 
-    // Cluster 2 (Payment domain)
     graph.addEdge({
       source: 'pay/x.ts',
       target: 'pay/y.ts',
@@ -117,7 +111,6 @@ describe('Dependency Graph', () => {
   it('computes PageRank centrality scores accurately', () => {
     const graph = new DependencyGraph();
 
-    // Node C is imported by A, B, and D (highest in-degree centrality)
     graph.addEdge({ source: 'A.ts', target: 'C.ts', kind: 'import', symbols: [], weight: 1 });
     graph.addEdge({ source: 'B.ts', target: 'C.ts', kind: 'import', symbols: [], weight: 1 });
     graph.addEdge({ source: 'D.ts', target: 'C.ts', kind: 'import', symbols: [], weight: 1 });

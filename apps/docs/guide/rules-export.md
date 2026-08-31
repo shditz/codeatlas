@@ -1,6 +1,18 @@
-# 📜 AI Rules & Guideline Generator
+# 📜 Evidence-Based AI Rules & Guideline Generator
 
-CodeAtlas automatically inspects your repository's tech stack (languages, frameworks, monorepos, and package managers) and compiles custom prompt guideline files for all major AI coding platforms.
+CodeAtlas automatically inspects your repository's tech stack, compiler settings, test frameworks, and architectural layers to compile **evidence-backed, citation-verified prompt guidelines** for all major AI coding platforms.
+
+---
+
+## 🛡️ Preventing AI Misinformation (Anti-Hallucination)
+
+Traditional AI guideline generators make assumptions or invent conventions. CodeAtlas utilizes the **`RuleGenerator`** engine to inspect concrete codebase evidence:
+
+1. **Compiler Strictness**: Inspects `tsconfig.json` for `"strict": true`, target JS versions, and path mappings.
+2. **Test Framework Conventions**: Detects Vitest, Jest, or Pytest configurations and requires test co-location.
+3. **Architecture Boundaries**: Detects DDD layers and enforces layered dependency flow.
+4. **Package Encapsulation**: Detects monorepo package boundaries and mandates importing from public entry points only.
+5. **Concrete Citations**: Every generated rule includes an exact file evidence citation (e.g. `Evidence: tsconfig.json -> compilerOptions.strict = true`).
 
 ---
 
@@ -22,35 +34,35 @@ CodeAtlas automatically inspects your repository's tech stack (languages, framew
 
 ---
 
-## 💻 Commands
+## 💻 Rule Generation Workflows
 
-### Generate for All Platforms
+### 1. Interactive Selection (Default)
 
-Generates the core set of guideline files (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`, `.windsurfrules`, `.github/copilot-instructions.md`):
+Running `atlas rules generate` presents an interactive checkbox list where developers can choose which discovered rules to accept:
 
 ```bash
-atlas rules generate all
+atlas rules generate
 ```
 
-### Generate for a Specific Target
+### 2. Proposal Document (`--proposal`)
+
+Generates a markdown document (`PROPOSED_RULES.md`) containing all detected evidence and recommended rules. This allows teams to review and refine AI instructions in a Pull Request before committing them:
 
 ```bash
-# Generate specifically for Antigravity
-atlas rules generate antigravity
-
-# Generate specifically for Claude
-atlas rules generate claude
-
-# Generate specifically for Cursor
-atlas rules generate cursor
+atlas rules generate --proposal
 ```
 
-### Overwriting Existing Files
+### 3. Automated CI Mode (`-y, --yes`)
 
-If rule files already exist and you want to refresh them based on your latest codebase scan, pass `--force`:
+Automatically accepts and writes all evidence-backed rules without prompting:
 
 ```bash
-atlas rules generate all --force
+# Generate for all platforms
+atlas rules generate all -y
+
+# Generate specifically for Antigravity or Claude
+atlas rules generate antigravity -y
+atlas rules generate claude -y
 ```
 
 ---
@@ -67,7 +79,7 @@ atlas rules list
 
 ### Validate & Detect Conflicts
 
-Analyzes your rule files to find conflicting instructions (e.g. one rule telling AI to use tabs while another specifies spaces):
+Analyzes your rule files to detect conflicting instructions (e.g. conflicting tab/space indentation rules or contradictory framework instructions):
 
 ```bash
 atlas rules validate

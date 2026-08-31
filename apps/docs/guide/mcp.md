@@ -1,8 +1,8 @@
 # 🔌 Model Context Protocol (MCP) Integration
 
-The **Model Context Protocol (MCP)** is an open standard created by Anthropic that allows AI assistants (like Claude, Antigravity, and Cursor) to securely connect to external tools and data sources.
+The **Model Context Protocol (MCP)** is an open standard created by Anthropic that allows AI assistants (like Claude, Antigravity, Cursor, and Windsurf) to securely connect to external tools and data sources.
 
-Instead of your AI guessing what your files contain, CodeAtlas runs an MCP server that acts as a **real-time query engine** directly inside your AI's thought process.
+Instead of your AI guessing what your files contain, CodeAtlas runs an MCP server that acts as a **real-time architectural query engine** directly inside your AI's thought process.
 
 ---
 
@@ -13,13 +13,13 @@ flowchart LR
     A["🧑‍💻 AI Assistant<br/>(Antigravity / Claude / Cursor)"] -- "JSON-RPC (stdio)" --> B["⚡ CodeAtlas MCP Server<br/>(atlas mcp)"]
     B -- "Query" --> C["🗄️ Embedded SQLite<br/>(.atlas/atlas.db)"]
     C -- "AST & Dependency Graph" --> B
-    B -- "Token-Budgeted Context" --> A
+    B -- "Secret-Redacted Context" --> A
 ```
 
 1. You install and configure the CodeAtlas MCP server once.
-2. When you ask your AI assistant a question (e.g. _"Fix the database connection issue"_), the AI calls CodeAtlas MCP tools automatically.
-3. CodeAtlas extracts the exact AST definitions, functions, and import graphs from SQLite and returns a compressed summary.
-4. Your AI writes accurate code without hallucinations and saves up to 80% on tokens!
+2. When you ask your AI assistant a question (e.g. _"Fix the database connection issue"_ or _"Implement the new billing flow"_), the AI calls CodeAtlas MCP tools automatically.
+3. CodeAtlas extracts exact AST definitions, functions, and import graphs from SQLite and returns a compressed, secret-redacted summary.
+4. Your AI writes accurate code without hallucinations and saves up to 92% on tokens!
 
 ---
 
@@ -93,20 +93,33 @@ Add to your editor's MCP settings:
 
 ---
 
-## 🧰 Available MCP Tools (The 11 Superpowers)
+## 🧰 The 16 CodeAtlas MCP Tools
 
-Once connected, your AI assistant will have access to the following 11 tools:
+Once connected, your AI assistant will have access to the following 16 specialized tools:
 
-| Tool Name           | Description                                                  | What the AI Uses It For                                                |
-| :------------------ | :----------------------------------------------------------- | :--------------------------------------------------------------------- |
-| `atlas_scan`        | Scans workspace metadata, languages, and monorepo structure. | Discovering project layout and stack.                                  |
-| `atlas_index`       | Updates the local AST symbol and dependency graph.           | Refreshing index after editing files.                                  |
-| `atlas_search`      | Full-text FTS5 BM25 search across symbols and files.         | Finding specific classes, functions, or keywords.                      |
-| `atlas_get_context` | Retrieves token-budgeted, explainable code context packs.    | Gathering all relevant files before implementing a feature.            |
-| `atlas_graph_query` | Executes Cypher queries over the codebase graph.             | Answering complex relationship questions (e.g. _Who calls this API?_). |
-| `atlas_pr_diff`     | Analyzes git diffs and calculates blast radius.              | Pre-commit impact analysis and code review.                            |
-| `atlas_compress`    | Compresses source code into AST signature skeletons.         | Reading large files within tight token budgets.                        |
-| `atlas_get_map`     | Returns hierarchical directory tree and exported symbols.    | High-level codebase navigation.                                        |
-| `atlas_get_rules`   | Discovers and validates project AI coding rules.             | Ensuring adherence to project coding standards.                        |
-| `atlas_doctor`      | Runs repository health checks.                               | Diagnosing missing indexes or rule conflicts.                          |
-| `atlas_analyze`     | Audits dead code, circular dependencies, and hotspots.       | Architecture quality control before completing tasks.                  |
+| Tool Name                          | Category         | Description & Purpose                                                                                   |
+| :--------------------------------- | :--------------- | :------------------------------------------------------------------------------------------------------ |
+| `atlas_scan`                       | Exploration      | Scans workspace metadata, programming languages, and monorepo workspace package layout.                 |
+| `atlas_index`                      | Core             | Updates local AST symbols, dependencies, and temporal git metrics with automatic secret redaction.      |
+| `atlas_search`                     | Search           | Full-text FTS5 BM25 search across symbols and files (secrets automatically redacted).                   |
+| `atlas_get_context`                | Context Packing  | Intent-driven (`bug`/`feature`/`refactor`) token-budgeted prompt packs with directory tree structure.  |
+| `atlas_graph_query`                | Graph            | Executes Cypher graph traversal queries across code dependencies.                                       |
+| `atlas_pr_diff`                    | Impact Analysis  | Analyzes git diffs, calculates downstream blast radius, and flags breaking edits.                       |
+| `atlas_compress`                   | Token Saving     | Compresses source code into AST signature skeletons with in-memory secret scrubbing.                    |
+| `atlas_get_map`                    | Visual           | Returns hierarchical directory tree and exported symbols for codebase navigation.                       |
+| `atlas_get_rules`                  | Rules            | Discovers and validates project AI coding rules across all formats (`AGENTS.md`, `CLAUDE.md`, etc.).   |
+| `atlas_doctor`                     | Health           | Runs repository health checks and SQLite index integrity verification.                                  |
+| `atlas_analyze`                    | Architecture     | Audits DDD layer regressions, circular imports, dead code, and temporal git churn hotspots.             |
+| `atlas_trace_execution_path`       | Deep Tracing     | Traces call hierarchies upwards to entry points or downwards to leaf dependencies.                      |
+| `atlas_find_entry_points`          | Architecture     | Identifies controllers, Next.js route handlers, CLI commands, and root exported functions.              |
+| `atlas_calculate_change_surface`   | Impact Analysis  | Computes downstream blast radius for proposed symbol modifications before making changes.               |
+| `atlas_security_audit`             | Security         | SAST security audit detecting injection vulnerabilities, sensitive credentials, and exposed endpoints. |
+| `atlas_plan_feature`               | AI Blueprint     | Autonomous planning tool: generates step-by-step implementation blueprints and context files.          |
+
+---
+
+## 🔒 Built-In Security Redaction Guarantee
+
+Every tool that reads or compresses code (`atlas_compress`, `atlas_get_context`, `atlas_search`, `atlas_security_audit`) routes its output through the `SecretScanner` redaction layer.
+
+Private keys, Cloud API keys (Anthropic, OpenAI, AWS, GCP, GitHub), JWT tokens, and database connection passwords are automatically replaced with sanitization placeholders before the JSON-RPC response reaches the LLM.

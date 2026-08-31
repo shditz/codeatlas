@@ -114,34 +114,25 @@ export class SearchRepository {
     this.db.run("INSERT INTO symbols_fts(symbols_fts) VALUES('rebuild')");
   }
 
-  /**
-   * Reciprocal Rank Fusion (RRF) — combines BM25 text results with
-   * pre-scored vector results into a single unified ranking.
-   * Formula: RRF(d) = Σ 1/(k + rank_i(d))  where k=60 (standard constant).
-   */
   hybridSearch(
     query: string,
     vectorResults: Array<{ relativePath: string; score: number }>,
     limit: number = 30,
     k: number = 60,
   ): Array<{ relativePath: string; rrfScore: number; ftsRank: number; vectorRank: number }> {
-    // 1. Get BM25 FTS results
     const ftsResults = this.searchFiles(query, limit * 2);
 
-    // 2. Build rank maps (1-indexed)
     const ftsRankMap = new Map<string, number>();
     ftsResults.forEach((r, i) => ftsRankMap.set(r.relativePath, i + 1));
 
     const vecRankMap = new Map<string, number>();
     vectorResults.forEach((r, i) => vecRankMap.set(r.relativePath, i + 1));
 
-    // 3. Union all candidate file paths
     const allPaths = new Set<string>([
       ...ftsResults.map((r) => r.relativePath),
       ...vectorResults.map((r) => r.relativePath),
     ]);
 
-    // 4. Compute RRF score
     const scored: Array<{
       relativePath: string;
       rrfScore: number;
@@ -162,7 +153,6 @@ export class SearchRepository {
       });
     }
 
-    // 5. Sort by descending RRF score and return top N
     scored.sort((a, b) => b.rrfScore - a.rrfScore);
     return scored.slice(0, limit);
   }
@@ -244,7 +234,6 @@ export class SearchRepository {
 
     const expandedTerms = this.expandQuery(rawTerms);
 
-    // In SQLite FTS5, prefix wildcard is bare term with asterisk: term*
     return expandedTerms.map((term) => `${term}*`).join(' OR ');
   }
 }

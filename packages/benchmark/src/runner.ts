@@ -59,7 +59,6 @@ export class BenchmarkRunner {
     const allFiles = fileRepo.getAll(projectId as number);
     const filesByPath = new Map<string, FileInfo>(allFiles.map((f) => [f.relativePath, f]));
 
-    // Calculate total raw tokens across the entire codebase
     let totalRepoRawTokens = 0;
     for (const file of allFiles) {
       const fullPath = path.join(repoDir, file.relativePath);
@@ -103,10 +102,8 @@ export class BenchmarkRunner {
     for (const task of dataset.tasks) {
       const start = performance.now();
 
-      // 1. Retrieve candidates
       const retrievalResult = retrieval.retrieve(task.query, 15);
 
-      // 2. Rank candidates
       const ranker = new Ranker({
         weights: {
           lexical_weight: 0.35,
@@ -121,7 +118,6 @@ export class BenchmarkRunner {
       });
       const ranked = ranker.rank(retrievalResult.candidates);
 
-      // 3. Build Context Pack
       const contextEngine = new ContextEngine({
         tokenBudget: 8000,
         defaultMode: 'signature',
@@ -139,7 +135,6 @@ export class BenchmarkRunner {
       const retrievedPaths = pack.files.map((f) => f.relativePath.replace(/\\/g, '/'));
       const normalizedExpected = task.expectedFiles.map((f) => f.replace(/\\/g, '/'));
 
-      // Calculate precision and recall
       const hits = normalizedExpected.filter((exp) =>
         retrievedPaths.some((ret) => ret === exp || ret.endsWith(exp)),
       );

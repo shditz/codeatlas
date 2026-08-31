@@ -2,7 +2,7 @@ export interface BenchmarkTask {
   id: string;
   query: string;
   description: string;
-  expectedFiles: string[]; // Relative paths that are truly relevant
+  expectedFiles: string[]; 
 }
 
 export interface BenchmarkDataset {

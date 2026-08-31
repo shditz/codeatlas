@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { createLogger, hashContent, normalizePath, getExtension } from '@codeatlas-ai/shared';
-import { canParse, detectLanguage, isTestFile, isGeneratedFile } from '@codeatlas-ai/core';
-import { parseFile, type ParseResult } from '@codeatlas-ai/parser';
+import { canParse, detectLanguage, isTestFile, isGeneratedFile, redactSecrets } from '@codeatlas-ai/core';
+import { parseFile, resolveProjectSemantics, type ParseResult } from '@codeatlas-ai/parser';
 import type { AtlasDatabase } from '@codeatlas-ai/storage';
 import {
   FileRepository,
@@ -12,7 +12,9 @@ import {
   DependencyRepository,
   SearchRepository,
   ProjectRepository,
+  GitMetricsRepository,
 } from '@codeatlas-ai/storage';
+import { GitService } from '@codeatlas-ai/git';
 import type { DependencyEdge, FileInfo } from '@codeatlas-ai/core';
 import { Scanner, type ScanOptions } from './scanner.js';
 
@@ -42,6 +44,8 @@ export class Indexer {
   private importRepo: ImportRepository;
   private depRepo: DependencyRepository;
   private searchRepo: SearchRepository;
+  private gitMetricsRepo: GitMetricsRepository;
+  private gitService: GitService;
   private scanner: Scanner;
   private concurrency: number;
 
@@ -51,6 +55,8 @@ export class Indexer {
     this.importRepo = new ImportRepository(options.db);
     this.depRepo = new DependencyRepository(options.db);
     this.searchRepo = new SearchRepository(options.db);
+    this.gitMetricsRepo = new GitMetricsRepository(options.db);
+    this.gitService = new GitService(options.root);
     this.scanner = new Scanner(options);
     this.concurrency = Math.max(1, Math.min(options.concurrency ?? (os.cpus()?.length || 4), 16));
   }
@@ -99,7 +105,8 @@ export class Indexer {
     const contentCache = new Map<string, string>();
     for (const file of files) {
       try {
-        const content = fs.readFileSync(file.path, 'utf-8');
+        const rawContent = fs.readFileSync(file.path, 'utf-8');
+        const content = redactSecrets(rawContent);
         const contentHash = hashContent(content);
         const existingHash = existingHashes.get(file.relativePath);
 
@@ -180,6 +187,8 @@ export class Indexer {
                       kind: 'import',
                       symbols: imp.symbols,
                       weight: 1.0,
+                      confidence: imp.confidence ?? 0.9,
+                      resolution: imp.resolution ?? 'tree-sitter',
                     });
                   }
                 }
@@ -217,10 +226,73 @@ export class Indexer {
       });
     }
 
+    const hasTsJsFiles = files.some(
+      (f) => f.language === 'typescript' || f.language === 'javascript',
+    );
+    if (hasTsJsFiles) {
+      try {
+        const semanticResult = await resolveProjectSemantics(Array.from(currentPaths), {
+          rootDir: this.options.root,
+        });
+        for (const semEdge of semanticResult.edges) {
+          const existingIdx = dependencies.findIndex(
+            (d) =>
+              d.source === semEdge.sourceFile &&
+              d.target === semEdge.targetFile &&
+              d.kind === semEdge.kind,
+          );
+          if (existingIdx >= 0 && dependencies[existingIdx]) {
+            dependencies[existingIdx] = {
+              source: semEdge.sourceFile,
+              target: semEdge.targetFile,
+              kind: semEdge.kind,
+              symbols: Array.from(
+                new Set([...dependencies[existingIdx]!.symbols, ...semEdge.symbols]),
+              ),
+              weight: semEdge.weight,
+              confidence: semEdge.confidence,
+              resolution: semEdge.resolution,
+            };
+          } else {
+            dependencies.push({
+              source: semEdge.sourceFile,
+              target: semEdge.targetFile,
+              kind: semEdge.kind,
+              symbols: semEdge.symbols,
+              weight: semEdge.weight,
+              confidence: semEdge.confidence,
+              resolution: semEdge.resolution,
+            });
+          }
+        }
+      } catch (semErr) {
+        logger.debug(`Semantic resolution fallback to AST: ${semErr}`);
+      }
+    }
+
     if (dependencies.length > 0) {
       this.depRepo.deleteAll(this.options.projectId);
       this.depRepo.insertBatch(this.options.projectId, dependencies);
       dependenciesCreated = dependencies.length;
+    }
+
+    try {
+      if (this.gitService.isGitRepo()) {
+        const bulkMetrics = this.gitService.getBulkFileMetrics(300);
+        const metricRecords = Array.from(bulkMetrics.values()).map((m) => ({
+          projectId: this.options.projectId,
+          filePath: m.filePath,
+          churnCount: m.churnCount,
+          lastModified: m.lastModified,
+          primaryOwner: m.primaryOwner,
+          authors: m.authors,
+        }));
+        if (metricRecords.length > 0) {
+          this.gitMetricsRepo.insertBatch(this.options.projectId, metricRecords);
+        }
+      }
+    } catch (gitErr) {
+      logger.debug(`Git metrics extraction skipped: ${gitErr}`);
     }
 
     this.options.db.run(
@@ -297,7 +369,8 @@ export class Indexer {
         const stats = fs.statSync(fullPath);
         if (!stats.isFile()) continue;
 
-        const content = fs.readFileSync(fullPath, 'utf-8');
+        const rawContent = fs.readFileSync(fullPath, 'utf-8');
+        const content = redactSecrets(rawContent);
         const contentHash = hashContent(content);
         const existingHash = existingHashes.get(relPath);
 
@@ -393,6 +466,8 @@ export class Indexer {
                         kind: 'import',
                         symbols: imp.symbols,
                         weight: 1.0,
+                        confidence: imp.confidence ?? 0.9,
+                        resolution: imp.resolution ?? 'tree-sitter',
                       },
                     ]);
                     dependenciesCreated++;

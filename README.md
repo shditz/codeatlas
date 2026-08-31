@@ -9,7 +9,7 @@
 CodeAtlas turns your codebase into a high-performance **Knowledge Graph** stored locally in an embedded SQLite database (`.atlas/atlas.db`). It equips AI coding assistants (such as **Google Antigravity**, **Claude Code**, **Cursor**, **Windsurf**, and **Copilot**) with structural codebase context—dramatically reducing irrelevant token usage, preventing architectural regressions, and grounding AI agent code generation in real dependency graphs.
 
 [![CI](https://github.com/shditz/codeatlas/actions/workflows/ci.yml/badge.svg)](https://github.com/shditz/codeatlas/actions)
-[![Tests: 105 passing](<https://img.shields.io/badge/Tests-105%20passing%20(100%25)-brightgreen.svg>)](https://github.com/shditz/codeatlas)
+[![Tests: 147 passing](<https://img.shields.io/badge/Tests-147%20passing%20(100%25)-brightgreen.svg>)](https://github.com/shditz/codeatlas)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-green?logo=node.js)](https://nodejs.org/)
@@ -26,32 +26,36 @@ When AI coding agents work on mid-to-large repositories, they face two core bott
 **CodeAtlas solves this with deterministic local intelligence:**
 
 - ⚡ **Local-First & 100% Private**: Everything is indexed locally into SQLite using Tree-sitter. Your code never leaves your machine.
-- 🧠 **Explainable Context Packing**: Selects only task-relevant files and compresses secondary modules into AST signatures and type skeletons. Includes visual Directory Tree Packing!
-- 🛡️ **Architectural Guardrails**: Automatically flags **Dead Code / Orphan Symbols**, **Circular Dependencies**, and **Cyclomatic Complexity Hotspots**.
-- 🚀 **Zero-Config Setup**: `atlas init` auto-detects your language stack, package manager, and monorepo structure to generate smart ignore rules.
-- 🔌 **Native Model Context Protocol (MCP)**: Plugs directly into Antigravity, Claude Desktop, Cursor, and Cline as a real-time brain extension with high-level reasoning tools (`atlas_detect_dead_code`, `atlas_complexity_report`).
+- 🔒 **Automated Secret Redaction**: Built-in `SecretScanner` automatically redacts Cloud API keys (Anthropic, OpenAI, AWS, GCP, GitHub), JWTs, and database passwords before they touch search databases or LLM responses.
+- 🧩 **Framework-Specific Adapters**: Understands semantic idioms for React Hooks (`use*`), Next.js App Router (`page.tsx`, `layout.tsx`, `route.ts`), NestJS DI (`@Controller`, `@Injectable`, `@Module`), and Prisma Schema (`.prisma` models, enums, relations).
+- 🏛️ **True Architecture Model (DDD Layering)**: Enforces Domain-Driven Design boundaries (Presentation, Application, Domain, Infrastructure, Shared) and blocks architectural regressions with `--fail-on-architecture`.
+- 🧠 **Task-Intent Context Packing**: Dynamic retrieval tailored to task intents (`bug`, `feature`, `refactor`) with AST signature skeletonization, saving up to 92% on token budgets.
+- 📈 **Temporal Churn & Git Analytics**: Correlates structural complexity with Git change frequency to highlight fragile architectural hotspots.
+- 🔌 **16 Model Context Protocol (MCP) Tools**: Directly integrates with Antigravity, Claude Code, Cursor, and Windsurf for real-time architectural tracing (`atlas_trace_execution_path`, `atlas_security_audit`, `atlas_plan_feature`).
 
 ---
 
 ## 🌐 Language & Parser Support Matrix
 
-CodeAtlas uses native **Tree-sitter** grammars to extract syntax trees, exported symbols, call references, and import dependencies:
+CodeAtlas uses native **Tree-sitter** grammars and semantic resolvers to extract syntax trees, exported symbols, call references, and import dependencies:
 
-| Tier                               | Language         | File Extensions                                                         | Capabilities                                            |
-| :--------------------------------- | :--------------- | :---------------------------------------------------------------------- | :------------------------------------------------------ |
-| **Tier 1 (Full AST & Call Graph)** | TypeScript / TSX | `.ts`, `.tsx`, `.mts`, `.cts`                                           | AST Symbols, Call Graph, Imports, Cyclomatic Complexity |
-|                                    | JavaScript / JSX | `.js`, `.jsx`, `.mjs`, `.cjs`                                           | AST Symbols, Call Graph, Imports, Cyclomatic Complexity |
-|                                    | Python           | `.py`                                                                   | AST Functions/Classes, Call Graph, Module Imports       |
-|                                    | Go               | `.go`                                                                   | AST Structs/Functions, Call Graph, Package Imports      |
-|                                    | Rust             | `.rs`                                                                   | AST Structs/Traits/Impl, Call Graph, Crate Imports      |
-|                                    | PHP              | `.php`, `.phtml`                                                        | AST Classes/Methods, Call Graph, Namespace Imports      |
-| **Tier 2 (Symbol & Structure)**    | Java             | `.java`                                                                 | AST Classes, Methods, Import Graph                      |
-|                                    | C#               | `.cs`                                                                   | AST Classes, Methods, Namespace Graph                   |
-|                                    | C / C++          | `.c`, `.h`, `.cpp`, `.hpp`, `.cc`                                       | AST Functions, Structs, Header Includes                 |
-|                                    | Ruby             | `.rb`                                                                   | AST Classes, Modules, Method Definitions                |
-|                                    | Kotlin           | `.kt`, `.kts`                                                           | AST Classes, Functions, Import Graph                    |
-|                                    | Swift            | `.swift`                                                                | AST Structs, Protocols, Class Definitions               |
-| **Tier 3 (Content & Search)**      | Data & Markup    | `.json`, `.yaml`, `.toml`, `.md`, `.html`, `.css`, `.sql`, `Dockerfile` | FTS5 Full-Text Search (BM25 ranking), Token Counting    |
+| Tier                               | Language / Framework | File Extensions                                                         | Capabilities                                                                 |
+| :--------------------------------- | :------------------- | :---------------------------------------------------------------------- | :--------------------------------------------------------------------------- |
+| **Tier 1 (Full AST & Semantics)**  | TypeScript / TSX     | `.ts`, `.tsx`, `.mts`, `.cts`                                           | Semantic Type Inheritance, `@/*` Path Mapping, React Hooks, Next.js Routes    |
+|                                    | JavaScript / JSX     | `.js`, `.jsx`, `.mjs`, `.cjs`                                           | AST Symbols, Call Graph, Imports, Cyclomatic Complexity                      |
+|                                    | NestJS               | `.ts`                                                                   | Controller, Provider, Module Decorators & Dependency Injection               |
+|                                    | Prisma Schema        | `.prisma`                                                               | Models, Enums, Field Definitions, Cross-Model Relational Graph               |
+|                                    | Python               | `.py`                                                                   | AST Functions/Classes, Call Graph, Module Imports                            |
+|                                    | Go                   | `.go`                                                                   | AST Structs/Functions, Call Graph, Package Imports                           |
+|                                    | Rust                 | `.rs`                                                                   | AST Structs/Traits/Impl, Call Graph, Crate Imports                           |
+|                                    | PHP                  | `.php`, `.phtml`                                                        | AST Classes/Methods, Call Graph, Namespace Imports                           |
+| **Tier 2 (Symbol & Structure)**    | Java                 | `.java`                                                                 | AST Classes, Methods, Import Graph                                           |
+|                                    | C#                   | `.cs`                                                                   | AST Classes, Methods, Namespace Graph                                        |
+|                                    | C / C++              | `.c`, `.h`, `.cpp`, `.hpp`, `.cc`                                       | AST Functions, Structs, Header Includes                                      |
+|                                    | Ruby                 | `.rb`                                                                   | AST Classes, Modules, Method Definitions                                     |
+|                                    | Kotlin               | `.kt`, `.kts`                                                           | AST Classes, Functions, Import Graph                                         |
+|                                    | Swift                | `.swift`                                                                | AST Structs, Protocols, Class Definitions                                    |
+| **Tier 3 (Content & Search)**      | Data & Markup        | `.json`, `.yaml`, `.toml`, `.md`, `.html`, `.css`, `.sql`, `Dockerfile` | FTS5 Full-Text Search (BM25 ranking), Secret Redaction, Token Counting       |
 
 ---
 
@@ -80,7 +84,7 @@ CodeAtlas includes an automated **Benchmark Suite** (`pnpm run benchmark`) evalu
 npm install -g @codeatlas-ai/cli
 ```
 
-_(Or build locally from source with `pnpm install && pnpm build && pnpm --filter @codeatlas-ai/cli link --global`)_
+*(Or build locally from source with `pnpm install && pnpm build && pnpm --filter @codeatlas-ai/cli link --global`)*
 
 ### 2. Initialize in Your Project
 
@@ -94,16 +98,16 @@ atlas init
 atlas index
 ```
 
-### 3. Generate AI Guidelines
+### 3. Generate Evidence-Based AI Guidelines
 
-Auto-generate architecture rules customized for your AI assistant:
+Auto-generate architecture rules customized for your AI assistant with empirical codebase evidence:
 
 ```bash
-# Generate rules for Antigravity (creates AGENTS.md)
-atlas rules generate antigravity
+# Generate rules proposal for review
+atlas rules generate --proposal
 
-# Or generate for Claude, Cursor, Copilot, Windsurf, etc.
-atlas rules generate all
+# Or generate directly for Antigravity (AGENTS.md), Claude (CLAUDE.md), Cursor (.cursorrules)
+atlas rules generate all -y
 ```
 
 ---
@@ -116,10 +120,10 @@ atlas rules generate all
 | `atlas scan`           | **Setup**       | Fast scan detecting languages, frameworks, workspaces, and monorepo structure.               |
 | `atlas index`          | **Core**        | Parses AST with Tree-sitter, computes complexity, and audits code health (Dead code/DAG).    |
 | `atlas watch`          | **Realtime**    | Watches directory for file changes and updates the graph incrementally in real time.         |
-| `atlas context`        | **AI Context**  | Extracts token-budgeted prompt packs with visual Directory Tree Packing.                     |
+| `atlas context`        | **AI Context**  | Extracts token-budgeted prompt packs with intent routing (`--intent bug\|feature\|refactor`).  |
 | `atlas export`         | **AI Context**  | Exports context packs into Markdown files for manual LLM chat sessions.                      |
 | `atlas diff`           | **Quality**     | Calculates Semantic Blast Radius and severity ratings from Git diffs.                        |
-| `atlas analyze`        | **Quality**     | Audits codebase for Dead Code, Circular Imports, and Git Churn Hotspots.                     |
+| `atlas analyze`        | **Quality**     | Audits DDD layer regressions (`--architecture`), dead code, circular dependencies, & churn.  |
 | `atlas doctor`         | **Quality**     | Runs repository health checks and provides a readiness score.                                |
 | `atlas pr`             | **Quality**     | Generates an architectural PR summary for AI Code Reviews.                                   |
 | `atlas search`         | **Search**      | Semantic & Full-text search with synonym query expansion via SQLite FTS5 (BM25 ranking).     |
@@ -127,9 +131,9 @@ atlas rules generate all
 | `atlas map`            | **Visual**      | Displays an ASCII tree map of directories and exported symbols.                              |
 | `atlas rules list`     | **Rules**       | Lists all discovered AI rule files.                                                          |
 | `atlas rules validate` | **Rules**       | Checks for rule conflicts and consistency.                                                   |
-| `atlas rules generate` | **Rules**       | Generates guideline files for specific AI editors (`cursor`, `claude`, `antigravity`, etc.). |
+| `atlas rules generate` | **Rules**       | Generates evidence-backed guidelines (`--proposal`, `-y`, `antigravity`, `claude`, `cursor`). |
 | `atlas clean`          | **Maintenance** | Cleans local cache, database, and snapshots.                                                 |
-| `atlas mcp`            | **Integration** | Starts the official Model Context Protocol (MCP) server over `stdio`.                        |
+| `atlas mcp`            | **Integration** | Starts the official Model Context Protocol (MCP) server with 16 tools over `stdio`.          |
 
 ---
 
@@ -175,6 +179,29 @@ Add to `%APPDATA%\Claude\claude_desktop_config.json` (Windows) or `~/Library/App
 
 ---
 
+## 🧰 The 16 CodeAtlas MCP Tools
+
+| Tool Name                          | Category         | Description                                                            |
+| :--------------------------------- | :--------------- | :--------------------------------------------------------------------- |
+| `atlas_scan`                       | Exploration      | Scans workspace metadata, languages, and monorepo structure.           |
+| `atlas_index`                      | Core             | Updates local AST symbols, dependencies, and temporal git metrics.     |
+| `atlas_search`                     | Search           | Full-text FTS5 BM25 search across symbols and files (secret-redacted).  |
+| `atlas_get_context`                | Context Packing  | Task-intent (`bug`/`feature`/`refactor`) token-budgeted context pack.  |
+| `atlas_graph_query`                | Graph            | Executes Cypher graph traversal queries across code dependencies.      |
+| `atlas_pr_diff`                    | Impact Analysis  | Analyzes git diffs, calculates blast radius, and flags breaking edits. |
+| `atlas_compress`                   | Token Saving     | Compresses source code into AST signature skeletons with redaction.    |
+| `atlas_get_map`                    | Visual           | Returns hierarchical directory tree and exported symbols.              |
+| `atlas_get_rules`                  | Rules            | Discovers and validates project AI coding rules.                       |
+| `atlas_doctor`                     | Health           | Runs repository health checks and SQLite index verification.           |
+| `atlas_analyze`                    | Architecture     | Audits DDD layer regressions, circular imports, and dead code.         |
+| `atlas_trace_execution_path`       | Deep Tracing     | Traces call chains upwards to entry points or downwards to leaves.     |
+| `atlas_find_entry_points`          | Architecture     | Identifies controllers, routes, CLI handlers, and root exports.        |
+| `atlas_calculate_change_surface`   | Impact Analysis  | Computes downstream blast radius for proposed symbol modifications.    |
+| `atlas_security_audit`             | Security         | SAST audit detecting potential vulnerabilities and sensitive secrets.  |
+| `atlas_plan_feature`               | AI Blueprint     | Generates step-by-step implementation blueprints and context files.    |
+
+---
+
 ## 🏛️ Architecture & Deep Design
 
 For an in-depth look at CodeAtlas's monorepo layout, C4 container relationships, SQLite schema, and AST data pipelines, see [**ARCHITECTURE.md**](ARCHITECTURE.md).
@@ -201,6 +228,10 @@ default_mode = "full" # "full", "signature", "summary", or "digest"
 [security]
 scan_secrets = true
 exclude_patterns = [".env", "*.pem", "*.key"]
+
+[architecture.rules.disallow]
+"presentation -> infrastructure" = "Controllers must not directly call Repositories without Services"
+"domain -> infrastructure" = "Domain entities must maintain Dependency Inversion"
 ```
 
 ---
@@ -210,7 +241,7 @@ exclude_patterns = [".env", "*.pem", "*.key"]
 To run the interactive documentation portal locally:
 
 ```bash
-pnpm run docs:dev
+pnpm --filter @codeatlas-ai/docs docs:dev
 ```
 
 Then visit [http://localhost:5173](http://localhost:5173) in your browser.

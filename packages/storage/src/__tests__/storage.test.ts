@@ -9,6 +9,7 @@ import {
   ProjectRepository,
   EmbeddingRepository,
   FederationService,
+  GitMetricsRepository,
 } from '../index.js';
 
 describe('Storage & SQLite Repositories', () => {
@@ -21,14 +22,16 @@ describe('Storage & SQLite Repositories', () => {
 
   it('initializes schema and runs migrations idempotently', () => {
     const migrations = db.all<{ version: number }>('SELECT * FROM migrations');
-    expect(migrations).toHaveLength(3);
+    expect(migrations).toHaveLength(5);
     expect(migrations[0]?.version).toBe(1);
     expect(migrations[1]?.version).toBe(2);
     expect(migrations[2]?.version).toBe(3);
+    expect(migrations[3]?.version).toBe(4);
+    expect(migrations[4]?.version).toBe(5);
 
     runMigrations(db);
     const migrations2 = db.all<{ version: number }>('SELECT * FROM migrations');
-    expect(migrations2).toHaveLength(3);
+    expect(migrations2).toHaveLength(5);
   });
 
   it('performs CRUD operations on files', () => {
@@ -119,7 +122,7 @@ describe('Storage & SQLite Repositories', () => {
     expect(search).toHaveLength(1);
   });
 
-  it('manages dependency graph edges', () => {
+  it('manages dependency graph edges with confidence scores and resolution method', () => {
     const depRepo = new DependencyRepository(db);
 
     const projRes = db.run('INSERT INTO projects (name, root) VALUES (?, ?)', 'test', '/test');
@@ -132,6 +135,8 @@ describe('Storage & SQLite Repositories', () => {
         kind: 'import',
         symbols: ['AuthService'],
         weight: 1.0,
+        confidence: 0.95,
+        resolution: 'static-import',
       },
       {
         source: 'src/auth.service.ts',
@@ -139,6 +144,8 @@ describe('Storage & SQLite Repositories', () => {
         kind: 'import',
         symbols: ['UserRepository'],
         weight: 1.0,
+        confidence: 0.9,
+        resolution: 'tree-sitter',
       },
     ]);
 
@@ -147,10 +154,14 @@ describe('Storage & SQLite Repositories', () => {
     const deps = depRepo.getDependencies(projectId, 'src/auth.controller.ts');
     expect(deps).toHaveLength(1);
     expect(deps[0]?.target).toBe('src/auth.service.ts');
+    expect(deps[0]?.confidence).toBe(0.95);
+    expect(deps[0]?.resolution).toBe('static-import');
 
     const dependents = depRepo.getDependents(projectId, 'src/user.repository.ts');
     expect(dependents).toHaveLength(1);
     expect(dependents[0]?.source).toBe('src/auth.service.ts');
+    expect(dependents[0]?.confidence).toBe(0.9);
+    expect(dependents[0]?.resolution).toBe('tree-sitter');
   });
 
   it('executes FTS5 search correctly', () => {
@@ -267,5 +278,35 @@ describe('Storage & SQLite Repositories', () => {
 
     const results = federation.searchCrossRepoSymbols('Auth');
     expect(Array.isArray(results)).toBe(true);
+  });
+
+  it('manages temporal git metrics with GitMetricsRepository', () => {
+    const projRes = db.run('INSERT INTO projects (name, root) VALUES (?, ?)', 'test-git', '/git');
+    const projectId = Number(projRes.lastInsertRowid);
+
+    const gitRepo = new GitMetricsRepository(db);
+    gitRepo.upsert({
+      projectId,
+      filePath: 'src/main.ts',
+      churnCount: 15,
+      lastModified: '2026-08-31T10:00:00Z',
+      primaryOwner: 'Alice',
+      authors: [
+        { author: 'Alice', commits: 10 },
+        { author: 'Bob', commits: 5 },
+      ],
+    });
+
+    const metric = gitRepo.getByFile(projectId, 'src/main.ts');
+    expect(metric).toBeDefined();
+    expect(metric?.churnCount).toBe(15);
+    expect(metric?.primaryOwner).toBe('Alice');
+    expect(metric?.authors).toHaveLength(2);
+
+    const all = gitRepo.getAll(projectId);
+    expect(all).toHaveLength(1);
+
+    gitRepo.deleteAll(projectId);
+    expect(gitRepo.getAll(projectId)).toHaveLength(0);
   });
 });

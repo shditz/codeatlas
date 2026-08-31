@@ -1,19 +1,19 @@
 # 🤖 AI Agent Workflow Best Practices
 
-How to get the absolute best results when pairing CodeAtlas with AI Coding Assistants (**Google Antigravity**, **Claude Code**, **Cursor**, and **Windsurf**).
+How to achieve maximum accuracy and zero regressions when pairing CodeAtlas with AI Coding Assistants (**Google Antigravity**, **Claude Code**, **Cursor**, and **Windsurf**).
 
 ---
 
-## 🌟 The Golden Formula: MCP Tools + AI Rules
+## 🌟 The Golden Formula: MCP Tools + Evidence-Backed Rules
 
-To make your AI agent perform at its peak, you need two things working together:
+To make your AI agent perform at its peak, two systems work in tandem:
 
 ```
-🚀 Peak AI Performance = MCP Server (The Tools) + AGENTS.md (The Motivation)
+🚀 Peak AI Performance = MCP Server (16 Tools) + AGENTS.md (Evidence-Backed Rules)
 ```
 
-1. **The Tools (MCP Server)**: Gives your AI the _ability_ to query AST symbols and dependencies.
-2. **The Motivation (`AGENTS.md` / `.cursorrules`)**: Gives your AI explicit _instructions_ to always check CodeAtlas before making assumptions or guessing file paths.
+1. **The Tools (MCP Server)**: Gives your AI the *ability* to query AST symbols, trace call chains, and calculate downstream impact.
+2. **The Motivation (`AGENTS.md` / `.cursorrules`)**: Gives your AI explicit *instructions* to query CodeAtlas before making assumptions or modifying critical files.
 
 ---
 
@@ -26,50 +26,44 @@ In your project root:
 ```bash
 atlas init
 atlas index
-atlas rules generate all
+atlas rules generate all -y
 ```
 
-This creates tailored instruction files (like `AGENTS.md` or `.cursorrules`) that teach your AI about your TypeScript conventions, monorepo workspaces, and architectural boundaries.
+This creates tailored instruction files (like `AGENTS.md` or `.cursorrules`) that teach your AI about your TypeScript conventions, DDD layers, monorepo workspaces, and architectural boundaries.
 
 ---
 
-### Step 2: Context-Driven Prompting
+### Step 2: Task-Intent Driven Prompting
 
-When asking an AI agent to build a feature, avoid vague prompts that force the AI to search blindly.
-
-**❌ The Slow Way (Blind AI Search):**
-
-> _"Please add a discount coupon feature to the checkout page."_
-> _(AI reads 50 random files, burns tokens, and might edit the wrong service)._
-
-**✅ The CodeAtlas Way (Precision Context):**
-
-> _"Use `atlas_get_context` to fetch the context pack for 'discount coupon checkout', read the relevant files, and implement the feature."_
-> _(AI retrieves the exact 4 files involved, understands their type interfaces, and implements the feature cleanly in 1 shot)._
-
----
-
-### Step 3: Architecture Self-Audit (Pre-Completion)
-
-Before your AI agent marks a task as complete, instruct it to run an architectural audit:
+When asking an AI agent to build a feature or fix a bug, specify the task intent:
 
 **Prompt to AI:**
 
-> _"Run `atlas_analyze` (or `atlas analyze` in the terminal). Make sure your changes did not introduce any circular dependencies or dead code."_
+> _"Use `atlas_get_context` with task 'Fix database connection timeout under high load' and intent 'bug'. Review the retrieved files and identify the root cause."_
 
-If the AI accidentally created an import loop (e.g. `auth.ts` imports `user.ts` which imports `auth.ts`), `atlas analyze` flags it immediately and the AI refactors it before you ever commit!
+CodeAtlas dynamically prioritizes error handlers, connection pools, and call chains, feeding the AI exactly the right files with zero token waste.
 
 ---
 
-### Step 4: Pre-Commit Blast Radius Check
+### Step 3: Deep Call Hierarchy Tracing
 
-Before submitting a Pull Request, run:
+Before modifying shared utility functions or core service methods, instruct the AI to check callers and entry points:
 
-```bash
-atlas diff
-```
+**Prompt to AI:**
 
-CodeAtlas will show you the **Blast Radius** of your changes—listing every other component or package in your project that depends on the files you just changed.
+> _"Use `atlas_trace_execution_path` for `AuthService.validateToken` in direction 'upstream' to verify all controllers and route handlers that depend on this method."_
+
+---
+
+### Step 4: Architecture Self-Audit (Pre-Completion)
+
+Before your AI agent marks a task as complete, instruct it to run an architectural self-audit:
+
+**Prompt to AI:**
+
+> _"Run `atlas_analyze` (or `atlas analyze --architecture` in the terminal). Make sure your changes did not introduce any DDD layer regressions, public API bypasses, circular dependencies, or dead code."_
+
+If the AI accidentally imported a private module (e.g. bypassing a public API boundary), `atlas analyze` flags the violation and the AI refactors it before code review!
 
 ---
 
@@ -101,6 +95,9 @@ jobs:
         run: |
           npx @codeatlas-ai/cli index
           npx @codeatlas-ai/cli doctor
+
+      - name: Fail on DDD Layer Regressions
+        run: npx @codeatlas-ai/cli analyze --architecture --fail-on-architecture
 
       - name: Fail on Circular Dependencies
         run: npx @codeatlas-ai/cli analyze --fail-on-cycles

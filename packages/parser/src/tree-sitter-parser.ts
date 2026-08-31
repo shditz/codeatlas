@@ -46,9 +46,11 @@ function getParserClass(): any {
   return ParserClass;
 }
 
-function getLanguage(lang: Language): unknown {
-  if (languageGrammars[lang]) {
-    return languageGrammars[lang];
+function getLanguage(lang: Language, filePath?: string): unknown {
+  const isTsx = filePath?.endsWith('.tsx') || filePath?.endsWith('.jsx');
+  const cacheKey = isTsx ? `${lang}:tsx` : lang;
+  if (languageGrammars[cacheKey]) {
+    return languageGrammars[cacheKey];
   }
 
   let grammar: unknown = null;
@@ -56,7 +58,9 @@ function getLanguage(lang: Language): unknown {
     case 'typescript': {
       try {
         const mod = safeRequire('tree-sitter-typescript');
-        grammar = mod.typescript ?? mod.default ?? mod;
+        grammar = isTsx
+          ? (mod.tsx ?? mod.typescript ?? mod.default ?? mod)
+          : (mod.typescript ?? mod.default ?? mod);
       } catch {
         grammar = null;
       }
@@ -179,7 +183,7 @@ export async function parseFile(
 
     if (treeSitterSupported.includes(language)) {
       try {
-        const lang = getLanguage(language);
+        const lang = getLanguage(language, filePath);
         if (lang) {
           const ParserConstructor = getParserClass();
           const parser = new ParserConstructor();
@@ -273,6 +277,9 @@ export async function parseFile(
         case 'swift':
           extractSwiftSymbolsAndImports(content, filePath, symbols, imports, exportedNames);
           break;
+        case 'prisma':
+          extractPrismaSymbolsAndImports(content, filePath, symbols, imports, exportedNames);
+          break;
         default:
           break;
       }
@@ -284,6 +291,49 @@ export async function parseFile(
   }
 
   return { symbols, imports, exportedNames, errors };
+}
+
+function isReactHookName(name: string): boolean {
+  return /^use[A-Z0-9]/.test(name);
+}
+
+function resolveNextJsRouteSymbolKind(
+  filePath: string,
+  name: string,
+  isExported: boolean,
+): SymbolKind | null {
+  const normalized = filePath.replace(/\\/g, '/');
+  const match = normalized.match(/(?:^|\/)app\/(?:(.+?)\/)?([^/]+)\.(?:tsx|ts|jsx|js)$/);
+  if (!match) return null;
+
+  const filename = match[2];
+  if (filename === 'page' && (isExported || name === 'default' || name === 'Page' || name.toLowerCase().includes('page'))) {
+    return 'page';
+  }
+  if (filename === 'layout' && (isExported || name === 'default' || name === 'Layout' || name.toLowerCase().includes('layout'))) {
+    return 'layout';
+  }
+  if (filename === 'route' && ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'].includes(name)) {
+    return 'route_handler';
+  }
+  return null;
+}
+
+function resolveNestJsClassKind(node: AstNode): SymbolKind | null {
+  const checkText = (txt: string): SymbolKind | null => {
+    if (/@Controller\s*(?:\(|$)/.test(txt)) return 'controller';
+    if (/@Injectable\s*(?:\(|$)|@Service\s*(?:\(|$)|@Repository\s*(?:\(|$)/.test(txt)) return 'provider';
+    if (/@Module\s*(?:\(|$)/.test(txt)) return 'module';
+    return null;
+  };
+
+  const direct = checkText(node.text);
+  if (direct) return direct;
+  if (node.parent) {
+    const parentCheck = checkText(node.parent.text);
+    if (parentCheck) return parentCheck;
+  }
+  return null;
 }
 
 function extractTypeScriptSymbols(
@@ -300,9 +350,18 @@ function extractTypeScriptSymbols(
     switch (child.type) {
       case 'function_declaration':
       case 'generator_function_declaration': {
-        const name = child.childForFieldName('name')?.text ?? '';
+        const rawName = child.childForFieldName('name')?.text ?? '';
+        const isDefaultExport = isExported && (child.parent?.text.includes('default') ?? false);
+        const name = rawName || (isDefaultExport ? 'default' : '');
         if (name) {
-          symbols.push(makeSymbol(name, 'function', filePath, child, isExported, parentName));
+          let kind: SymbolKind = 'function';
+          const nextKind = resolveNextJsRouteSymbolKind(filePath, name, isExported);
+          if (nextKind) {
+            kind = nextKind;
+          } else if (isReactHookName(name)) {
+            kind = 'hook';
+          }
+          symbols.push(makeSymbol(name, kind, filePath, child, isExported, parentName));
           if (isExported) exportedNames.push(name);
         }
         break;
@@ -311,7 +370,9 @@ function extractTypeScriptSymbols(
       case 'class_declaration': {
         const name = child.childForFieldName('name')?.text ?? '';
         if (name) {
-          symbols.push(makeSymbol(name, 'class', filePath, child, isExported, parentName));
+          const nestKind = resolveNestJsClassKind(child);
+          const kind: SymbolKind = nestKind ?? 'class';
+          symbols.push(makeSymbol(name, kind, filePath, child, isExported, parentName));
           if (isExported) exportedNames.push(name);
           extractTypeScriptClassMembers(child, filePath, symbols, name);
         }
@@ -362,10 +423,8 @@ function extractTypeScriptSymbols(
         extractTypeScriptSymbols(child, filePath, symbols, imports, exportedNames, parentName);
         extractTypeScriptExportedNames(child, exportedNames);
 
-        // Handle re-export as an implicit import so the graph links barrel files
         const reExportSource = child.childForFieldName('source')?.text?.replace(/['"]/g, '');
         if (reExportSource) {
-          // This is a re-export: `export { ... } from '...'` or `export * from '...'`
           const reExportedSymbols: string[] = [];
           for (const sub of child.namedChildren) {
             if (sub.type === 'export_clause') {
@@ -378,7 +437,6 @@ function extractTypeScriptSymbols(
               }
             }
           }
-          // Check for `export * from '...'` (namespace re-export)
           const isNamespaceReExport = child.text.includes('export *');
           imports.push({
             filePath,
@@ -437,11 +495,20 @@ function extractTypeScriptVariableDeclarations(
 
       const value = declarator.childForFieldName('value');
       const isArrowFn = value?.type === 'arrow_function' || value?.type === 'function';
-      const kind: SymbolKind = isArrowFn
+      let kind: SymbolKind = isArrowFn
         ? 'function'
         : isConstant(node.text)
           ? 'constant'
           : 'variable';
+
+      if (isArrowFn) {
+        const nextKind = resolveNextJsRouteSymbolKind(filePath, name, isExported);
+        if (nextKind) {
+          kind = nextKind;
+        } else if (isReactHookName(name)) {
+          kind = 'hook';
+        }
+      }
 
       symbols.push(makeSymbol(name, kind, filePath, declarator, isExported, parentName));
       if (isExported) exportedNames.push(name);
@@ -861,16 +928,8 @@ function makeSymbol(
   };
 }
 
-/**
- * Extract a deep, AI-useful signature from an AST node.
- * For functions/methods: captures params, return type, generics, async/static modifiers.
- * For classes: captures heritage (extends/implements) and generic type params.
- * For interfaces/types/enums: captures the declaration header.
- * Falls back to the first line of text (trimmed) if structural extraction fails.
- */
 function extractDeepSignature(node: AstNode, kind: SymbolKind): string {
   try {
-    // Collect JSDoc / leading comment if present
     const jsdoc = extractLeadingJSDoc(node);
 
     let sig = '';
@@ -913,7 +972,6 @@ function extractLeadingJSDoc(node: AstNode): string {
   const parent = node.parent;
   if (!parent) return '';
 
-  // Check for comment node immediately before this node in parent's children
   const siblings = parent.children;
   const myIndex = siblings.findIndex(
     (s) =>
@@ -928,7 +986,6 @@ function extractLeadingJSDoc(node: AstNode): string {
       if (lines.length <= 5) {
         return prev.text;
       }
-      // Truncate long JSDoc to first 4 lines + closing
       return lines.slice(0, 4).join('\n') + '\n */';
     }
   }
@@ -938,27 +995,23 @@ function extractLeadingJSDoc(node: AstNode): string {
 function extractFunctionSignature(node: AstNode): string {
   const parts: string[] = [];
 
-  // Detect modifiers from parent or text
   const text = node.text;
   const firstLine = text.split('\n')[0] ?? '';
 
   if (firstLine.includes('async ')) parts.push('async');
   if (firstLine.includes('static ')) parts.push('static');
 
-  // Function keyword or arrow
   const nameNode = node.childForFieldName('name');
   const paramsNode = node.childForFieldName('parameters');
   const returnTypeNode = node.childForFieldName('return_type');
   const typeParamsNode = node.childForFieldName('type_parameters');
 
   if (node.type === 'arrow_function' || node.type === 'function') {
-    // For const x = (...) => ... or const x = function(...)
     const params = paramsNode?.text ?? '()';
     const retType = returnTypeNode?.text ?? '';
     const generics = typeParamsNode?.text ?? '';
     parts.push(`${generics}${params}${retType ? ': ' + retType.replace(/^:\s*/, '') : ''} => ...`);
   } else {
-    // Normal function/method declaration
     const name = nameNode?.text ?? '';
     const generics = typeParamsNode?.text ?? '';
     const params = paramsNode?.text ?? '()';
@@ -977,13 +1030,11 @@ function extractClassSignature(node: AstNode): string {
   const name = node.childForFieldName('name')?.text ?? '';
   const typeParams = node.childForFieldName('type_parameters')?.text ?? '';
 
-  // Extract heritage: extends/implements
   const heritageparts: string[] = [];
   for (const child of node.namedChildren) {
     if (child.type === 'class_heritage') {
       heritageparts.push(child.text);
     }
-    // Some grammars use extends_clause / implements_clause
     if (child.type === 'extends_clause' || child.type === 'extends_type_clause') {
       heritageparts.push('extends ' + child.text.replace(/^extends\s*/, ''));
     }
@@ -1001,7 +1052,6 @@ function extractInterfaceSignature(node: AstNode): string {
   const name = node.childForFieldName('name')?.text ?? '';
   const typeParams = node.childForFieldName('type_parameters')?.text ?? '';
 
-  // Look for extends in children
   let extendsClause = '';
   for (const child of node.namedChildren) {
     if (child.type === 'extends_type_clause' || child.type === 'extends_clause') {
@@ -1015,7 +1065,6 @@ function extractInterfaceSignature(node: AstNode): string {
 }
 
 function extractTypeAliasSignature(node: AstNode): string {
-  // For type aliases, capture the full declaration line
   const firstLine = node.text.split('\n')[0] ?? '';
   const sig = firstLine.replace(/\s*=\s*$/, '').trim();
   return sig.length > 300 ? sig.slice(0, 300) + '...' : sig;
@@ -1024,7 +1073,6 @@ function extractTypeAliasSignature(node: AstNode): string {
 function extractEnumSignature(node: AstNode): string {
   const name = node.childForFieldName('name')?.text ?? '';
 
-  // Extract enum member names (up to 8 for readability)
   const body = node.childForFieldName('body');
   const members: string[] = [];
   if (body) {
@@ -1767,7 +1815,7 @@ function extractTypeScriptSymbolsAndImportsRegex(
     );
     if (typeMatch && typeMatch[1] && typeMatch[2]) {
       const rawKind = typeMatch[1];
-      const kind: SymbolKind =
+      let kind: SymbolKind =
         rawKind === 'class'
           ? 'class'
           : rawKind === 'interface'
@@ -1777,7 +1825,20 @@ function extractTypeScriptSymbolsAndImportsRegex(
               : 'type';
       const name = typeMatch[2];
       const isExported = line.startsWith('export');
-      currentClass = kind === 'class' ? name : currentClass;
+
+      if (rawKind === 'class') {
+        const prevLine = i > 0 ? (lines[i - 1] ?? '') : '';
+        const combined = `${prevLine}\n${line}`;
+        if (/@Controller\s*(?:\(|$)/.test(combined)) {
+          kind = 'controller';
+        } else if (/@Injectable\s*(?:\(|$)|@Service\s*(?:\(|$)/.test(combined)) {
+          kind = 'provider';
+        } else if (/@Module\s*(?:\(|$)/.test(combined)) {
+          kind = 'module';
+        }
+      }
+
+      currentClass = (kind === 'class' || kind === 'controller' || kind === 'provider' || kind === 'module') ? name : currentClass;
       symbols.push({
         name,
         kind,
@@ -1797,9 +1858,18 @@ function extractTypeScriptSymbolsAndImportsRegex(
     if (funcMatch && funcMatch[1]) {
       const name = funcMatch[1];
       const isExported = line.startsWith('export');
+      let kind: SymbolKind = currentClass ? 'method' : 'function';
+      if (!currentClass) {
+        const nextKind = resolveNextJsRouteSymbolKind(filePath, name, isExported);
+        if (nextKind) {
+          kind = nextKind;
+        } else if (isReactHookName(name)) {
+          kind = 'hook';
+        }
+      }
       symbols.push({
         name,
-        kind: currentClass ? 'method' : 'function',
+        kind,
         filePath,
         line: i + 1,
         column: rawLine.indexOf(name),
@@ -1817,9 +1887,16 @@ function extractTypeScriptSymbolsAndImportsRegex(
     if (varMatch && varMatch[1]) {
       const name = varMatch[1];
       const isExported = line.startsWith('export');
+      let kind: SymbolKind = 'function';
+      const nextKind = resolveNextJsRouteSymbolKind(filePath, name, isExported);
+      if (nextKind) {
+        kind = nextKind;
+      } else if (isReactHookName(name)) {
+        kind = 'hook';
+      }
       symbols.push({
         name,
-        kind: 'function',
+        kind,
         filePath,
         line: i + 1,
         column: rawLine.indexOf(name),
@@ -2111,3 +2188,99 @@ export function validateSourceCode(
     };
   }
 }
+
+function extractPrismaSymbolsAndImports(
+  content: string,
+  filePath: string,
+  symbols: SymbolInfo[],
+  imports: ImportInfo[],
+  exportedNames: string[],
+): void {
+  const lines = content.split('\n');
+  let currentModel: string | null = null;
+  const models = new Set<string>();
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    const modelMatch = trimmed.match(/^model\s+([A-Za-z0-9_]+)/);
+    if (modelMatch && modelMatch[1]) {
+      models.add(modelMatch[1]);
+    }
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i] ?? '';
+    const line = rawLine.trim();
+    if (!line || line.startsWith('//')) continue;
+
+    const modelMatch = line.match(/^model\s+([A-Za-z0-9_]+)\s*\{/);
+    if (modelMatch && modelMatch[1]) {
+      const name = modelMatch[1];
+      currentModel = name;
+      symbols.push({
+        name,
+        kind: 'model',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: true,
+        signature: `model ${name}`,
+      });
+      exportedNames.push(name);
+      continue;
+    }
+
+    const enumMatch = line.match(/^enum\s+([A-Za-z0-9_]+)\s*\{/);
+    if (enumMatch && enumMatch[1]) {
+      const name = enumMatch[1];
+      currentModel = null;
+      symbols.push({
+        name,
+        kind: 'enum',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: true,
+        signature: `enum ${name}`,
+      });
+      exportedNames.push(name);
+      continue;
+    }
+
+    if (line === '}') {
+      currentModel = null;
+      continue;
+    }
+
+    if (currentModel) {
+      const fieldMatch = line.match(/^([A-Za-z0-9_]+)\s+([A-Za-z0-9_]+)(\[\]|\?)?/);
+      if (fieldMatch && fieldMatch[1] && fieldMatch[2]) {
+        const fieldName = fieldMatch[1];
+        const fieldType = fieldMatch[2];
+
+        symbols.push({
+          name: fieldName,
+          kind: 'property',
+          filePath,
+          line: i + 1,
+          column: rawLine.indexOf(fieldName),
+          exported: false,
+          signature: line,
+          parentSymbol: currentModel,
+        });
+
+        if (models.has(fieldType) && fieldType !== currentModel) {
+          imports.push({
+            filePath,
+            importPath: fieldType,
+            symbols: [fieldType],
+            isDefault: false,
+            isNamespace: false,
+            isType: true,
+          });
+        }
+      }
+    }
+  }
+}
+

@@ -1,11 +1,17 @@
-import type { FileInfo, RetrievalCandidate, RetrievalSource } from '@codeatlas-ai/core';
+import type {
+  FileInfo,
+  RetrievalCandidate,
+  RetrievalSource,
+  RetrievalOptions,
+  RetrievalIntent,
+} from '@codeatlas-ai/core';
 import type { SearchRepository } from '@codeatlas-ai/storage';
 import type { DependencyGraph } from '@codeatlas-ai/graph';
 import { createLogger } from '@codeatlas-ai/shared';
 
 const logger = createLogger('retrieval');
 
-export type { RetrievalCandidate, RetrievalSource };
+export type { RetrievalCandidate, RetrievalSource, RetrievalOptions, RetrievalIntent };
 
 export interface RetrievalResult {
   candidates: RetrievalCandidate[];
@@ -20,8 +26,16 @@ export class RetrievalEngine {
     private filesByPath: Map<string, FileInfo>,
   ) {}
 
-  retrieve(query: string, limit: number = 50): RetrievalResult {
+  retrieve(
+    query: string,
+    optionsOrLimit: number | RetrievalOptions = 50,
+  ): RetrievalResult {
     const startTime = Date.now();
+    const options: RetrievalOptions =
+      typeof optionsOrLimit === 'number' ? { limit: optionsOrLimit } : (optionsOrLimit ?? {});
+    const limit = options.limit ?? 50;
+    const intent = options.intent;
+
     const queryTerms = this.extractTerms(query);
     const candidateMap = new Map<string, RetrievalCandidate>();
 
@@ -38,9 +52,10 @@ export class RetrievalEngine {
       const symbolMatches = this.searchRepo.searchSymbols(query, limit);
       for (const sm of symbolMatches) {
         if (sm.relativePath) {
+          const symScore = intent === 'feature' ? 5.5 : 4.0;
           this.addCandidate(candidateMap, sm.relativePath, {
             type: 'symbol',
-            score: 4.0,
+            score: symScore,
             detail: `Symbol definition match (rank: ${(sm.rank ?? 0).toFixed(2)})`,
           });
         }
@@ -62,39 +77,74 @@ export class RetrievalEngine {
 
     const matchedFiles = [...candidateMap.keys()];
     for (const filePath of matchedFiles) {
-      const deps = this.graph.getDependencies(filePath, 1);
-      for (const dep of deps) {
-        this.addCandidate(candidateMap, dep, {
+      const directDeps = this.graph.getDirectDependencies(filePath);
+      for (const edge of directDeps) {
+        const conf = edge.confidence ?? 0.9;
+        const res = edge.resolution ? ` via ${edge.resolution}` : '';
+        const depMultiplier = intent === 'feature' ? 1.4 : 0.8;
+        const kindBoost = edge.kind === 'extends' || edge.kind === 'implements' ? 1.5 : 1.0;
+
+        this.addCandidate(candidateMap, edge.target, {
           type: 'graph',
-          score: 0.8,
-          detail: `Dependency of ${filePath.split('/').pop()}`,
+          score: depMultiplier * conf * kindBoost,
+          detail: `Dependency of ${filePath.split('/').pop()} (confidence: ${Math.round(conf * 100)}%${res}${edge.kind !== 'import' ? `, kind: ${edge.kind}` : ''})`,
         });
       }
 
-      const dependents = this.graph.getDependents(filePath, 1);
-      for (const dep of dependents) {
-        this.addCandidate(candidateMap, dep, {
+      const directDependents = this.graph.getDirectDependents(filePath);
+      for (const edge of directDependents) {
+        const conf = edge.confidence ?? 0.9;
+        const res = edge.resolution ? ` via ${edge.resolution}` : '';
+        const callerMultiplier = intent === 'bug' ? 1.6 : 0.6;
+
+        this.addCandidate(candidateMap, edge.source, {
           type: 'graph',
-          score: 0.6,
-          detail: `Dependent on ${filePath.split('/').pop()}`,
+          score: callerMultiplier * conf,
+          detail: `Caller/Dependent ${filePath.split('/').pop()} (confidence: ${Math.round(conf * 100)}%${res})`,
         });
       }
     }
 
     for (const [filePath, candidate] of candidateMap.entries()) {
+      candidate.file = this.filesByPath.get(filePath);
+
       const incomingEdges = this.graph.getDirectDependents(filePath);
       if (incomingEdges.length > 0) {
-        const centralityBoost = Math.min(2.5, incomingEdges.length * 0.3);
+        const centralityMultiplier = intent === 'refactor' ? 0.6 : 0.3;
+        const maxBoost = intent === 'refactor' ? 4.5 : 2.5;
+        const centralityBoost = Math.min(maxBoost, incomingEdges.length * centralityMultiplier);
         candidate.sources.push({
           type: 'graph',
           score: centralityBoost,
-          detail: `Core architectural module (depended on by ${incomingEdges.length} files)`,
+          detail: `Core architectural module (depended on by ${incomingEdges.length} files${intent === 'refactor' ? ', refactor priority' : ''})`,
         });
       }
-    }
 
-    for (const candidate of candidateMap.values()) {
-      candidate.file = this.filesByPath.get(candidate.filePath);
+      if (intent === 'bug') {
+        if (candidate.file?.isTest || filePath.includes('test') || filePath.includes('spec')) {
+          candidate.sources.push({
+            type: 'path',
+            score: 2.5,
+            detail: `Test file boosted for bug fix intent verification`,
+          });
+        }
+      } else if (intent === 'feature') {
+        if (filePath.includes('interface') || filePath.includes('model') || filePath.includes('type') || filePath.includes('schema')) {
+          candidate.sources.push({
+            type: 'symbol',
+            score: 2.0,
+            detail: `Domain interface/type definition boosted for feature intent`,
+          });
+        }
+      } else if (intent === 'refactor') {
+        if (filePath.includes('index') || filePath.includes('api') || filePath.includes('public')) {
+          candidate.sources.push({
+            type: 'path',
+            score: 2.0,
+            detail: `Public API boundary file boosted for refactor intent`,
+          });
+        }
+      }
     }
 
     const candidates = [...candidateMap.values()]
@@ -106,7 +156,7 @@ export class RetrievalEngine {
       .slice(0, limit);
 
     const duration = Date.now() - startTime;
-    logger.debug(`Retrieved ${candidates.length} candidates in ${duration}ms`);
+    logger.debug(`Retrieved ${candidates.length} candidates (intent: ${intent ?? 'default'}) in ${duration}ms`);
 
     return { candidates, queryTerms, duration };
   }

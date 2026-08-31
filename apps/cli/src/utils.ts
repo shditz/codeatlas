@@ -73,7 +73,6 @@ export function getOrCreateProject(db: AtlasDatabase, cwd: string): number {
 function parseTOML(content: string): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   let currentSection: Record<string, unknown> = result;
-  let currentSectionName = '';
 
   for (const line of content.split('\n')) {
     const trimmed = line.trim();
@@ -81,9 +80,20 @@ function parseTOML(content: string): Record<string, unknown> {
 
     const sectionMatch = trimmed.match(/^\[([^\]]+)\]$/);
     if (sectionMatch) {
-      currentSectionName = sectionMatch[1] ?? '';
-      currentSection = {};
-      result[currentSectionName] = currentSection;
+      const sectionPath = (sectionMatch[1] ?? '').split('.');
+      let target: Record<string, unknown> = result;
+      for (let i = 0; i < sectionPath.length - 1; i++) {
+        const p = sectionPath[i]!;
+        if (!target[p] || typeof target[p] !== 'object') {
+          target[p] = {};
+        }
+        target = target[p] as Record<string, unknown>;
+      }
+      const lastKey = sectionPath[sectionPath.length - 1]!;
+      if (!target[lastKey] || typeof target[lastKey] !== 'object') {
+        target[lastKey] = {};
+      }
+      currentSection = target[lastKey] as Record<string, unknown>;
       continue;
     }
 
@@ -93,7 +103,7 @@ function parseTOML(content: string): Record<string, unknown> {
       let value: unknown = kvMatch[2] ?? '';
 
       // Parse value
-      const strValue = value as string;
+      const strValue = (value as string).trim();
       if (strValue === 'true') value = true;
       else if (strValue === 'false') value = false;
       else if (strValue.startsWith('"') && strValue.endsWith('"')) value = strValue.slice(1, -1);
@@ -148,9 +158,20 @@ export function generateConfigTOML(config: AtlasConfig): string {
   lines.push(`exclude_patterns = ${JSON.stringify(config.security.exclude_patterns)}`);
   lines.push('');
 
+  lines.push('[architecture]');
+  lines.push(`type = "${config.architecture?.type || 'auto'}"`);
+  lines.push('');
+
+  lines.push('[architecture.rules]');
+  lines.push(`allow = ${JSON.stringify(config.architecture?.rules?.allow || [])}`);
+  lines.push(`disallow = ${JSON.stringify(config.architecture?.rules?.disallow || [])}`);
+  lines.push(`enforce_public_api = ${config.architecture?.rules?.enforce_public_api ?? true}`);
+  lines.push('');
+
   lines.push('[ai]');
   lines.push(`provider = "${config.ai.provider}"`);
   lines.push('');
 
   return lines.join('\n');
 }
+

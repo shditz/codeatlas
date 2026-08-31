@@ -17,7 +17,6 @@ export function registerDoctorCommand(program: Command): void {
       const db = openDatabase(cwd);
       const projectId = getOrCreateProject(db, cwd);
 
-      // Auto-heal mode
       if (options.heal) {
         console.log(chalk.bold.cyan('\n🩺 CodeAtlas Auto-Heal\n'));
 
@@ -140,7 +139,6 @@ export function registerDoctorCommand(program: Command): void {
         });
       }
 
-      // Database integrity check
       try {
         const intResult = db.get<{ integrity_check: string }>('PRAGMA integrity_check;');
         const intStatus = (intResult as Record<string, unknown>)?.['integrity_check'] ?? 'unknown';

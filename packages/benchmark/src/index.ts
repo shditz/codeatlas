@@ -46,13 +46,11 @@ async function main() {
     console.log('─'.repeat(78));
   }
 
-  // Save report to disk
   const resultsDir = path.resolve(process.cwd(), '.benchmarks', 'results');
   fs.mkdirSync(resultsDir, { recursive: true });
 
   fs.writeFileSync(path.join(resultsDir, 'report.json'), JSON.stringify(reports, null, 2), 'utf-8');
 
-  // Generate Markdown Leaderboard
   let md = '# 📊 CodeAtlas Empirical Benchmark Results\n\n';
   md +=
     '> Verified automated evaluation measuring context precision, recall, and token reduction.\n\n';

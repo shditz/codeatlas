@@ -103,6 +103,7 @@ const MIGRATIONS: Migration[] = [
         FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
       );
 
+
       CREATE INDEX IF NOT EXISTS idx_deps_source ON dependencies(source_path);
       CREATE INDEX IF NOT EXISTS idx_deps_target ON dependencies(target_path);
 
@@ -182,6 +183,34 @@ const MIGRATIONS: Migration[] = [
     name: 'add_cyclomatic_complexity',
     sql: `
       ALTER TABLE symbols ADD COLUMN cyclomatic_complexity INTEGER;
+    `,
+  },
+  {
+    version: 4,
+    name: 'add_dependency_confidence_and_resolution',
+    sql: `
+      ALTER TABLE dependencies ADD COLUMN confidence REAL NOT NULL DEFAULT 0.9;
+      ALTER TABLE dependencies ADD COLUMN resolution TEXT NOT NULL DEFAULT 'tree-sitter';
+    `,
+  },
+  {
+    version: 5,
+    name: 'create_git_metrics_table',
+    sql: `
+      CREATE TABLE IF NOT EXISTS git_metrics (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        project_id INTEGER NOT NULL,
+        file_path TEXT NOT NULL,
+        churn_count INTEGER NOT NULL DEFAULT 0,
+        last_modified TEXT,
+        primary_owner TEXT,
+        authors_json TEXT NOT NULL DEFAULT '[]',
+        FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+        UNIQUE(project_id, file_path)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_git_metrics_project ON git_metrics(project_id);
+      CREATE INDEX IF NOT EXISTS idx_git_metrics_file ON git_metrics(file_path);
     `,
   },
 ];

@@ -9,8 +9,9 @@ import type {
   Language,
   Framework,
   PackageManager,
+  RetrievalIntent,
 } from '@codeatlas-ai/core';
-import { defaultConfig, detectLanguage } from '@codeatlas-ai/core';
+import { defaultConfig, detectLanguage, redactSecrets } from '@codeatlas-ai/core';
 import {
   AtlasDatabase,
   runMigrations,
@@ -154,6 +155,11 @@ export class McpServer {
               type: 'string',
               description:
                 'Context packing mode: full, signature, summary, or digest (default: full)',
+            },
+            intent: {
+              type: 'string',
+              description:
+                'Task intent for task-aware dynamic retrieval weighting: bug, feature, refactor, or explore (default: explore)',
             },
           },
           required: ['task'],
@@ -373,6 +379,64 @@ export class McpServer {
               description: 'Maximum number of top complex symbols to return (default: 15)',
             },
           },
+        },
+      },
+      {
+        name: 'atlas_trace_execution_path',
+        description:
+          'Find and trace the exact execution/dependency path between two files/modules in the codebase with step-by-step confidence scores and resolution types.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            fromNode: {
+              type: 'string',
+              description: 'Source relative file path (e.g. "packages/indexer/src/indexer.ts")',
+            },
+            toNode: {
+              type: 'string',
+              description: 'Target relative file path (e.g. "packages/storage/src/repositories.ts")',
+            },
+          },
+          required: ['fromNode', 'toNode'],
+        },
+      },
+      {
+        name: 'atlas_find_entry_points',
+        description:
+          'Discover all top-level entry points and ingress modules (controllers, routes, CLI commands, main apps) that invoke or depend on the specified target file.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            targetNode: {
+              type: 'string',
+              description: 'Relative path of the target file/module to trace entry points for',
+            },
+            maxDepth: {
+              type: 'number',
+              description: 'Maximum backward traversal depth (default: 10)',
+            },
+          },
+          required: ['targetNode'],
+        },
+      },
+      {
+        name: 'atlas_calculate_change_surface',
+        description:
+          'Calculate the complete blast radius, downstream impact surface, risk vulnerability score, and recommended test files for modifying specified files.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            filePaths: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'List of relative file paths proposed to be modified or refactored',
+            },
+            maxDepth: {
+              type: 'number',
+              description: 'Maximum blast radius traversal depth (default: 5)',
+            },
+          },
+          required: ['filePaths'],
         },
       },
     ];
@@ -627,6 +691,17 @@ export class McpServer {
     return this.dbInstance;
   }
 
+  public close(): void {
+    if (this.dbInstance) {
+      try {
+        this.dbInstance.db.close();
+      } catch {
+        // Ignore
+      }
+      this.dbInstance = null;
+    }
+  }
+
   public async readResource(uri: string): Promise<string> {
     switch (uri) {
       case 'atlas://architecture/map': {
@@ -816,8 +891,9 @@ export class McpServer {
         const graph = new DependencyGraph();
         graph.addEdges(deps);
 
+        const intent = (args.intent as RetrievalIntent) || undefined;
         const retrieval = new RetrievalEngine(searchRepo, graph, filesByPath);
-        const retrievalResult = retrieval.retrieve(task);
+        const retrievalResult = retrieval.retrieve(task, { limit: 50, intent });
 
         const config = defaultConfig();
         const ranker = new Ranker({
@@ -929,7 +1005,11 @@ export class McpServer {
           source: d.source,
           target: d.target,
           type: d.kind.toUpperCase(),
-          properties: { weight: d.weight },
+          properties: {
+            weight: d.weight,
+            confidence: d.confidence ?? 0.9,
+            resolution: d.resolution ?? 'tree-sitter',
+          },
         }));
 
         const graph = new DependencyGraph();
@@ -987,7 +1067,8 @@ export class McpServer {
           throw new Error(`File not found: ${filePath}`);
         }
 
-        const source = fs.readFileSync(absPath, 'utf-8');
+        const rawSource = fs.readFileSync(absPath, 'utf-8');
+        const source = redactSecrets(rawSource);
         const compressor = new CodeCompressor();
         const ext = path.extname(filePath);
         const lang =
@@ -1074,7 +1155,6 @@ export class McpServer {
           throw new Error('Missing "sql" argument');
         }
 
-        // Safety check: ensure query is read-only
         const forbiddenPatterns =
           /\b(DROP|DELETE|UPDATE|INSERT|ALTER|TRUNCATE|CREATE|REPLACE|ATTACH|DETACH)\b/i;
         if (forbiddenPatterns.test(sql)) {
@@ -1111,7 +1191,6 @@ export class McpServer {
         const absPath = path.resolve(this.rootDir, filePath);
         const language = detectLanguage(filePath);
 
-        // 1. AST Safety Validation Gate
         const validation = validateSourceCode(newContent, language);
         if (!validation.valid) {
           return JSON.stringify(
@@ -1127,11 +1206,9 @@ export class McpServer {
           );
         }
 
-        // 2. Safe Write to Disk
         fs.mkdirSync(path.dirname(absPath), { recursive: true });
         fs.writeFileSync(absPath, newContent, 'utf-8');
 
-        // 3. Incrementally update index
         try {
           const { db, projectId } = this.openDb();
           const indexer = new Indexer({ root: this.rootDir, db, projectId });
@@ -1274,8 +1351,16 @@ export class McpServer {
           primaryTouchpoints: coreFiles.map((file: string) => ({
             filePath: file,
             role: 'Primary modification target',
-            directDependents: graph.getDirectDependents(file).map((e) => e.source),
-            directDependencies: graph.getDirectDependencies(file).map((e) => e.target),
+            directDependents: graph.getDirectDependents(file).map((e) => ({
+              file: e.source,
+              confidence: e.confidence ?? 0.9,
+              resolution: e.resolution ?? 'tree-sitter',
+            })),
+            directDependencies: graph.getDirectDependencies(file).map((e) => ({
+              file: e.target,
+              confidence: e.confidence ?? 0.9,
+              resolution: e.resolution ?? 'tree-sitter',
+            })),
           })),
           supportingContextFiles: Array.from(contextSet).slice(0, maxFiles),
           activeRulesCount: rules.length,
@@ -1360,6 +1445,76 @@ export class McpServer {
           null,
           2,
         );
+      }
+
+      case 'atlas_trace_execution_path': {
+        const fromNode = String(args.fromNode ?? '').replace(/\\/g, '/');
+        const toNode = String(args.toNode ?? '').replace(/\\/g, '/');
+
+        const { db, projectId } = this.openDb();
+        const depRepo = new DependencyRepository(db);
+        const deps = depRepo.getAll(projectId);
+
+        const graph = new DependencyGraph();
+        graph.addEdges(deps);
+
+        const executionPath = graph.findExecutionPath(fromNode, toNode);
+
+        return JSON.stringify(
+          {
+            found: Boolean(executionPath),
+            from: fromNode,
+            to: toNode,
+            pathLength: executionPath ? executionPath.nodes.length : 0,
+            executionPath: executionPath || null,
+            message: executionPath
+              ? `Found execution path of ${executionPath.steps.length} step(s) with ${Math.round(executionPath.totalConfidence * 100)}% overall confidence.`
+              : `No reachable execution path found between "${fromNode}" and "${toNode}".`,
+          },
+          null,
+          2,
+        );
+      }
+
+      case 'atlas_find_entry_points': {
+        const targetNode = String(args.targetNode ?? '').replace(/\\/g, '/');
+        const maxDepth = typeof args.maxDepth === 'number' ? args.maxDepth : 10;
+
+        const { db, projectId } = this.openDb();
+        const depRepo = new DependencyRepository(db);
+        const deps = depRepo.getAll(projectId);
+
+        const graph = new DependencyGraph();
+        graph.addEdges(deps);
+
+        const entryPoints = graph.findEntryPoints(targetNode, maxDepth);
+
+        return JSON.stringify(
+          {
+            targetNode,
+            entryPointCount: entryPoints.length,
+            entryPoints,
+          },
+          null,
+          2,
+        );
+      }
+
+      case 'atlas_calculate_change_surface': {
+        const rawFiles = Array.isArray(args.filePaths) ? (args.filePaths as string[]) : [];
+        const filePaths = rawFiles.map((f) => String(f).replace(/\\/g, '/'));
+        const maxDepth = typeof args.maxDepth === 'number' ? args.maxDepth : 5;
+
+        const { db, projectId } = this.openDb();
+        const depRepo = new DependencyRepository(db);
+        const deps = depRepo.getAll(projectId);
+
+        const graph = new DependencyGraph();
+        graph.addEdges(deps);
+
+        const surface = graph.calculateChangeSurface(filePaths, maxDepth);
+
+        return JSON.stringify(surface, null, 2);
       }
 
       default:

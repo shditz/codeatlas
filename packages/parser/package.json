@@ -1,6 +1,6 @@
 {
   "name": "@codeatlas-ai/parser",
-  "version": "0.4.0",
+  "version": "1.0.0",
   "type": "module",
   "exports": {
     ".": {
@@ -27,7 +27,8 @@
     "tree-sitter-javascript": "^0.23.0",
     "tree-sitter-python": "^0.23.0",
     "tree-sitter-rust": "^0.23.0",
-    "tree-sitter-typescript": "^0.23.2"
+    "tree-sitter-typescript": "^0.23.2",
+    "typescript": "^5.5.0"
   },
   "publishConfig": {
     "access": "public"

@@ -295,8 +295,8 @@ export class DependencyRepository {
 
   upsert(projectId: number, edge: DependencyEdge): void {
     this.db.run(
-      `INSERT INTO dependencies (project_id, source_path, target_path, kind, symbols, weight)
-       VALUES (?, ?, ?, ?, ?, ?)
+      `INSERT INTO dependencies (project_id, source_path, target_path, kind, symbols, weight, confidence, resolution)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT DO NOTHING`,
       projectId,
       edge.source,
@@ -304,13 +304,15 @@ export class DependencyRepository {
       edge.kind,
       JSON.stringify(edge.symbols),
       edge.weight,
+      edge.confidence ?? 0.9,
+      edge.resolution ?? 'tree-sitter',
     );
   }
 
   insertBatch(projectId: number, edges: DependencyEdge[]): void {
     const stmt = this.db.instance.prepare(
-      `INSERT OR IGNORE INTO dependencies (project_id, source_path, target_path, kind, symbols, weight)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT OR IGNORE INTO dependencies (project_id, source_path, target_path, kind, symbols, weight, confidence, resolution)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     );
 
     this.db.transaction(() => {
@@ -322,6 +324,8 @@ export class DependencyRepository {
           edge.kind,
           JSON.stringify(edge.symbols),
           edge.weight,
+          edge.confidence ?? 0.9,
+          edge.resolution ?? 'tree-sitter',
         );
       }
     });
@@ -371,7 +375,9 @@ export class DependencyRepository {
       target: row['target_path'] as string,
       kind: row['kind'] as DependencyEdge['kind'],
       symbols: JSON.parse(row['symbols'] as string) as string[],
-      weight: row['weight'] as number,
+      weight: (row['weight'] as number) ?? 1.0,
+      confidence: (row['confidence'] as number) ?? 0.9,
+      resolution: (row['resolution'] as string) ?? 'tree-sitter',
     };
   }
 }
@@ -575,3 +581,79 @@ export class EmbeddingRepository {
     };
   }
 }
+
+export interface GitMetricRecord {
+  id?: number;
+  projectId: number;
+  filePath: string;
+  churnCount: number;
+  lastModified?: string;
+  primaryOwner?: string;
+  authors: Array<{ author: string; commits: number }>;
+}
+
+export class GitMetricsRepository {
+  constructor(private db: AtlasDatabase) {}
+
+  upsert(metric: GitMetricRecord): number {
+    const result = this.db.run(
+      `INSERT INTO git_metrics (project_id, file_path, churn_count, last_modified, primary_owner, authors_json)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT(project_id, file_path) DO UPDATE SET
+         churn_count = excluded.churn_count,
+         last_modified = excluded.last_modified,
+         primary_owner = excluded.primary_owner,
+         authors_json = excluded.authors_json`,
+      metric.projectId,
+      metric.filePath,
+      metric.churnCount,
+      metric.lastModified || null,
+      metric.primaryOwner || null,
+      JSON.stringify(metric.authors || []),
+    );
+    return Number(result.lastInsertRowid);
+  }
+
+  insertBatch(projectId: number, metrics: GitMetricRecord[]): void {
+    if (metrics.length === 0) return;
+    this.db.transaction(() => {
+      for (const m of metrics) {
+        this.upsert({ ...m, projectId });
+      }
+    });
+  }
+
+  getByFile(projectId: number, filePath: string): GitMetricRecord | undefined {
+    const row = this.db.get<Record<string, unknown>>(
+      'SELECT * FROM git_metrics WHERE project_id = ? AND file_path = ?',
+      projectId,
+      filePath,
+    );
+    return row ? this.mapRow(row) : undefined;
+  }
+
+  getAll(projectId: number): GitMetricRecord[] {
+    const rows = this.db.all<Record<string, unknown>>(
+      'SELECT * FROM git_metrics WHERE project_id = ? ORDER BY churn_count DESC',
+      projectId,
+    );
+    return rows.map((r) => this.mapRow(r));
+  }
+
+  deleteAll(projectId: number): void {
+    this.db.run('DELETE FROM git_metrics WHERE project_id = ?', projectId);
+  }
+
+  private mapRow(row: Record<string, unknown>): GitMetricRecord {
+    return {
+      id: row['id'] as number,
+      projectId: row['project_id'] as number,
+      filePath: row['file_path'] as string,
+      churnCount: row['churn_count'] as number,
+      lastModified: (row['last_modified'] as string) || undefined,
+      primaryOwner: (row['primary_owner'] as string) || undefined,
+      authors: JSON.parse((row['authors_json'] as string) || '[]'),
+    };
+  }
+}
+

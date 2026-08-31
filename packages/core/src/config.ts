@@ -37,18 +37,34 @@ export const AIConfigSchema = z.object({
   base_url: z.string().optional(),
 });
 
+export const ArchitectureRulesConfigSchema = z.object({
+  allow: z.array(z.string()).default([]),
+  disallow: z.array(z.string()).default([]),
+  enforce_public_api: z.boolean().default(true),
+});
+
+export const ArchitectureConfigSchema = z.object({
+  type: z.enum(['layered', 'ddd', 'clean', 'hexagonal', 'custom', 'auto']).default('auto'),
+  layers: z.record(z.string(), z.union([z.string(), z.array(z.string())])).default({}),
+  bounded_contexts: z.record(z.string(), z.union([z.string(), z.array(z.string())])).default({}),
+  rules: ArchitectureRulesConfigSchema.default({}),
+});
+
 export const AtlasConfigSchema = z.object({
   project: ProjectConfigSchema.default({}),
   index: IndexConfigSchema.default({}),
   ranking: RankingConfigSchema.default({}),
   context: ContextConfigSchema.default({}),
   security: SecurityConfigSchema.default({}),
+  architecture: ArchitectureConfigSchema.default({}),
   ai: AIConfigSchema.default({}),
 });
 
 export type AtlasConfig = z.infer<typeof AtlasConfigSchema>;
 export type RankingConfig = z.infer<typeof RankingConfigSchema>;
 export type ContextConfig = z.infer<typeof ContextConfigSchema>;
+export type ArchitectureConfig = z.infer<typeof ArchitectureConfigSchema>;
+export type ArchitectureRulesConfig = z.infer<typeof ArchitectureRulesConfigSchema>;
 
 export function parseConfig(raw: unknown): AtlasConfig {
   return AtlasConfigSchema.parse(raw);
@@ -57,3 +73,4 @@ export function parseConfig(raw: unknown): AtlasConfig {
 export function defaultConfig(): AtlasConfig {
   return AtlasConfigSchema.parse({});
 }
+

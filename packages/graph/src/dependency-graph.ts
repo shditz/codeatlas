@@ -107,11 +107,6 @@ export class DependencyGraph {
     return this.nodes.has(node);
   }
 
-  /**
-   * Compute the "blast radius" of a set of changed files.
-   * Returns all files transitively affected (dependents) up to maxDepth,
-   * organized by impact level (direct vs transitive).
-   */
   getBlastRadius(
     changedFiles: string[],
     maxDepth: number = 5,
@@ -128,14 +123,12 @@ export class DependencyGraph {
     for (const changedFile of changedFiles) {
       const affected: string[] = [];
 
-      // Level 1: direct dependents
       const directDeps = this.incoming.get(changedFile) ?? [];
       for (const edge of directDeps) {
         directSet.add(edge.source);
         affected.push(edge.source);
       }
 
-      // Level 2+: transitive dependents
       const visited = new Set<string>([changedFile]);
       const queue = directDeps.map((e) => ({ node: e.source, depth: 1 }));
 
@@ -158,11 +151,9 @@ export class DependencyGraph {
       affectedByFile.set(changedFile, [...new Set(affected)]);
     }
 
-    // Remove files that are in directSet from transitiveSet (direct takes priority)
     for (const f of directSet) {
       transitiveSet.delete(f);
     }
-    // Remove changed files themselves from both sets
     for (const f of changedFiles) {
       directSet.delete(f);
       transitiveSet.delete(f);
@@ -335,6 +326,165 @@ export class DependencyGraph {
     const pageRanks = this.computePageRank();
     return pageRanks.get(node);
   }
+
+  findExecutionPath(from: string, to: string): ExecutionPath | undefined {
+    const rawPath = this.getShortestPath(from, to);
+    if (!rawPath || rawPath.length === 0) return undefined;
+
+    const steps: ExecutionStep[] = [];
+    let totalConfidence = 1.0;
+
+    for (let i = 0; i < rawPath.length - 1; i++) {
+      const src = rawPath[i]!;
+      const tgt = rawPath[i + 1]!;
+      const edges = this.outgoing.get(src) ?? [];
+      const edge = edges.find((e) => e.target === tgt) ?? {
+        source: src,
+        target: tgt,
+        kind: 'import',
+        symbols: [],
+        weight: 1.0,
+        confidence: 0.9,
+        resolution: 'heuristic',
+      };
+
+      const stepConfidence = edge.confidence ?? 0.9;
+      totalConfidence *= stepConfidence;
+
+      steps.push({
+        from: src,
+        to: tgt,
+        kind: edge.kind,
+        confidence: stepConfidence,
+        resolution: edge.resolution ?? 'tree-sitter',
+        symbols: edge.symbols,
+      });
+    }
+
+    return {
+      nodes: rawPath,
+      steps,
+      totalConfidence: Math.round(totalConfidence * 100) / 100,
+    };
+  }
+
+  findEntryPoints(targetNode: string, maxDepth: number = 10): EntryPointInfo[] {
+    if (!this.nodes.has(targetNode)) return [];
+
+    const entryPoints: EntryPointInfo[] = [];
+    const visited = new Set<string>();
+    const queue: Array<{ node: string; path: string[]; depth: number }> = [
+      { node: targetNode, path: [targetNode], depth: 0 },
+    ];
+
+    while (queue.length > 0) {
+      const current = queue.shift();
+      if (!current || current.depth >= maxDepth) continue;
+
+      if (visited.has(current.node)) continue;
+      visited.add(current.node);
+
+      const incomingEdges = this.incoming.get(current.node) ?? [];
+      if (incomingEdges.length === 0 && current.node !== targetNode) {
+        entryPoints.push({
+          entryPoint: current.node,
+          isRoot: true,
+          distance: current.depth,
+          callChain: [...current.path].reverse(),
+        });
+      } else {
+        const isIngressPattern =
+          current.node !== targetNode &&
+          /(index|main|app|server|cli|command|route|controller)\.(ts|js|py|go|rs)$/i.test(
+            current.node,
+          );
+
+        if (isIngressPattern) {
+          entryPoints.push({
+            entryPoint: current.node,
+            isRoot: incomingEdges.length === 0,
+            distance: current.depth,
+            callChain: [...current.path].reverse(),
+          });
+        }
+
+        for (const edge of incomingEdges) {
+          if (!visited.has(edge.source)) {
+            queue.push({
+              node: edge.source,
+              path: [...current.path, edge.source],
+              depth: current.depth + 1,
+            });
+          }
+        }
+      }
+    }
+
+    return entryPoints.sort((a, b) => a.distance - b.distance);
+  }
+  calculateChangeSurface(filePaths: string[], maxDepth: number = 5): ChangeSurfaceResult {
+    const blast = this.getBlastRadius(filePaths, maxDepth);
+    const affectedCount = blast.directlyAffected.length + blast.transitivelyAffected.length;
+
+    let riskScore = (blast.directlyAffected.length * 2.0 + blast.transitivelyAffected.length * 1.0) / Math.max(1, this.nodes.size) * 100;
+    riskScore = Math.min(100, Math.round(riskScore * 10) / 10);
+
+    let riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'LOW';
+    if (riskScore > 50 || blast.directlyAffected.length > 20) {
+      riskLevel = 'CRITICAL';
+    } else if (riskScore > 25 || blast.directlyAffected.length > 10) {
+      riskLevel = 'HIGH';
+    } else if (riskScore > 10 || blast.directlyAffected.length > 3) {
+      riskLevel = 'MEDIUM';
+    }
+
+    const allAffected = [...blast.directlyAffected, ...blast.transitivelyAffected];
+    const recommendedTestFiles = allAffected.filter((f) =>
+      /(test|spec|__tests__)/i.test(f),
+    );
+
+    return {
+      targetFiles: filePaths,
+      directlyAffected: blast.directlyAffected,
+      transitivelyAffected: blast.transitivelyAffected,
+      affectedCount,
+      riskScore,
+      riskLevel,
+      recommendedTestFiles,
+    };
+  }
+}
+
+export interface ExecutionStep {
+  from: string;
+  to: string;
+  kind: string;
+  confidence: number;
+  resolution: string;
+  symbols: string[];
+}
+
+export interface ExecutionPath {
+  nodes: string[];
+  steps: ExecutionStep[];
+  totalConfidence: number;
+}
+
+export interface EntryPointInfo {
+  entryPoint: string;
+  isRoot: boolean;
+  distance: number;
+  callChain: string[];
+}
+
+export interface ChangeSurfaceResult {
+  targetFiles: string[];
+  directlyAffected: string[];
+  transitivelyAffected: string[];
+  affectedCount: number;
+  riskScore: number;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  recommendedTestFiles: string[];
 }
 
 export interface CommunityCluster {

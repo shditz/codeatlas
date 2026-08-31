@@ -12,6 +12,7 @@ export type Language =
   | 'kotlin'
   | 'swift'
   | 'php'
+  | 'prisma'
   | 'json'
   | 'yaml'
   | 'toml'
@@ -37,7 +38,15 @@ export type SymbolKind =
   | 'variable'
   | 'constant'
   | 'property'
-  | 'export';
+  | 'export'
+  | 'hook'
+  | 'route_handler'
+  | 'page'
+  | 'layout'
+  | 'controller'
+  | 'provider'
+  | 'module'
+  | 'model';
 
 export type DependencyKind = 'import' | 'export' | 'extends' | 'implements' | 'reference';
 
@@ -170,6 +179,8 @@ export interface ImportInfo {
   isDefault: boolean;
   isNamespace: boolean;
   isType: boolean;
+  confidence?: number;
+  resolution?: string;
 }
 
 export interface DependencyEdge {
@@ -178,6 +189,8 @@ export interface DependencyEdge {
   kind: DependencyKind;
   symbols: string[];
   weight: number;
+  confidence?: number;
+  resolution?: string;
 }
 
 export interface Rule {
@@ -206,8 +219,25 @@ export interface ScoreExplanation {
   reason: string;
 }
 
+export type RetrievalIntent = 'bug' | 'feature' | 'refactor' | 'explore';
+
+export interface RetrievalOptions {
+  limit?: number;
+  intent?: RetrievalIntent;
+}
+
+export interface GitMetric {
+  id?: number;
+  projectId: number;
+  filePath: string;
+  churnCount: number;
+  lastModified?: string;
+  primaryOwner?: string;
+  authorsJson?: string;
+}
+
 export interface RetrievalSource {
-  type: 'keyword' | 'symbol' | 'path' | 'graph';
+  type: 'keyword' | 'symbol' | 'path' | 'graph' | 'git';
   score: number;
   detail: string;
 }
@@ -337,6 +367,64 @@ export interface TechnicalDebtHotspot {
   recommendation: string;
 }
 
+export type ArchitectureLayerType =
+  | 'presentation'
+  | 'application'
+  | 'domain'
+  | 'infrastructure'
+  | 'shared'
+  | 'custom';
+
+export interface ArchitectureLayer {
+  name: string;
+  patterns: string[];
+  type?: ArchitectureLayerType;
+  files?: string[];
+}
+
+export interface BoundedContext {
+  name: string;
+  patterns: string[];
+  files: string[];
+  publicApiFiles?: string[];
+}
+
+export interface ArchitectureViolation {
+  id: string;
+  sourceFile: string;
+  targetFile: string;
+  sourceLayer?: string;
+  targetLayer?: string;
+  sourceContext?: string;
+  targetContext?: string;
+  violationType:
+    | 'LAYER_REGRESSION'
+    | 'BOUNDED_CONTEXT_LEAK'
+    | 'PUBLIC_API_BYPASS'
+    | 'CUSTOM_RULE_VIOLATION';
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  rule: string;
+  description: string;
+  remediation: string;
+  importedSymbols?: string[];
+  line?: number;
+}
+
+export interface ArchitectureReport {
+  architectureType: string;
+  layers: ArchitectureLayer[];
+  boundedContexts: BoundedContext[];
+  violations: ArchitectureViolation[];
+  summary: {
+    totalViolations: number;
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+    cleanScore: number;
+  };
+}
+
 export interface CodebaseAnalytics {
   summary: {
     totalFiles: number;
@@ -350,4 +438,6 @@ export interface CodebaseAnalytics {
   hotspots: NodeMetrics[];
   instabilities: NodeMetrics[];
   gitHotspots?: TechnicalDebtHotspot[];
+  architectureReport?: ArchitectureReport;
 }
+

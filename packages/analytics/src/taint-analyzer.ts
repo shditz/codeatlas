@@ -88,10 +88,8 @@ export class TaintAnalyzer {
     const results: TaintVulnerability[] = [];
     const lines = content.split('\n');
 
-    // Track tainted variables in this file: variableName -> { line, sourceExpr }
     const taintedVars = new Map<string, { line: number; source: string }>();
 
-    // 1. Identify Sources (User Inputs & Ingress data)
     const sourcePatterns = [
       /(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*(?:req\.(?:query|body|params|headers)(?:\.[A-Za-z0-9_$]+|\[[^\]]+\])?)/,
       /(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*process\.argv/,
@@ -107,7 +105,6 @@ export class TaintAnalyzer {
         const match = line.match(pattern);
         if (match && match[1]) {
           if (match[1].includes(',')) {
-            // Destructured variables
             match[1].split(',').forEach((v) => {
               const cleanVar = v.trim().split(':')[0]?.trim();
               if (cleanVar) {
@@ -121,12 +118,10 @@ export class TaintAnalyzer {
       }
     }
 
-    // 2. Identify Sinks (Dangerous Execution Call Sites)
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i] ?? '';
       const lineNum = i + 1;
 
-      // Pattern A: SQL Injection (String template / concatenation in SQL execution)
       const sqlSinkMatch =
         line.match(/(?:query|execute|raw|db\.run|db\.all|db\.exec)\s*\(\s*`[^`]*\$\{([^}]+)\}/) ||
         line.match(
@@ -159,7 +154,6 @@ export class TaintAnalyzer {
         }
       }
 
-      // Pattern B: Command Injection (Unsanitized exec/spawn)
       const cmdSinkMatch =
         line.match(/(?:exec|execSync|spawn|spawnSync)\s*\(\s*`[^`]*\$\{([^}]+)\}/) ||
         line.match(/(?:exec|execSync)\s*\(\s*["'][^"']*\s*\+\s*([A-Za-z0-9_$]+)/);
@@ -190,7 +184,6 @@ export class TaintAnalyzer {
         }
       }
 
-      // Pattern C: Code Injection (eval / new Function)
       const evalSinkMatch = line.match(/\b(?:eval|new\s+Function)\s*\(\s*([A-Za-z0-9_$]+|`[^`]*`)/);
       if (evalSinkMatch && evalSinkMatch[1]) {
         const expr = evalSinkMatch[1].trim();
@@ -211,7 +204,6 @@ export class TaintAnalyzer {
         }
       }
 
-      // Pattern D: Path Traversal
       const hasFsRead = /(?:readFile|readFileSync|createReadStream|createWriteStream)\s*\(/.test(
         line,
       );
@@ -236,7 +228,6 @@ export class TaintAnalyzer {
         }
       }
 
-      // Pattern E: Cross-Site Scripting (XSS in frontend)
       const xssSinkMatch = line.match(
         /(?:innerHTML\s*=\s*|dangerouslySetInnerHTML\s*=\s*\{\s*__html:\s*)([A-Za-z0-9_$]+)/,
       );
