@@ -109,11 +109,13 @@ export class BenchmarkRunner {
       // 2. Rank candidates
       const ranker = new Ranker({
         weights: {
-          lexical: 0.35,
-          graph_proximity: 0.3,
-          centrality: 0.15,
-          recency: 0.1,
-          depth: 0.1,
+          lexical_weight: 0.35,
+          symbol_weight: 0.20,
+          path_weight: 0.15,
+          dependency_weight: 0.10,
+          module_weight: 0.10,
+          rule_weight: 0.05,
+          recency_weight: 0.05,
         },
         queryTerms: retrievalResult.queryTerms,
       });
