@@ -43,7 +43,6 @@
   "activationEvents": [
     "onStartupFinished"
   ],
-
   "contributes": {
     "viewsContainers": {
       "activitybar": [
@@ -74,7 +73,6 @@
         }
       ]
     },
-
     "commands": [
       {
         "command": "codeatlas.indexCodebase",
@@ -152,7 +150,6 @@
     }
   },
   "scripts": {
-
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
@@ -172,7 +169,6 @@
     "@codeatlas-ai/compression": "workspace:*",
     "@codeatlas-ai/retrieval": "workspace:*"
   },
-
   "devDependencies": {
     "@types/vscode": "^1.90.0"
   }

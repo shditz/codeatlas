@@ -23,6 +23,7 @@
 ## 🚀 Quick Start
 
 ### 1. Index Your Workspace
+
 Open any project folder in VS Code / Antigravity / Cursor, open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on macOS) and run:
 
 ```
@@ -32,11 +33,13 @@ CodeAtlas: Index / Refresh Codebase
 CodeAtlas will scan your directory, extract AST symbols via Tree-sitter, link module dependencies, and build a local SQLite graph in `.atlas/atlas.db`.
 
 ### 2. Open the Interactive 3D/2D Graph View
+
 - Click the **CodeAtlas (Map)** icon in the left Activity Bar.
 - Or click the **Graph View** button at the top-right of any open editor tab.
 - Or run `CodeAtlas: Open Interactive Graph View` from the Command Palette.
 
 ### 3. Connect to Your AI Assistant (1-Click MCP Setup)
+
 Open your integrated terminal and run:
 
 ```bash
@@ -51,14 +54,14 @@ This automatically configures Google Antigravity, Cursor, Claude Desktop, Windsu
 
 Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and type `CodeAtlas`:
 
-| Command | Description |
-| :--- | :--- |
-| `CodeAtlas: Open Interactive Graph View` | Opens the 3D/2D force-directed dependency graph tab |
-| `CodeAtlas: Index / Refresh Codebase` | Re-indexes AST symbols, dependencies, and git churn |
-| `CodeAtlas: Export Context for AI Agent` | Generates a compressed context pack for the active file or task |
-| `CodeAtlas: Generate Git PR Context` | Creates a comprehensive architectural blast-radius summary for Pull Requests |
-| `CodeAtlas: Run Cypher Graph Query` | Executes graph queries across codebase dependencies |
-| `CodeAtlas: Toggle Real-time Watcher` | Enables/disables live background indexing on file save (`Ctrl+S`) |
+| Command                                  | Description                                                                  |
+| :--------------------------------------- | :--------------------------------------------------------------------------- |
+| `CodeAtlas: Open Interactive Graph View` | Opens the 3D/2D force-directed dependency graph tab                          |
+| `CodeAtlas: Index / Refresh Codebase`    | Re-indexes AST symbols, dependencies, and git churn                          |
+| `CodeAtlas: Export Context for AI Agent` | Generates a compressed context pack for the active file or task              |
+| `CodeAtlas: Generate Git PR Context`     | Creates a comprehensive architectural blast-radius summary for Pull Requests |
+| `CodeAtlas: Run Cypher Graph Query`      | Executes graph queries across codebase dependencies                          |
+| `CodeAtlas: Toggle Real-time Watcher`    | Enables/disables live background indexing on file save (`Ctrl+S`)            |
 
 ---
 
@@ -72,17 +75,18 @@ Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and type `CodeAtlas`:
 
 ## ⚙️ Extension Settings
 
-| Setting | Default | Description |
-| :--- | :--- | :--- |
-| `codeatlas.autoIndexOnSave` | `true` | Automatically update AST symbols incrementally when files are saved. |
-| `codeatlas.defaultGraphDimension` | `"3D"` | Default graph layout dimension (`"3D"` WebGL or `"2D"` Canvas). |
-| `codeatlas.maxContextTokens` | `12000` | Token budget limit for generated AI context packs. |
+| Setting                           | Default | Description                                                          |
+| :-------------------------------- | :------ | :------------------------------------------------------------------- |
+| `codeatlas.autoIndexOnSave`       | `true`  | Automatically update AST symbols incrementally when files are saved. |
+| `codeatlas.defaultGraphDimension` | `"3D"`  | Default graph layout dimension (`"3D"` WebGL or `"2D"` Canvas).      |
+| `codeatlas.maxContextTokens`      | `12000` | Token budget limit for generated AI context packs.                   |
 
 ---
 
 ## 🔒 Security & Privacy
 
 CodeAtlas operates **strictly offline and on-device**:
+
 - All databases and indexes are stored in `.atlas/atlas.db` inside your workspace.
 - Built-in `SecretScanner` automatically redacts API keys, cloud tokens, private keys, and passwords before exporting context or serving MCP queries.
 - **Zero cloud telemetry, zero remote tracking.**

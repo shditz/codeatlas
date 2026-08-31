@@ -27,7 +27,9 @@ export class CodeAtlasTreeItem extends vscode.TreeItem {
  * Overview & Architectural Hierarchy Provider
  */
 export class CodeAtlasOverviewProvider implements vscode.TreeDataProvider<CodeAtlasTreeItem> {
-  private _onDidChangeTreeData = new vscode.EventEmitter<CodeAtlasTreeItem | undefined | null | void>();
+  private _onDidChangeTreeData = new vscode.EventEmitter<
+    CodeAtlasTreeItem | undefined | null | void
+  >();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
   private fileRepo: FileRepository | null = null;
@@ -68,7 +70,15 @@ export class CodeAtlasOverviewProvider implements vscode.TreeDataProvider<CodeAt
 
   async getChildren(element?: CodeAtlasTreeItem): Promise<CodeAtlasTreeItem[]> {
     if (!this.workspaceRoot) {
-      return [new CodeAtlasTreeItem('No workspace opened', vscode.TreeItemCollapsibleState.None, undefined, undefined, 'info')];
+      return [
+        new CodeAtlasTreeItem(
+          'No workspace opened',
+          vscode.TreeItemCollapsibleState.None,
+          undefined,
+          undefined,
+          'info',
+        ),
+      ];
     }
 
     if (!this.db || !this.fileRepo || !this.symbolRepo) {
@@ -134,7 +144,9 @@ export class CodeAtlasOverviewProvider implements vscode.TreeDataProvider<CodeAt
           `[${f.language}]`,
           f.language === 'typescript' || f.language === 'javascript' ? 'file-code' : 'file',
         );
-        const absPath = path.isAbsolute(f.path) ? f.path : path.join(this.workspaceRoot, f.relativePath);
+        const absPath = path.isAbsolute(f.path)
+          ? f.path
+          : path.join(this.workspaceRoot, f.relativePath);
         item.command = {
           command: 'vscode.open',
           title: 'Open File',
@@ -149,7 +161,9 @@ export class CodeAtlasOverviewProvider implements vscode.TreeDataProvider<CodeAt
       const files = fileRepo.getAll(this.projectId);
 
       const symbols: SymbolInfo[] = files
-        .flatMap((f) => (f.id ? symbolRepo.getByFile(f.id).map((s) => ({ ...s, filePath: f.relativePath })) : []))
+        .flatMap((f) =>
+          f.id ? symbolRepo.getByFile(f.id).map((s) => ({ ...s, filePath: f.relativePath })) : [],
+        )
         .slice(0, 150);
 
       return symbols.map((s: SymbolInfo) => {
@@ -201,7 +215,9 @@ export class CodeAtlasOverviewProvider implements vscode.TreeDataProvider<CodeAt
  * Architecture & Health Diagnostics Provider
  */
 export class CodeAtlasAnalyticsProvider implements vscode.TreeDataProvider<CodeAtlasTreeItem> {
-  private _onDidChangeTreeData = new vscode.EventEmitter<CodeAtlasTreeItem | undefined | null | void>();
+  private _onDidChangeTreeData = new vscode.EventEmitter<
+    CodeAtlasTreeItem | undefined | null | void
+  >();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
   constructor(
@@ -226,7 +242,15 @@ export class CodeAtlasAnalyticsProvider implements vscode.TreeDataProvider<CodeA
 
   async getChildren(element?: CodeAtlasTreeItem): Promise<CodeAtlasTreeItem[]> {
     if (!this.workspaceRoot || !this.db) {
-      return [new CodeAtlasTreeItem('Index workspace to view health diagnostics', vscode.TreeItemCollapsibleState.None, undefined, undefined, 'pulse')];
+      return [
+        new CodeAtlasTreeItem(
+          'Index workspace to view health diagnostics',
+          vscode.TreeItemCollapsibleState.None,
+          undefined,
+          undefined,
+          'pulse',
+        ),
+      ];
     }
 
     const fileRepo = new FileRepository(this.db);
@@ -252,14 +276,14 @@ export class CodeAtlasAnalyticsProvider implements vscode.TreeDataProvider<CodeA
 
       const deadDetector = new DeadCodeDetector(graph, files, []);
       const deadItems = deadDetector.detectDeadCode();
-      const deadFiles = deadItems.filter(i => i.kind === 'file');
+      const deadFiles = deadItems.filter((i) => i.kind === 'file');
 
       const analyzer = new ArchitectureAnalyzer({ graph, files });
       const report = analyzer.analyze();
-      const presentation = report.layers.find(l => l.name === 'presentation')?.files || [];
-      const application = report.layers.find(l => l.name === 'application')?.files || [];
-      const domain = report.layers.find(l => l.name === 'domain')?.files || [];
-      const infrastructure = report.layers.find(l => l.name === 'infrastructure')?.files || [];
+      const presentation = report.layers.find((l) => l.name === 'presentation')?.files || [];
+      const application = report.layers.find((l) => l.name === 'application')?.files || [];
+      const domain = report.layers.find((l) => l.name === 'domain')?.files || [];
+      const infrastructure = report.layers.find((l) => l.name === 'infrastructure')?.files || [];
 
       const layerItem = new CodeAtlasTreeItem(
         `DDD Layer Architecture`,
@@ -271,7 +295,9 @@ export class CodeAtlasAnalyticsProvider implements vscode.TreeDataProvider<CodeA
 
       const cycleItem = new CodeAtlasTreeItem(
         `Circular Dependencies (${cycles.length})`,
-        cycles.length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
+        cycles.length > 0
+          ? vscode.TreeItemCollapsibleState.Collapsed
+          : vscode.TreeItemCollapsibleState.None,
         'cat_cycles',
         cycles.length === 0 ? '✓ None (Clean)' : '⚠ Regressions found',
         cycles.length === 0 ? 'check' : 'warning',
@@ -279,7 +305,9 @@ export class CodeAtlasAnalyticsProvider implements vscode.TreeDataProvider<CodeA
 
       const deadItem = new CodeAtlasTreeItem(
         `Dead / Orphan Files (${deadFiles.length})`,
-        deadFiles.length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
+        deadFiles.length > 0
+          ? vscode.TreeItemCollapsibleState.Collapsed
+          : vscode.TreeItemCollapsibleState.None,
         'cat_dead',
         deadFiles.length === 0 ? '✓ Clean' : `${deadFiles.length} files`,
         deadFiles.length === 0 ? 'pass' : 'trash',
@@ -290,30 +318,74 @@ export class CodeAtlasAnalyticsProvider implements vscode.TreeDataProvider<CodeA
 
     if (element.contextValue === 'cat_layers') {
       const graph = new DependencyGraph();
-      for (const d of deps) graph.addEdge({ source: d.source, target: d.target, kind: d.kind, symbols: d.symbols || [], weight: d.weight || 1 });
+      for (const d of deps)
+        graph.addEdge({
+          source: d.source,
+          target: d.target,
+          kind: d.kind,
+          symbols: d.symbols || [],
+          weight: d.weight || 1,
+        });
       const analyzer = new ArchitectureAnalyzer({ graph, files });
       const report = analyzer.analyze();
-      const presentation = report.layers.find(l => l.name === 'presentation')?.files || [];
-      const application = report.layers.find(l => l.name === 'application')?.files || [];
-      const domain = report.layers.find(l => l.name === 'domain')?.files || [];
-      const infrastructure = report.layers.find(l => l.name === 'infrastructure')?.files || [];
+      const presentation = report.layers.find((l) => l.name === 'presentation')?.files || [];
+      const application = report.layers.find((l) => l.name === 'application')?.files || [];
+      const domain = report.layers.find((l) => l.name === 'domain')?.files || [];
+      const infrastructure = report.layers.find((l) => l.name === 'infrastructure')?.files || [];
 
       return [
-        new CodeAtlasTreeItem(`Presentation Layer (${presentation.length})`, vscode.TreeItemCollapsibleState.None, 'layer', 'Controllers, UI, Routes', 'preview'),
-        new CodeAtlasTreeItem(`Application Layer (${application.length})`, vscode.TreeItemCollapsibleState.None, 'layer', 'Services, Use-Cases', 'gear'),
-        new CodeAtlasTreeItem(`Domain Layer (${domain.length})`, vscode.TreeItemCollapsibleState.None, 'layer', 'Core Entities, Value Objects', 'heart'),
-        new CodeAtlasTreeItem(`Infrastructure Layer (${infrastructure.length})`, vscode.TreeItemCollapsibleState.None, 'layer', 'DB, Storage, External APIs', 'server'),
+        new CodeAtlasTreeItem(
+          `Presentation Layer (${presentation.length})`,
+          vscode.TreeItemCollapsibleState.None,
+          'layer',
+          'Controllers, UI, Routes',
+          'preview',
+        ),
+        new CodeAtlasTreeItem(
+          `Application Layer (${application.length})`,
+          vscode.TreeItemCollapsibleState.None,
+          'layer',
+          'Services, Use-Cases',
+          'gear',
+        ),
+        new CodeAtlasTreeItem(
+          `Domain Layer (${domain.length})`,
+          vscode.TreeItemCollapsibleState.None,
+          'layer',
+          'Core Entities, Value Objects',
+          'heart',
+        ),
+        new CodeAtlasTreeItem(
+          `Infrastructure Layer (${infrastructure.length})`,
+          vscode.TreeItemCollapsibleState.None,
+          'layer',
+          'DB, Storage, External APIs',
+          'server',
+        ),
       ];
     }
 
     if (element.contextValue === 'cat_cycles') {
       const graph = new DependencyGraph();
-      for (const d of deps) graph.addEdge({ source: d.source, target: d.target, kind: d.kind, symbols: d.symbols || [], weight: d.weight || 1 });
+      for (const d of deps)
+        graph.addEdge({
+          source: d.source,
+          target: d.target,
+          kind: d.kind,
+          symbols: d.symbols || [],
+          weight: d.weight || 1,
+        });
       const cycles = new CycleDetector(graph).detectCycles().cycles;
 
       return cycles.slice(0, 20).map((c) => {
         const cyclePath = c.join(' ➔ ');
-        const item = new CodeAtlasTreeItem(cyclePath, vscode.TreeItemCollapsibleState.None, 'cycle_item', `${c.length} files`, 'sync');
+        const item = new CodeAtlasTreeItem(
+          cyclePath,
+          vscode.TreeItemCollapsibleState.None,
+          'cycle_item',
+          `${c.length} files`,
+          'sync',
+        );
         const firstFile = c[0];
         if (firstFile) {
           item.command = {
@@ -328,12 +400,25 @@ export class CodeAtlasAnalyticsProvider implements vscode.TreeDataProvider<CodeA
 
     if (element.contextValue === 'cat_dead') {
       const graph = new DependencyGraph();
-      for (const d of deps) graph.addEdge({ source: d.source, target: d.target, kind: d.kind, symbols: d.symbols || [], weight: d.weight || 1 });
+      for (const d of deps)
+        graph.addEdge({
+          source: d.source,
+          target: d.target,
+          kind: d.kind,
+          symbols: d.symbols || [],
+          weight: d.weight || 1,
+        });
       const deadItems = new DeadCodeDetector(graph, files, []).detectDeadCode();
-      const deadFiles = deadItems.filter(i => i.kind === 'file');
+      const deadFiles = deadItems.filter((i) => i.kind === 'file');
 
       return deadFiles.slice(0, 30).map((f) => {
-        const item = new CodeAtlasTreeItem(f.id, vscode.TreeItemCollapsibleState.None, 'dead_file', '0 incoming imports', 'file');
+        const item = new CodeAtlasTreeItem(
+          f.id,
+          vscode.TreeItemCollapsibleState.None,
+          'dead_file',
+          '0 incoming imports',
+          'file',
+        );
         item.command = {
           command: 'vscode.open',
           title: 'Open File',
@@ -351,7 +436,9 @@ export class CodeAtlasAnalyticsProvider implements vscode.TreeDataProvider<CodeA
  * AI Agent Rules & Governance Provider
  */
 export class CodeAtlasRulesProvider implements vscode.TreeDataProvider<CodeAtlasTreeItem> {
-  private _onDidChangeTreeData = new vscode.EventEmitter<CodeAtlasTreeItem | undefined | null | void>();
+  private _onDidChangeTreeData = new vscode.EventEmitter<
+    CodeAtlasTreeItem | undefined | null | void
+  >();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
   constructor(private workspaceRoot: string) {}
@@ -373,7 +460,13 @@ export class CodeAtlasRulesProvider implements vscode.TreeDataProvider<CodeAtlas
     const rules = engine.discover();
 
     if (rules.length === 0) {
-      const emptyItem = new CodeAtlasTreeItem('No AI rules detected', vscode.TreeItemCollapsibleState.None, undefined, 'Click to generate rules', 'shield');
+      const emptyItem = new CodeAtlasTreeItem(
+        'No AI rules detected',
+        vscode.TreeItemCollapsibleState.None,
+        undefined,
+        'Click to generate rules',
+        'shield',
+      );
       emptyItem.command = {
         command: 'codeatlas.exportContext',
         title: 'Generate Rules',
@@ -413,27 +506,63 @@ export class CodeAtlasToolsProvider implements vscode.TreeDataProvider<CodeAtlas
   async getChildren(): Promise<CodeAtlasTreeItem[]> {
     const items: CodeAtlasTreeItem[] = [];
 
-    const graphAction = new CodeAtlasTreeItem('Open 3D/2D Graph Canvas', vscode.TreeItemCollapsibleState.None, 'tool', 'Interactive WebGL Architecture', 'type-hierarchy');
+    const graphAction = new CodeAtlasTreeItem(
+      'Open 3D/2D Graph Canvas',
+      vscode.TreeItemCollapsibleState.None,
+      'tool',
+      'Interactive WebGL Architecture',
+      'type-hierarchy',
+    );
     graphAction.command = { command: 'codeatlas.openGraphView', title: 'Open Graph' };
     items.push(graphAction);
 
-    const indexAction = new CodeAtlasTreeItem('Index / Refresh Workspace', vscode.TreeItemCollapsibleState.None, 'tool', 'Extract Tree-sitter ASTs', 'refresh');
+    const indexAction = new CodeAtlasTreeItem(
+      'Index / Refresh Workspace',
+      vscode.TreeItemCollapsibleState.None,
+      'tool',
+      'Extract Tree-sitter ASTs',
+      'refresh',
+    );
     indexAction.command = { command: 'codeatlas.indexCodebase', title: 'Index Codebase' };
     items.push(indexAction);
 
-    const contextAction = new CodeAtlasTreeItem('Export Context Pack for AI', vscode.TreeItemCollapsibleState.None, 'tool', 'Token-budgeted & compressed', 'cloud-download');
+    const contextAction = new CodeAtlasTreeItem(
+      'Export Context Pack for AI',
+      vscode.TreeItemCollapsibleState.None,
+      'tool',
+      'Token-budgeted & compressed',
+      'cloud-download',
+    );
     contextAction.command = { command: 'codeatlas.exportContext', title: 'Export Context' };
     items.push(contextAction);
 
-    const prAction = new CodeAtlasTreeItem('Generate Git PR Blast Radius', vscode.TreeItemCollapsibleState.None, 'tool', 'Downstream impact analysis', 'git-pull-request');
+    const prAction = new CodeAtlasTreeItem(
+      'Generate Git PR Blast Radius',
+      vscode.TreeItemCollapsibleState.None,
+      'tool',
+      'Downstream impact analysis',
+      'git-pull-request',
+    );
     prAction.command = { command: 'codeatlas.generatePRContext', title: 'Generate PR Context' };
     items.push(prAction);
 
-    const queryAction = new CodeAtlasTreeItem('Run Cypher Graph Query', vscode.TreeItemCollapsibleState.None, 'tool', 'Dependency traversal query', 'search');
+    const queryAction = new CodeAtlasTreeItem(
+      'Run Cypher Graph Query',
+      vscode.TreeItemCollapsibleState.None,
+      'tool',
+      'Dependency traversal query',
+      'search',
+    );
     queryAction.command = { command: 'codeatlas.queryGraph', title: 'Query Graph' };
     items.push(queryAction);
 
-    const watchAction = new CodeAtlasTreeItem('Toggle Real-time Watcher', vscode.TreeItemCollapsibleState.None, 'tool', 'Auto-index on file save (Ctrl+S)', 'eye');
+    const watchAction = new CodeAtlasTreeItem(
+      'Toggle Real-time Watcher',
+      vscode.TreeItemCollapsibleState.None,
+      'tool',
+      'Auto-index on file save (Ctrl+S)',
+      'eye',
+    );
     watchAction.command = { command: 'codeatlas.toggleWatcher', title: 'Toggle Watcher' };
     items.push(watchAction);
 

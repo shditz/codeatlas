@@ -95,7 +95,6 @@ export function activate(context: vscode.ExtensionContext): void {
   vscode.window.registerTreeDataProvider('codeatlas.rules', rulesProvider);
   vscode.window.registerTreeDataProvider('codeatlas.tools', toolsProvider);
 
-
   context.subscriptions.push(
     vscode.languages.registerCodeLensProvider(
       [
@@ -158,7 +157,6 @@ export function activate(context: vscode.ExtensionContext): void {
           analyticsProvider.setDatabase(db, projectId);
           codelensProvider.setDatabase(db, projectId);
           rulesProvider.refresh();
-
 
           if (result.errors && result.errors.length > 0) {
             vscode.window.showWarningMessage(
