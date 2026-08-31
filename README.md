@@ -25,9 +25,10 @@ When AI agents work on large codebases, they struggle with two main problems:
 **CodeAtlas solves this:**
 
 - ⚡ **Local-First & 100% Private**: Everything is indexed locally into SQLite with Tree-sitter. No code is uploaded to the cloud.
-- 🧠 **Smart Context Budgeting**: Compresses files into AST signatures so AI gets 100% of the architectural context using 20% of the tokens.
-- 🛡️ **Architectural Guardrails**: Automatically detects **Dead Code**, **Circular Dependencies**, and **God Objects**.
-- 🔌 **Native Model Context Protocol (MCP)**: Plugs directly into Antigravity, Claude Desktop, Cursor, and Cline as a real-time brain extension.
+- 🧠 **Smart Context Budgeting**: Compresses files into AST signatures so AI gets 100% of the architectural context using 20% of the tokens. Includes visual Directory Tree Packing!
+- 🛡️ **Architectural Guardrails**: Automatically detects **Dead Code**, **Circular Dependencies**, and **Complexity Hotspots**.
+- 🚀 **Zero-Config Setup**: `atlas init` automatically detects your stack and generates smart ignore rules.
+- 🔌 **Native Model Context Protocol (MCP)**: Plugs directly into Antigravity, Claude Desktop, Cursor, and Cline as a real-time brain extension (Includes `atlas_detect_dead_code` & `atlas_complexity_report`).
 
 ---
 
