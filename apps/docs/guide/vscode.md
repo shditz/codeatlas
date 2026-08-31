@@ -1,38 +1,75 @@
 # VS Code Extension Manual
 
-The official **CodeAtlas VS Code Extension** integrates AST indexing, symbol navigation, AI rule synchronization, and interactive architecture visualization into Visual Studio Code.
+The official **CodeAtlas VS Code Extension** integrates AST indexing, symbol navigation, AI rule synchronization, and interactive architecture visualization into Visual Studio Code, Google Antigravity, Cursor, and Windsurf.
 
 ---
 
-## Key Features
+## 🧭 Sidebar Views
 
-### 1. Interactive Architecture Graph
+The CodeAtlas Activity Bar provides 4 dedicated panels:
 
-- **3D and 2D Layouts**: Switch between WebGL 3D spatial force layout and 2D Canvas planar view.
-- **Spotlight Mode**: Highlights active dependency paths while dimming unrelated files for focused module tracing.
-- **Search & Filters**: Search by file name or path, with instant filter chips for Files and Folders.
-- **Node Inspector**: Inspect file size, language, connected dependencies, and jump directly to source files via the "Open in Editor" button.
+### 1. Architecture & Codebase Map
 
-### 2. Automatic Background Indexing
+- **Open Architecture Map**: Launches the interactive 2D/3D force-directed dependency canvas.
+- **Files Explorer**: Tree view of all indexed files and directory structures.
+- **Symbols Explorer**: Comprehensive AST symbol navigation with cyclomatic complexity badges.
 
-- Monitors file save events in your workspace.
-- Executes incremental Tree-sitter AST diffing in the background, updating `.atlas/atlas.db` without blocking editor performance.
+### 2. Architecture Health & Diagnostics
+
+- **Architecture Layers**: Domain-Driven Design (DDD) module grouping and layer inspection.
+- **Circular Imports**: Real-time cycle detection to prevent recursive initialization bugs.
+- **Unreferenced Files**: Instant detection of dead/orphaned code with 0 incoming dependencies.
+
+### 3. AI Agent Rules & Governance
+
+- **Rule Explorer**: Real-time discovery of rules from `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, etc.
+- **Rule Generator**: Interactive creation of evidence-backed guidelines with codebase citations.
+
+### 4. Quick Actions & AI Tools
+
+Instant access to all core CodeAtlas features directly from the sidebar:
+
+- **Quick Scan Workspace**: Instant tech-stack and project metadata scan.
+- **Export Context Pack**: Token-budgeted AST signature export for AI prompts.
+- **Generate AI Rules**: Evidence-backed rule synthesis for your AI assistants.
+- **Architecture Audit**: Security SAST scan and layer compliance audit.
+- **Semantic Codebase Search**: FTS5 BM25 search across symbols and code.
+- **Start MCP Server**: Launch Model Context Protocol server.
+- **Analyze PR Impact**: Architectural blast-radius analysis for Pull Requests.
+- **Health Diagnostics**: Comprehensive repository health scoring (0-100).
+- **Query Graph (NL/Cypher)**: Natural language and Cypher query interface.
+- **Toggle Real-time Watcher**: Live background re-indexing on file save.
+- **Initialize Workspace**: Set up `.atlas/` intelligence database.
+- **Clean Cache & DB**: Reset and clear local SQLite cache safely.
 
 ---
 
-## Command Palette Actions
+## ⌨️ Command Palette Actions
 
-Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
+Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and type `CodeAtlas`:
 
-| Command Identifier          | Title                               | Description                                          |
-| --------------------------- | ----------------------------------- | ---------------------------------------------------- |
-| `codeatlas.openGraphView`   | `CodeAtlas: Open Interactive Graph` | Opens the 2D/3D architecture graph visualizer tab    |
-| `codeatlas.indexWorkspace`  | `CodeAtlas: Index Workspace`        | Triggers a full workspace AST re-indexing            |
-| `codeatlas.exportRules`     | `CodeAtlas: Export AI Rules`        | Generates prompt rule files for Cursor, Claude, etc. |
-| `codeatlas.showContextPack` | `CodeAtlas: Show Context Budget`    | Displays token usage and compressed symbol metrics   |
+| Command Identifier            | Title                                    | Description                                         |
+| ----------------------------- | ---------------------------------------- | --------------------------------------------------- |
+| `codeatlas.openGraphView`     | `CodeAtlas: Open Interactive Graph View` | Opens the 2D/3D architecture graph visualizer tab   |
+| `codeatlas.indexCodebase`     | `CodeAtlas: Index / Refresh Codebase`    | Triggers full workspace AST re-indexing             |
+| `codeatlas.exportContext`     | `CodeAtlas: Export Context for AI Agent` | Generates compressed AST signatures for AI prompts  |
+| `codeatlas.generatePRContext` | `CodeAtlas: Generate Git PR Context`     | Creates architectural blast-radius summary for PRs  |
+| `codeatlas.generateRules`     | `CodeAtlas: Generate AI Agent Rules`     | Generates evidence-backed guidelines for AI agents  |
+| `codeatlas.queryGraph`        | `CodeAtlas: Run Cypher Graph Query`      | Executes graph queries across codebase dependencies |
+| `codeatlas.toggleWatcher`     | `CodeAtlas: Toggle Real-time Watcher`    | Enables/disables live indexing on file save         |
+| `codeatlas.startMCP`          | `CodeAtlas: Start MCP Server`            | Starts Model Context Protocol stdio server          |
+| `codeatlas.runAudit`          | `CodeAtlas: Run Architecture Audit`      | Audits security, layers, and dead code              |
+| `codeatlas.semanticSearch`    | `CodeAtlas: Search Codebase Symbols`     | Full-text and symbol search with BM25 ranking       |
+| `codeatlas.init`              | `CodeAtlas: Initialize Workspace`        | Initializes CodeAtlas `.atlas/` database            |
+| `codeatlas.scan`              | `CodeAtlas: Scan Workspace`              | Fast metadata and structure scan                    |
+| `codeatlas.doctor`            | `CodeAtlas: Run Health Diagnostics`      | Evaluates overall repository health score           |
+| `codeatlas.rulesValidate`     | `CodeAtlas: Validate AI Rules`           | Checks for rule conflicts and contradictions        |
+| `codeatlas.clean`             | `CodeAtlas: Clean Cache & Database`      | Safely clears local index cache                     |
 
 ---
 
-## Editor Title Bar Integration
+## 🖱️ Editor & Context Menu Integration
 
-When viewing any source file in your editor, CodeAtlas adds a dedicated **Graph View** button to the top-right editor title bar. Clicking this icon immediately opens the interactive architecture map centered on the current file.
+- **Editor Title Bar**: Click the dedicated **Graph** icon on any active editor tab to visualize its dependency radius.
+- **Explorer Context Menu**: Right-click any file or folder to export a token-optimized context pack.
+- **CodeLens**: Inline AST symbol complexity indicators and reference counts directly above functions and classes.

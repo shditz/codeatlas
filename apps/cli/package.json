@@ -1,6 +1,6 @@
 {
   "name": "@codeatlas-ai/cli",
-  "version": "1.1.0",
+  "version": "1.5.0",
   "type": "module",
   "bin": {
     "atlas": "./dist/index.js",
@@ -45,7 +45,8 @@
     "tree-sitter-javascript": "^0.23.0",
     "tree-sitter-python": "^0.23.0",
     "tree-sitter-rust": "^0.23.0",
-    "tree-sitter-typescript": "^0.23.2"
+    "tree-sitter-typescript": "^0.23.2",
+    "update-notifier": "^7.3.1"
   },
   "publishConfig": {
     "access": "public"
@@ -55,5 +56,8 @@
     "type": "git",
     "url": "https://github.com/shditz/codeatlas.git",
     "directory": "apps/cli"
+  },
+  "devDependencies": {
+    "@types/update-notifier": "^6.0.8"
   }
 }

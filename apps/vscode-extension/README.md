@@ -1,6 +1,6 @@
 # 🗺️ CodeAtlas — AI Context Intelligence for VS Code
 
-[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/shditz/codeatlas)
+[![Version](https://img.shields.io/badge/version-1.5.0-blue.svg)](https://github.com/shditz/codeatlas)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/shditz/codeatlas/blob/main/LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-VS%20Code%20%7C%20Antigravity%20%7C%20Cursor%20%7C%20Windsurf-purple.svg)](https://github.com/shditz/codeatlas)
 
@@ -26,12 +26,12 @@
 
 CodeAtlas is packaged as a standard VS Code Extension (`.vsix`) and is fully compatible with **VS Code**, **Google Antigravity**, **Cursor**, **Windsurf**, and other VS Code-based editors.
 
-1. Download or build the `codeatlas-vscode-1.1.0.vsix` file.
+1. Download or build the `codeatlas-vscode-1.5.0.vsix` file.
 2. Open your editor (VS Code, Antigravity, Cursor, etc.).
 3. Go to the **Extensions** view (`Ctrl+Shift+X` on Windows/Linux or `Cmd+Shift+X` on macOS).
 4. Click the **`...`** (Views and More Actions) icon at the top right of the Extensions panel.
 5. Select **"Install from VSIX..."** from the dropdown menu.
-6. Locate and select the `codeatlas-vscode-1.1.0.vsix` file to install it.
+6. Locate and select the `codeatlas-vscode-1.5.0.vsix` file to install it.
 
 ### 2. Index Your Workspace
 
@@ -71,8 +71,17 @@ Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and type `CodeAtlas`:
 | `CodeAtlas: Index / Refresh Codebase`    | Re-indexes AST symbols, dependencies, and git churn                          |
 | `CodeAtlas: Export Context for AI Agent` | Generates a compressed context pack for the active file or task              |
 | `CodeAtlas: Generate Git PR Context`     | Creates a comprehensive architectural blast-radius summary for Pull Requests |
+| `CodeAtlas: Generate AI Agent Rules`     | Generates evidence-backed guidelines for AI agents                           |
 | `CodeAtlas: Run Cypher Graph Query`      | Executes graph queries across codebase dependencies                          |
 | `CodeAtlas: Toggle Real-time Watcher`    | Enables/disables live background indexing on file save (`Ctrl+S`)            |
+| `CodeAtlas: Start MCP Server`            | Starts Model Context Protocol stdio server                                   |
+| `CodeAtlas: Run Architecture Audit`      | Audits security vulnerabilities, DDD layers, and dead code                   |
+| `CodeAtlas: Search Codebase Symbols`     | Full-text and symbol search with BM25 ranking                                |
+| `CodeAtlas: Initialize Workspace`        | Initializes CodeAtlas `.atlas/` database                                     |
+| `CodeAtlas: Scan Workspace`              | Fast metadata and tech-stack structure scan                                  |
+| `CodeAtlas: Run Health Diagnostics`      | Evaluates overall repository health score (0-100)                            |
+| `CodeAtlas: Validate AI Rules`           | Validates rule syntax and detects conflicting instructions                   |
+| `CodeAtlas: Clean Cache & Database`      | Safely resets and clears local SQLite cache                                  |
 
 ---
 

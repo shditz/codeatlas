@@ -23,9 +23,6 @@ export class CodeAtlasTreeItem extends vscode.TreeItem {
   }
 }
 
-/**
- * Overview & Architectural Hierarchy Provider
- */
 export class CodeAtlasOverviewProvider implements vscode.TreeDataProvider<CodeAtlasTreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<
     CodeAtlasTreeItem | undefined | null | void
@@ -104,15 +101,15 @@ export class CodeAtlasOverviewProvider implements vscode.TreeDataProvider<CodeAt
       const symbolCount = symbolRepo.count();
 
       const graphItem = new CodeAtlasTreeItem(
-        'Open 3D Architecture Canvas',
+        'Open Architecture Map',
         vscode.TreeItemCollapsibleState.None,
         'action_graph',
-        'Interactive WebGL',
+        'Interactive Visualizer',
         'type-hierarchy',
       );
       graphItem.command = {
         command: 'codeatlas.openGraphView',
-        title: 'Open Interactive Graph View',
+        title: 'Open Architecture Map',
       };
 
       const filesItem = new CodeAtlasTreeItem(
@@ -211,9 +208,6 @@ export class CodeAtlasOverviewProvider implements vscode.TreeDataProvider<CodeAt
   }
 }
 
-/**
- * Architecture & Health Diagnostics Provider
- */
 export class CodeAtlasAnalyticsProvider implements vscode.TreeDataProvider<CodeAtlasTreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<
     CodeAtlasTreeItem | undefined | null | void
@@ -286,7 +280,7 @@ export class CodeAtlasAnalyticsProvider implements vscode.TreeDataProvider<CodeA
       const infrastructure = report.layers.find((l) => l.name === 'infrastructure')?.files || [];
 
       const layerItem = new CodeAtlasTreeItem(
-        `DDD Layer Architecture`,
+        `Architecture Layers`,
         vscode.TreeItemCollapsibleState.Collapsed,
         'cat_layers',
         `${presentation.length + application.length + domain.length + infrastructure.length} modules`,
@@ -294,17 +288,17 @@ export class CodeAtlasAnalyticsProvider implements vscode.TreeDataProvider<CodeA
       );
 
       const cycleItem = new CodeAtlasTreeItem(
-        `Circular Dependencies (${cycles.length})`,
+        `Circular Imports (${cycles.length})`,
         cycles.length > 0
           ? vscode.TreeItemCollapsibleState.Collapsed
           : vscode.TreeItemCollapsibleState.None,
         'cat_cycles',
-        cycles.length === 0 ? '✓ None (Clean)' : '⚠ Regressions found',
+        cycles.length === 0 ? '✓ None (Clean)' : '⚠ Issues found',
         cycles.length === 0 ? 'check' : 'warning',
       );
 
       const deadItem = new CodeAtlasTreeItem(
-        `Dead / Orphan Files (${deadFiles.length})`,
+        `Unreferenced Files (${deadFiles.length})`,
         deadFiles.length > 0
           ? vscode.TreeItemCollapsibleState.Collapsed
           : vscode.TreeItemCollapsibleState.None,
@@ -432,9 +426,6 @@ export class CodeAtlasAnalyticsProvider implements vscode.TreeDataProvider<CodeA
   }
 }
 
-/**
- * AI Agent Rules & Governance Provider
- */
 export class CodeAtlasRulesProvider implements vscode.TreeDataProvider<CodeAtlasTreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<
     CodeAtlasTreeItem | undefined | null | void
@@ -468,8 +459,8 @@ export class CodeAtlasRulesProvider implements vscode.TreeDataProvider<CodeAtlas
         'shield',
       );
       emptyItem.command = {
-        command: 'codeatlas.exportContext',
-        title: 'Generate Rules',
+        command: 'codeatlas.generateRules',
+        title: 'Generate AI Rules',
       };
       return [emptyItem];
     }
@@ -493,9 +484,6 @@ export class CodeAtlasRulesProvider implements vscode.TreeDataProvider<CodeAtlas
   }
 }
 
-/**
- * Quick Actions & AI Tools Provider (1-Click Sidebar Hub)
- */
 export class CodeAtlasToolsProvider implements vscode.TreeDataProvider<CodeAtlasTreeItem> {
   constructor(_workspaceRoot: string) {}
 
@@ -507,50 +495,120 @@ export class CodeAtlasToolsProvider implements vscode.TreeDataProvider<CodeAtlas
     const items: CodeAtlasTreeItem[] = [];
 
     const graphAction = new CodeAtlasTreeItem(
-      'Open 3D/2D Graph Canvas',
+      'Open Architecture Map',
       vscode.TreeItemCollapsibleState.None,
       'tool',
-      'Interactive WebGL Architecture',
+      'Interactive 2D/3D visualizer',
       'type-hierarchy',
     );
-    graphAction.command = { command: 'codeatlas.openGraphView', title: 'Open Graph' };
+    graphAction.command = { command: 'codeatlas.openGraphView', title: 'Open Architecture Map' };
     items.push(graphAction);
 
     const indexAction = new CodeAtlasTreeItem(
       'Index / Refresh Workspace',
       vscode.TreeItemCollapsibleState.None,
       'tool',
-      'Extract Tree-sitter ASTs',
+      'Parse symbols & build graph',
       'refresh',
     );
     indexAction.command = { command: 'codeatlas.indexCodebase', title: 'Index Codebase' };
     items.push(indexAction);
 
-    const contextAction = new CodeAtlasTreeItem(
-      'Export Context Pack for AI',
+    const scanAction = new CodeAtlasTreeItem(
+      'Quick Scan Workspace',
       vscode.TreeItemCollapsibleState.None,
       'tool',
-      'Token-budgeted & compressed',
+      'Detect project stack & structure',
+      'search-stop',
+    );
+    scanAction.command = { command: 'codeatlas.scan', title: 'Scan' };
+    items.push(scanAction);
+
+    const contextAction = new CodeAtlasTreeItem(
+      'Export Context Pack',
+      vscode.TreeItemCollapsibleState.None,
+      'tool',
+      'Bundle context for AI agents',
       'cloud-download',
     );
     contextAction.command = { command: 'codeatlas.exportContext', title: 'Export Context' };
     items.push(contextAction);
 
-    const prAction = new CodeAtlasTreeItem(
-      'Generate Git PR Blast Radius',
+    const generateRulesAction = new CodeAtlasTreeItem(
+      'Generate AI Rules',
       vscode.TreeItemCollapsibleState.None,
       'tool',
-      'Downstream impact analysis',
+      'Create rules for Cursor/Claude/Codex',
+      'shield',
+    );
+    generateRulesAction.command = { command: 'codeatlas.generateRules', title: 'Generate Rules' };
+    items.push(generateRulesAction);
+
+    const validateAction = new CodeAtlasTreeItem(
+      'Validate AI Rules',
+      vscode.TreeItemCollapsibleState.None,
+      'tool',
+      'Check rules for conflicts',
+      'check-all',
+    );
+    validateAction.command = { command: 'codeatlas.rulesValidate', title: 'Validate Rules' };
+    items.push(validateAction);
+
+    const searchAction = new CodeAtlasTreeItem(
+      'Semantic Search',
+      vscode.TreeItemCollapsibleState.None,
+      'tool',
+      'Search codebase by intent',
+      'search-fuzzy',
+    );
+    searchAction.command = { command: 'codeatlas.semanticSearch', title: 'Search' };
+    items.push(searchAction);
+
+    const mcpAction = new CodeAtlasTreeItem(
+      'Start MCP Server',
+      vscode.TreeItemCollapsibleState.None,
+      'tool',
+      'Model Context Protocol service',
+      'server',
+    );
+    mcpAction.command = { command: 'codeatlas.startMCP', title: 'Start MCP' };
+    items.push(mcpAction);
+
+    const prAction = new CodeAtlasTreeItem(
+      'Analyze PR Impact',
+      vscode.TreeItemCollapsibleState.None,
+      'tool',
+      'Calculate git change blast radius',
       'git-pull-request',
     );
     prAction.command = { command: 'codeatlas.generatePRContext', title: 'Generate PR Context' };
     items.push(prAction);
 
-    const queryAction = new CodeAtlasTreeItem(
-      'Run Cypher Graph Query',
+    const auditAction = new CodeAtlasTreeItem(
+      'Architecture Audit',
       vscode.TreeItemCollapsibleState.None,
       'tool',
-      'Dependency traversal query',
+      'Check circular imports & layers',
+      'report',
+    );
+    auditAction.command = { command: 'codeatlas.runAudit', title: 'Audit' };
+    items.push(auditAction);
+
+    const doctorAction = new CodeAtlasTreeItem(
+      'Health Diagnostics',
+      vscode.TreeItemCollapsibleState.None,
+      'tool',
+      'Inspect database & indexer',
+      'pulse',
+    );
+    doctorAction.command = { command: 'codeatlas.doctor', title: 'Doctor' };
+    items.push(doctorAction);
+
+    const queryAction = new CodeAtlasTreeItem(
+      'Graph Query',
+      vscode.TreeItemCollapsibleState.None,
+      'tool',
+      'Run Cypher queries on graph',
       'search',
     );
     queryAction.command = { command: 'codeatlas.queryGraph', title: 'Query Graph' };
@@ -565,6 +623,26 @@ export class CodeAtlasToolsProvider implements vscode.TreeDataProvider<CodeAtlas
     );
     watchAction.command = { command: 'codeatlas.toggleWatcher', title: 'Toggle Watcher' };
     items.push(watchAction);
+
+    const initAction = new CodeAtlasTreeItem(
+      'Initialize Workspace',
+      vscode.TreeItemCollapsibleState.None,
+      'tool',
+      'Configure .atlas directory',
+      'new-folder',
+    );
+    initAction.command = { command: 'codeatlas.init', title: 'Init' };
+    items.push(initAction);
+
+    const cleanAction = new CodeAtlasTreeItem(
+      'Clean Cache & Database',
+      vscode.TreeItemCollapsibleState.None,
+      'tool',
+      'Reset all local index data',
+      'trash',
+    );
+    cleanAction.command = { command: 'codeatlas.clean', title: 'Clean Cache' };
+    items.push(cleanAction);
 
     return items;
   }

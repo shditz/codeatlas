@@ -5,7 +5,21 @@ import ForceGraph3D from 'react-force-graph-3d';
 import * as THREE from 'three';
 import './index.css';
 
-declare function acquireVsCodeApi(): { postMessage: (msg: unknown) => void };
+interface VsCodeApi {
+  postMessage: (msg: unknown) => void;
+  getState?: () => unknown;
+  setState?: (state: unknown) => void;
+}
+
+declare function acquireVsCodeApi(): VsCodeApi;
+
+const vscodeApi: VsCodeApi | null = (() => {
+  try {
+    return typeof acquireVsCodeApi !== 'undefined' ? acquireVsCodeApi() : null;
+  } catch {
+    return null;
+  }
+})();
 
 interface Node {
   id: string;
@@ -243,9 +257,8 @@ function App() {
 
     window.addEventListener('message', handleMessage);
 
-    if (typeof acquireVsCodeApi !== 'undefined') {
-      const vscode = acquireVsCodeApi();
-      vscode.postMessage({ command: 'ready' });
+    if (vscodeApi) {
+      vscodeApi.postMessage({ command: 'ready' });
     }
 
     return () => {
@@ -399,9 +412,8 @@ function App() {
 
   const handleOpenFile = (path?: string) => {
     if (!path) return;
-    if (typeof acquireVsCodeApi !== 'undefined') {
-      const vscode = acquireVsCodeApi();
-      vscode.postMessage({ command: 'openFile', path });
+    if (vscodeApi) {
+      vscodeApi.postMessage({ command: 'openFile', path });
     }
   };
 

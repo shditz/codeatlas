@@ -1,7 +1,12 @@
 import * as vscode from 'vscode';
 import path from 'node:path';
 import fs from 'node:fs';
-import { FileRepository, DependencyRepository, type AtlasDatabase } from '@codeatlas-ai/storage';
+import {
+  FileRepository,
+  DependencyRepository,
+  AtlasDatabase,
+  runMigrations,
+} from '@codeatlas-ai/storage';
 import { DependencyGraph } from '@codeatlas-ai/graph';
 
 export class GraphViewProvider {
@@ -36,6 +41,8 @@ export class GraphViewProvider {
         enableScripts: true,
         retainContextWhenHidden: true,
         localResourceRoots: [
+          extensionUri,
+          vscode.Uri.joinPath(extensionUri, 'webview', 'dist'),
           vscode.Uri.joinPath(extensionUri, '..', 'webview', 'dist'),
           vscode.Uri.joinPath(extensionUri, 'dist'),
         ],
@@ -98,6 +105,21 @@ export class GraphViewProvider {
   }
 
   private _sendGraphData() {
+    if (!this._db) {
+      const wsFolders = vscode.workspace.workspaceFolders;
+      if (wsFolders && wsFolders.length > 0 && wsFolders[0]) {
+        const dbPath = path.join(wsFolders[0].uri.fsPath, '.atlas', 'atlas.db');
+        if (fs.existsSync(dbPath)) {
+          try {
+            this._db = new AtlasDatabase(dbPath);
+            runMigrations(this._db);
+          } catch (e) {
+            console.error('Failed to init DB for graph view:', e);
+          }
+        }
+      }
+    }
+
     if (!this._db) {
       this._panel.webview.postMessage({
         command: 'error',
@@ -255,6 +277,12 @@ export class GraphViewProvider {
       const assetUri = webview.asWebviewUri(webviewDistPath).toString();
 
       html = html.replace(/(src|href)="\/assets\//g, `$1="${assetUri}/assets/`);
+      html = html.replace(/(src|href)="\/favicon\.svg"/g, `$1="${assetUri}/favicon.svg"`);
+      html = html.replace(/(src|href)="\/icons\.svg"/g, `$1="${assetUri}/icons.svg"`);
+
+      const cspSource = webview.cspSource;
+      const csp = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${cspSource} https: data: blob:; style-src ${cspSource} 'unsafe-inline'; script-src ${cspSource} 'unsafe-inline' 'unsafe-eval'; connect-src ${cspSource} https: data: blob:; font-src ${cspSource} data:;">`;
+      html = html.replace('<head>', `<head>\n    ${csp}`);
     } else {
       html = `<!DOCTYPE html>
       <html lang="en">

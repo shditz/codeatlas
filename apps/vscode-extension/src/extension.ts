@@ -12,7 +12,7 @@ import {
 } from '@codeatlas-ai/storage';
 import { Indexer, RepositoryWatcher } from '@codeatlas-ai/indexer';
 import { ContextEngine } from '@codeatlas-ai/context';
-import { RuleEngine } from '@codeatlas-ai/rules';
+import { RuleEngine, RuleGenerator } from '@codeatlas-ai/rules';
 import { createExporter } from '@codeatlas-ai/exporters';
 import { GitService } from '@codeatlas-ai/git';
 import {
@@ -139,6 +139,15 @@ export function activate(context: vscode.ExtensionContext): void {
           cancellable: false,
         },
         async () => {
+          if (db) {
+            try {
+              db.close();
+            } catch {
+              // Ignore close errors
+            }
+            db = null;
+          }
+
           const dbPath = path.join(workspaceRoot, '.atlas', 'atlas.db');
           fs.mkdirSync(path.dirname(dbPath), { recursive: true });
           db = new AtlasDatabase(dbPath);
@@ -477,6 +486,195 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand('codeatlas.openGraphView', () => {
       GraphViewProvider.createOrShow(context.extensionUri, db, projectId);
+    }),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('codeatlas.generateRules', async () => {
+      if (!workspaceRoot) {
+        vscode.window.showErrorMessage('CodeAtlas: Open a workspace folder first.');
+        return;
+      }
+
+      const options = [
+        {
+          label: '🤖 AGENTS.md (Google Antigravity / OpenAI Codex)',
+          target: 'antigravity',
+          file: 'AGENTS.md',
+        },
+        {
+          label: '🧠 CLAUDE.md (Claude Code / Anthropic)',
+          target: 'claude',
+          file: 'CLAUDE.md',
+        },
+        {
+          label: '⚡ .cursorrules (Cursor IDE)',
+          target: 'cursor',
+          file: '.cursorrules',
+        },
+        {
+          label: '✨ GEMINI.md (Google Gemini)',
+          target: 'gemini',
+          file: 'GEMINI.md',
+        },
+        {
+          label: '🌐 All Formats (Generate All Rule Files)',
+          target: 'all',
+          file: 'all',
+        },
+      ];
+
+      const selected = await vscode.window.showQuickPick(options, {
+        placeHolder: 'Select target AI rule guideline format to generate',
+      });
+
+      if (!selected) return;
+
+      try {
+        const generator = new RuleGenerator({ rootDir: workspaceRoot });
+        const proposed = generator.generateProposedRules();
+
+        const meta = {
+          name: path.basename(workspaceRoot),
+          languages: ['TypeScript'],
+          frameworks: [],
+          packageManager: 'pnpm',
+        };
+
+        const targetsToGenerate =
+          selected.target === 'all'
+            ? [
+                { target: 'antigravity', file: 'AGENTS.md' },
+                { target: 'claude', file: 'CLAUDE.md' },
+                { target: 'cursor', file: '.cursorrules' },
+                { target: 'gemini', file: 'GEMINI.md' },
+              ]
+            : [{ target: selected.target, file: selected.file }];
+
+        for (const item of targetsToGenerate) {
+          const doc = generator.generateRuleDocument(proposed, meta, item.target);
+          const targetPath = path.join(workspaceRoot, item.file);
+          fs.writeFileSync(targetPath, doc, 'utf-8');
+        }
+
+        rulesProvider.refresh();
+        vscode.window.showInformationMessage(
+          `CodeAtlas: Generated ${targetsToGenerate.map((t) => t.file).join(', ')} successfully!`,
+        );
+
+        const primaryFile = path.join(workspaceRoot, targetsToGenerate[0]!.file);
+        const textDoc = await vscode.workspace.openTextDocument(vscode.Uri.file(primaryFile));
+        await vscode.window.showTextDocument(textDoc);
+      } catch (err) {
+        vscode.window.showErrorMessage(
+          `Failed to generate rules: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+    }),
+    vscode.commands.registerCommand('codeatlas.clean', async () => {
+      if (!workspaceRoot) {
+        vscode.window.showErrorMessage('CodeAtlas: Open a workspace folder first.');
+        return;
+      }
+      try {
+        if (db) {
+          try {
+            db.close();
+          } catch {
+            // Ignore close error
+          }
+          db = null;
+        }
+        overviewProvider.setDatabase(null, 1);
+        analyticsProvider.setDatabase(null, 1);
+        codelensProvider.setDatabase(null, 1);
+
+        const atlasDir = path.join(workspaceRoot, '.atlas');
+        if (fs.existsSync(atlasDir)) {
+          fs.rmSync(atlasDir, { recursive: true, force: true });
+          vscode.window.showInformationMessage(
+            'CodeAtlas: Cache and database cleared successfully.',
+          );
+        } else {
+          vscode.window.showInformationMessage('CodeAtlas: Cache is already clean.');
+        }
+        overviewProvider.refresh();
+        analyticsProvider.refresh();
+        rulesProvider.refresh();
+      } catch (err) {
+        vscode.window.showErrorMessage(
+          `CodeAtlas Clean failed: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+    }),
+    vscode.commands.registerCommand('codeatlas.startMCP', () => {
+      if (!workspaceRoot) {
+        vscode.window.showErrorMessage('CodeAtlas: Open a workspace folder first.');
+        return;
+      }
+      const term = vscode.window.createTerminal('CodeAtlas: MCP');
+      term.show();
+      term.sendText('npx -y @codeatlas-ai/cli mcp');
+    }),
+    vscode.commands.registerCommand('codeatlas.runAudit', () => {
+      if (!workspaceRoot) {
+        vscode.window.showErrorMessage('CodeAtlas: Open a workspace folder first.');
+        return;
+      }
+      const term = vscode.window.createTerminal('CodeAtlas: Audit');
+      term.show();
+      term.sendText('npx -y @codeatlas-ai/cli audit');
+    }),
+    vscode.commands.registerCommand('codeatlas.semanticSearch', async () => {
+      if (!workspaceRoot) {
+        vscode.window.showErrorMessage('CodeAtlas: Open a workspace folder first.');
+        return;
+      }
+      const query = await vscode.window.showInputBox({
+        prompt: 'Enter search query for codebase',
+        placeHolder: 'e.g. "authentication controller or jwt validation"',
+      });
+      if (query) {
+        const term = vscode.window.createTerminal('CodeAtlas: Search');
+        term.show();
+        term.sendText(`npx -y @codeatlas-ai/cli search "${query}"`);
+      }
+    }),
+    vscode.commands.registerCommand('codeatlas.init', () => {
+      if (!workspaceRoot) {
+        vscode.window.showErrorMessage('CodeAtlas: Open a workspace folder first.');
+        return;
+      }
+      const term = vscode.window.createTerminal('CodeAtlas: Init');
+      term.show();
+      term.sendText('npx -y @codeatlas-ai/cli init');
+    }),
+    vscode.commands.registerCommand('codeatlas.scan', () => {
+      if (!workspaceRoot) {
+        vscode.window.showErrorMessage('CodeAtlas: Open a workspace folder first.');
+        return;
+      }
+      const term = vscode.window.createTerminal('CodeAtlas: Scan');
+      term.show();
+      term.sendText('npx -y @codeatlas-ai/cli scan');
+    }),
+    vscode.commands.registerCommand('codeatlas.doctor', () => {
+      if (!workspaceRoot) {
+        vscode.window.showErrorMessage('CodeAtlas: Open a workspace folder first.');
+        return;
+      }
+      const term = vscode.window.createTerminal('CodeAtlas: Doctor');
+      term.show();
+      term.sendText('npx -y @codeatlas-ai/cli doctor');
+    }),
+    vscode.commands.registerCommand('codeatlas.rulesValidate', () => {
+      if (!workspaceRoot) {
+        vscode.window.showErrorMessage('CodeAtlas: Open a workspace folder first.');
+        return;
+      }
+      const term = vscode.window.createTerminal('CodeAtlas: Rules Validate');
+      term.show();
+      term.sendText('npx -y @codeatlas-ai/cli rules validate');
     }),
   );
 }

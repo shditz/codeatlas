@@ -9,7 +9,7 @@
 CodeAtlas turns your codebase into a high-performance **Knowledge Graph** stored locally in an embedded SQLite database (`.atlas/atlas.db`). It equips AI coding assistants (such as **Google Antigravity**, **Claude Code**, **Cursor**, **Windsurf**, and **Copilot**) with structural codebase context—dramatically reducing irrelevant token usage, preventing architectural regressions, and grounding AI agent code generation in real dependency graphs.
 
 [![CI](https://github.com/shditz/codeatlas/actions/workflows/ci.yml/badge.svg)](https://github.com/shditz/codeatlas/actions)
-[![Tests: 147 passing](<https://img.shields.io/badge/Tests-147%20passing%20(100%25)-brightgreen.svg>)](https://github.com/shditz/codeatlas)
+[![Tests: 155 passing](<https://img.shields.io/badge/Tests-155%20passing%20(100%25)-brightgreen.svg>)](https://github.com/shditz/codeatlas)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-green?logo=node.js)](https://nodejs.org/)
@@ -115,11 +115,12 @@ atlas rules generate all -y
 CodeAtlas provides a native extension (`.vsix`) for any VS Code-compatible IDE (such as **Google Antigravity**, **Cursor**, **Windsurf**, and **VS Code**). This extension gives you a beautiful **Sidebar Panel** and an interactive **2D/3D Graph Canvas** right inside your editor.
 
 ### Installation Guide:
-1. Download or build the `codeatlas-vscode-1.1.0.vsix` file.
+
+1. Download or build the `codeatlas-vscode-1.5.0.vsix` file.
 2. Open your editor (VS Code, Antigravity, Cursor, etc.).
 3. Go to the **Extensions** view (`Ctrl+Shift+X` on Windows/Linux or `Cmd+Shift+X` on macOS).
 4. Click the **`...`** (Views and More Actions) menu at the top right of the Extensions panel.
-5. Select **"Install from VSIX..."** and choose the `codeatlas-vscode-1.1.0.vsix` file.
+5. Select **"Install from VSIX..."** and choose the `codeatlas-vscode-1.5.0.vsix` file.
 
 Once installed, click the **CodeAtlas map icon** in your Activity Bar to access the Architecture & Codebase Map, Analytics, AI Governance rules, and Quick Actions.
 

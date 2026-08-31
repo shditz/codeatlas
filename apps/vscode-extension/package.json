@@ -2,7 +2,7 @@
   "name": "codeatlas-vscode",
   "displayName": "CodeAtlas - AI Context Intelligence",
   "description": "Give AI a map of your codebase. Native VS Code integration for context intelligence, AST indexing, graph navigation, and rule management.",
-  "version": "1.1.0",
+  "version": "1.5.0",
   "private": true,
   "publisher": "shditz",
   "icon": "icon.png",
@@ -76,25 +76,25 @@
     "commands": [
       {
         "command": "codeatlas.indexCodebase",
-        "title": "Index / Refresh Codebase",
+        "title": "Index / Refresh Workspace",
         "category": "CodeAtlas",
         "icon": "$(refresh)"
       },
       {
         "command": "codeatlas.exportContext",
-        "title": "Export Context for AI Agent",
+        "title": "Export Context Pack",
         "category": "CodeAtlas",
         "icon": "$(cloud-download)"
       },
       {
         "command": "codeatlas.generatePRContext",
-        "title": "Generate Git PR Context",
+        "title": "Analyze PR Impact",
         "category": "CodeAtlas",
         "icon": "$(git-pull-request)"
       },
       {
         "command": "codeatlas.queryGraph",
-        "title": "Run Cypher Graph Query",
+        "title": "Graph Query",
         "category": "CodeAtlas",
         "icon": "$(search)"
       },
@@ -106,9 +106,63 @@
       },
       {
         "command": "codeatlas.openGraphView",
-        "title": "Open Interactive Graph View",
+        "title": "Open Architecture Map",
         "category": "CodeAtlas",
         "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "codeatlas.generateRules",
+        "title": "Generate AI Rules",
+        "category": "CodeAtlas",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "codeatlas.clean",
+        "title": "Clean Cache & Database",
+        "category": "CodeAtlas",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "codeatlas.startMCP",
+        "title": "Start MCP Server",
+        "category": "CodeAtlas",
+        "icon": "$(server)"
+      },
+      {
+        "command": "codeatlas.semanticSearch",
+        "title": "Semantic Search",
+        "category": "CodeAtlas",
+        "icon": "$(search-fuzzy)"
+      },
+      {
+        "command": "codeatlas.runAudit",
+        "title": "Architecture Audit",
+        "category": "CodeAtlas",
+        "icon": "$(report)"
+      },
+      {
+        "command": "codeatlas.init",
+        "title": "Initialize Workspace",
+        "category": "CodeAtlas",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "codeatlas.scan",
+        "title": "Quick Scan Workspace",
+        "category": "CodeAtlas",
+        "icon": "$(search-stop)"
+      },
+      {
+        "command": "codeatlas.doctor",
+        "title": "Health Diagnostics",
+        "category": "CodeAtlas",
+        "icon": "$(pulse)"
+      },
+      {
+        "command": "codeatlas.rulesValidate",
+        "title": "Validate AI Rules",
+        "category": "CodeAtlas",
+        "icon": "$(check-all)"
       }
     ],
     "menus": {
@@ -150,6 +204,7 @@
     }
   },
   "scripts": {
+    "vscode:prepublish": "pnpm run build",
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",

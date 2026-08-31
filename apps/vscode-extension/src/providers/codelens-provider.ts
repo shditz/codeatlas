@@ -70,7 +70,6 @@ export class CodeAtlasCodeLensProvider implements vscode.CodeLensProvider {
 
     const lenses: vscode.CodeLens[] = [];
 
-    // 1. Top of file CodeLens: Architecture & Centrality Overview
     const incomingDeps = this.depRepo
       ? this.depRepo.getDependents(this.projectId, relativePath)
       : [];
@@ -98,7 +97,6 @@ export class CodeAtlasCodeLensProvider implements vscode.CodeLensProvider {
       }),
     );
 
-    // 2. Symbol-level CodeLenses
     const symbols = this.symbolRepo.getByFile(file.id);
     for (const sym of symbols) {
       if (sym.line > 0 && sym.line <= document.lineCount) {

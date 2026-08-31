@@ -19,13 +19,23 @@ import { registerAnalyzeCommand } from './commands/analyze.js';
 import { registerInstallHooksCommand } from './commands/install-hooks.js';
 import { registerAuditCommand } from './commands/audit-cmd.js';
 import { registerLinkCommand } from './commands/link-cmd.js';
+import updateNotifier from 'update-notifier';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf-8'));
+
+updateNotifier({ pkg }).notify();
 
 const program = new Command();
 
 program
   .name('atlas')
   .description(chalk.bold('CodeAtlas') + ' — Give AI a map of your codebase.')
-  .version('1.1.0');
+  .version('1.5.0');
 
 registerInitCommand(program);
 registerScanCommand(program);

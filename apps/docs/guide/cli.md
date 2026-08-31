@@ -26,6 +26,9 @@ Commands:
   rules                        Manage and generate evidence-backed AI rules and guidelines
   clean [options]              Clean index database, cache, or snapshots
   mcp                          Start the Model Context Protocol (MCP) server (16 tools)
+  audit [options]              Run SAST and Data-Flow Taint Analysis
+  install-hooks [options]      Install Git pre-commit hooks for auto-indexing
+  link [targetPath]            Federate external repository databases
 ```
 
 ---
@@ -317,4 +320,52 @@ atlas mcp setup --dry-run
 
 # View all 14+ supported AI assistant targets and detection status
 atlas mcp list-targets
+```
+
+---
+
+### 17. `atlas audit`
+
+Runs Static Application Security Testing (SAST) and Data-Flow Taint Analysis across your codebase to detect security vulnerabilities and unsafe data sinks.
+
+```bash
+# Run security audit on entire indexed codebase
+atlas audit
+
+# Audit a specific file only
+atlas audit --file src/auth/jwt.ts
+
+# Output JSON report (ideal for CI pipelines)
+atlas audit --json
+
+# Fail CI build if critical or high vulnerabilities are found
+atlas audit --fail-on-vulnerabilities
+```
+
+---
+
+### 18. `atlas install-hooks`
+
+Installs native Git pre-commit hooks to automatically keep `.atlas/atlas.db` updated with staged changes on every `git commit`.
+
+```bash
+# Install pre-commit hook in .git/hooks/pre-commit
+atlas install-hooks
+
+# Force overwrite existing hook
+atlas install-hooks --force
+```
+
+---
+
+### 19. `atlas link`
+
+Federates and attaches an external repository's SQLite database to the current CodeAtlas index for multi-repo monorepo cross-referencing.
+
+```bash
+# Link an external repository database
+atlas link ../microservice-b --alias auth_service
+
+# List all federated repositories
+atlas link --list
 ```
