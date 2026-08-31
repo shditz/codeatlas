@@ -22,9 +22,20 @@
 
 ## 🚀 Quick Start
 
-### 1. Index Your Workspace
+### 1. Install the Extension (.vsix)
 
-Open any project folder in VS Code / Antigravity / Cursor, open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on macOS) and run:
+CodeAtlas is packaged as a standard VS Code Extension (`.vsix`) and is fully compatible with **VS Code**, **Google Antigravity**, **Cursor**, **Windsurf**, and other VS Code-based editors.
+
+1. Download or build the `codeatlas-vscode-1.1.0.vsix` file.
+2. Open your editor (VS Code, Antigravity, Cursor, etc.).
+3. Go to the **Extensions** view (`Ctrl+Shift+X` on Windows/Linux or `Cmd+Shift+X` on macOS).
+4. Click the **`...`** (Views and More Actions) icon at the top right of the Extensions panel.
+5. Select **"Install from VSIX..."** from the dropdown menu.
+6. Locate and select the `codeatlas-vscode-1.1.0.vsix` file to install it.
+
+### 2. Index Your Workspace
+
+Open any project folder in your IDE, open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`) and run:
 
 ```
 CodeAtlas: Index / Refresh Codebase
@@ -32,13 +43,13 @@ CodeAtlas: Index / Refresh Codebase
 
 CodeAtlas will scan your directory, extract AST symbols via Tree-sitter, link module dependencies, and build a local SQLite graph in `.atlas/atlas.db`.
 
-### 2. Open the Interactive 3D/2D Graph View
+### 3. Open the Interactive 3D/2D Graph View
 
-- Click the **CodeAtlas (Map)** icon in the left Activity Bar.
+- Click the **CodeAtlas** icon in the left Activity Bar to open the Sidebar panel.
 - Or click the **Graph View** button at the top-right of any open editor tab.
 - Or run `CodeAtlas: Open Interactive Graph View` from the Command Palette.
 
-### 3. Connect to Your AI Assistant (1-Click MCP Setup)
+### 4. Connect to Your AI Assistant (1-Click MCP Setup)
 
 Open your integrated terminal and run:
 

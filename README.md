@@ -110,6 +110,19 @@ atlas rules generate --proposal
 atlas rules generate all -y
 ```
 
+## 🧩 IDE Extension (VS Code, Antigravity, Cursor)
+
+CodeAtlas provides a native extension (`.vsix`) for any VS Code-compatible IDE (such as **Google Antigravity**, **Cursor**, **Windsurf**, and **VS Code**). This extension gives you a beautiful **Sidebar Panel** and an interactive **2D/3D Graph Canvas** right inside your editor.
+
+### Installation Guide:
+1. Download or build the `codeatlas-vscode-1.1.0.vsix` file.
+2. Open your editor (VS Code, Antigravity, Cursor, etc.).
+3. Go to the **Extensions** view (`Ctrl+Shift+X` on Windows/Linux or `Cmd+Shift+X` on macOS).
+4. Click the **`...`** (Views and More Actions) menu at the top right of the Extensions panel.
+5. Select **"Install from VSIX..."** and choose the `codeatlas-vscode-1.1.0.vsix` file.
+
+Once installed, click the **CodeAtlas map icon** in your Activity Bar to access the Architecture & Codebase Map, Analytics, AI Governance rules, and Quick Actions.
+
 ---
 
 ## 🛠️ CLI Commands Cheat Sheet
