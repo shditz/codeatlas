@@ -95,44 +95,23 @@ atlas rules generate all -y
 
 ---
 
-## 🤖 3. Hooking CodeAtlas into AI Coding Agents
+## 🤖 3. Connect to Your AI Coding Assistant (1-Click Setup)
 
 The real power happens when your AI Coding Assistant connects to CodeAtlas via **MCP (Model Context Protocol)**.
 
-### For Google Antigravity:
-
-In your project root, create `.agents/mcp_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "codeatlas": {
-      "command": "atlas",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
-### For Claude Code CLI:
+Run the automated configurator:
 
 ```bash
-claude mcp add codeatlas atlas -- mcp
+atlas mcp setup
 ```
 
-### For Claude Desktop:
+This interactive command automatically detects your installed AI assistants (Google Antigravity, Cursor, Claude Desktop, Claude Code, Windsurf, Roo Code, Trae, Zed, Continue) and safely writes the necessary configuration without overwriting existing tools.
 
-Add this to your Claude Desktop config (`%APPDATA%\Claude\claude_desktop_config.json` on Windows):
+You can also run non-interactively:
 
-```json
-{
-  "mcpServers": {
-    "codeatlas": {
-      "command": "atlas",
-      "args": ["mcp"]
-    }
-  }
-}
+```bash
+# Configure all detected AI assistants automatically
+atlas mcp setup --all
 ```
 
 ---

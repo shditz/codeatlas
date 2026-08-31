@@ -139,11 +139,41 @@ atlas rules generate all -y
 
 ## 🤖 Model Context Protocol (MCP) Integration
 
-Connect CodeAtlas directly to your AI Coding Assistant so it can query the codebase on-demand:
+Connect CodeAtlas directly to your AI Coding Assistant so it can query the codebase on-demand with **16 native tools**.
 
-### Google Antigravity
+### ⚡ 1-Click Automated Setup (Recommended)
 
-Add to your project's `.agents/mcp_config.json` or global `~/.gemini/config/mcp_config.json`:
+Run the interactive auto-configurator in your project directory:
+
+```bash
+atlas mcp setup
+```
+
+Or configure specific assistants non-interactively:
+
+```bash
+# Configure all detected AI assistants automatically
+atlas mcp setup --all
+
+# Or specify your preferred assistants
+atlas mcp setup --target cursor antigravity claude-desktop windsurf roo trae
+```
+
+To see all 14+ supported AI coding assistants and their detection status:
+
+```bash
+atlas mcp list-targets
+```
+
+---
+
+### 📝 Manual Configuration Reference
+
+If you prefer manual setup, add the following to your AI assistant's configuration file:
+
+#### Google Antigravity & Codex
+
+Add to `.agents/mcp_config.json` (workspace) or `~/.gemini/config/mcp_config.json` (global):
 
 ```json
 {
@@ -156,15 +186,45 @@ Add to your project's `.agents/mcp_config.json` or global `~/.gemini/config/mcp_
 }
 ```
 
-### Claude Code CLI
+#### Cursor
+
+Add to `.cursor/mcp.json` in your workspace root:
+
+```json
+{
+  "mcpServers": {
+    "codeatlas": {
+      "command": "atlas",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+#### Claude Code CLI
 
 ```bash
 claude mcp add codeatlas atlas -- mcp
 ```
 
-### Cursor & Claude Desktop
+#### Claude Desktop
 
 Add to `%APPDATA%\Claude\claude_desktop_config.json` (Windows) or `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
+
+```json
+{
+  "mcpServers": {
+    "codeatlas": {
+      "command": "atlas",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+#### Windsurf (Cascade)
+
+Add to `~/.codeium/windsurf/mcp_config.json` or `.windsurf/mcp.json`:
 
 ```json
 {

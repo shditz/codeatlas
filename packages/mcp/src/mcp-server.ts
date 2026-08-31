@@ -518,7 +518,7 @@ export class McpServer {
               },
               serverInfo: {
                 name: 'codeatlas-mcp',
-                version: '0.2.0',
+                version: '1.1.0',
               },
             },
           };

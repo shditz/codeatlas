@@ -6,6 +6,7 @@ import ora from 'ora';
 import { defaultConfig } from '@codeatlas-ai/core';
 import { AtlasDatabase, runMigrations } from '@codeatlas-ai/storage';
 import { Scanner } from '@codeatlas-ai/indexer';
+import { McpConfigurator } from '@codeatlas-ai/mcp';
 import {
   getAtlasDir,
   getConfigPath,
@@ -19,7 +20,9 @@ export function registerInitCommand(program: Command): void {
     .command('init')
     .description('Initialize CodeAtlas with smart project detection')
     .option('--force', 'Reinitialize even if already initialized')
-    .action(async (options: { force?: boolean }) => {
+    .option('--mcp', 'Automatically configure MCP for detected AI coding assistants')
+    .option('--no-mcp', 'Skip MCP configuration')
+    .action(async (options: { force?: boolean; mcp?: boolean }) => {
       const cwd = process.cwd();
 
       if (isInitialized(cwd) && !options.force) {
@@ -220,15 +223,42 @@ export function registerInitCommand(program: Command): void {
         console.log('');
       }
 
+      const configurator = new McpConfigurator(cwd);
+      const detectedAssistants = configurator.detectAssistants();
+
+      if (options.mcp) {
+        const results = await configurator.configureAllDetected();
+        console.log(chalk.bold('  🧭 MCP Multi-Agent Integration:'));
+        for (const res of results) {
+          console.log(`    ${chalk.green('✓')} ${res.targetName} (${chalk.dim(res.filePath)})`);
+        }
+        console.log('');
+      } else if (options.mcp !== false && detectedAssistants.length > 0) {
+        console.log(chalk.bold('  🤖 Detected AI Coding Assistants:'));
+        for (const ast of detectedAssistants) {
+          const status = ast.isConfigured
+            ? chalk.green('[Configured]')
+            : chalk.yellow('[Ready to setup]');
+          console.log(`    - ${chalk.cyan(ast.name)} ${status}`);
+        }
+        console.log(
+          chalk.dim('    Run ') +
+            chalk.cyan('atlas mcp setup') +
+            chalk.dim(' to connect CodeAtlas to these assistants.\n'),
+        );
+      }
+
       console.log(chalk.bold('  💡 Next Steps:'));
       console.log(
-        chalk.cyan('    atlas index   ') + chalk.dim('— Build deep AST & dependency graph'),
+        chalk.cyan('    atlas index     ') + chalk.dim('— Build deep AST & dependency graph'),
       );
       console.log(
-        chalk.cyan('    atlas context ') + chalk.dim('— Generate task context pack for AI agent'),
+        chalk.cyan('    atlas mcp setup ') +
+          chalk.dim('— 1-Click setup for AI assistants (Cursor, Antigravity, Claude, etc.)'),
       );
       console.log(
-        chalk.cyan('    atlas mcp     ') + chalk.dim('— Start Model Context Protocol server\n'),
+        chalk.cyan('    atlas context   ') +
+          chalk.dim('— Generate task context pack for AI agent\n'),
       );
     });
 }

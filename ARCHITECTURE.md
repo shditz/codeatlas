@@ -99,10 +99,10 @@ The monorepo is managed with `pnpm` workspaces and `tsup` for ultra-fast ESM/DTS
 
 ### 5. AI Protocols & Querying
 
-| Package                       | Description                                                                                                                                                     |
-| :---------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`@codeatlas-ai/mcp`**       | Model Context Protocol (MCP) server implementation with 16 high-level agent tools (`atlas_trace_execution_path`, `atlas_security_audit`, `atlas_plan_feature`). |
-| **`@codeatlas-ai/nl2cypher`** | Translates natural language questions into deterministic Cypher-like queries on the graph.                                                                      |
+| Package                       | Description                                                                                                                                                                                                                                                                            |
+| :---------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`@codeatlas-ai/mcp`**       | Model Context Protocol (MCP) server implementation with 16 high-level agent tools (`atlas_trace_execution_path`, `atlas_security_audit`, `atlas_plan_feature`) and **`McpConfigurator`** (1-Click multi-agent installer for 14+ AI assistants with safe non-destructive JSON merging). |
+| **`@codeatlas-ai/nl2cypher`** | Translates natural language questions into deterministic Cypher-like queries on the graph.                                                                                                                                                                                             |
 
 ---
 

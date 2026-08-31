@@ -297,8 +297,24 @@ atlas clean
 
 ### 16. `atlas mcp`
 
-Starts the Model Context Protocol (MCP) server over `stdio` exposing 16 tools for real-time integration with AI assistants.
+Runs the Model Context Protocol (MCP) server or automatically configures integration for your AI coding assistants (Antigravity, Cursor, Claude, Windsurf, Roo, etc.).
 
 ```bash
+# Start the MCP server over stdio (called automatically by AI assistants)
 atlas mcp
+
+# 1-Click Interactive setup: auto-detects and configures your AI coding assistants
+atlas mcp setup
+
+# Non-interactive configuration for all detected assistants
+atlas mcp setup --all
+
+# Configure specific assistants
+atlas mcp setup --target cursor antigravity claude-desktop windsurf roo trae
+
+# Preview configuration changes without writing to disk
+atlas mcp setup --dry-run
+
+# View all 14+ supported AI assistant targets and detection status
+atlas mcp list-targets
 ```

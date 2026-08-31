@@ -23,13 +23,60 @@ flowchart LR
 
 ---
 
-## 🛠️ Step-by-Step Configuration Guide
+## ⚡ 1-Click Automated Configuration (Recommended)
 
-### 1. Google Antigravity
+Instead of manually editing hidden JSON files across different directories, CodeAtlas includes an enterprise-grade **Universal MCP Auto-Configurator**:
 
-Antigravity natively loads MCP servers configured in `.agents/mcp_config.json` (for project-level) or `~/.gemini/config/mcp_config.json` (for global).
+```bash
+# Interactive setup: auto-detects installed assistants and lets you pick
+atlas mcp setup
 
-Create or edit `.agents/mcp_config.json` in your repository root:
+# Or non-interactively configure all detected AI assistants:
+atlas mcp setup --all
+
+# Or configure specific assistants by target ID:
+atlas mcp setup --target cursor antigravity claude-desktop windsurf roo trae zed continue
+```
+
+### 📋 View Supported AI Assistants & Detection Status
+
+Run the following command to see all 14+ supported AI coding assistants, their target config paths, and whether they are detected on your machine:
+
+```bash
+atlas mcp list-targets
+```
+
+---
+
+## 🛠️ Supported AI Coding Assistants Matrix
+
+CodeAtlas automatically performs **safe non-destructive merges** and creates `.bak` backups before modifying configurations:
+
+| Assistant                      | Type               | Configuration Path                                                                          | Format / Schema                       |
+| :----------------------------- | :----------------- | :------------------------------------------------------------------------------------------ | :------------------------------------ |
+| **Google Antigravity & Codex** | Workspace & Global | `.agents/mcp_config.json`<br>`~/.gemini/config/mcp_config.json`                             | `mcpServers.codeatlas`                |
+| **Cursor**                     | Workspace & Global | `.cursor/mcp.json`<br>`~/.cursor/mcp.json`                                                  | `mcpServers.codeatlas`                |
+| **Claude Code CLI**            | CLI & Workspace    | Auto `claude mcp add` & `.claude.json`                                                      | `mcpServers.codeatlas`                |
+| **Claude Desktop**             | Global AppData     | `%APPDATA%\Claude\claude_desktop_config.json`<br>`~/Library/Application Support/Claude/...` | `mcpServers.codeatlas`                |
+| **Windsurf (Cascade)**         | Global & Workspace | `~/.codeium/windsurf/mcp_config.json`<br>`.windsurf/mcp.json`                               | `mcpServers.codeatlas`                |
+| **Roo Code (VS Code)**         | Global Storage     | `cline_mcp_settings.json` (Roo Code extension)                                              | `mcpServers.codeatlas` (auto-enabled) |
+| **Cline (VS Code)**            | Global Storage     | `cline_mcp_settings.json` (Cline extension)                                                 | `mcpServers.codeatlas` (auto-enabled) |
+| **Trae IDE**                   | Workspace & Global | `.trae/mcp.json` & `~/.trae/mcp.json`                                                       | `mcpServers.codeatlas`                |
+| **Zed Editor**                 | Global Settings    | `~/.config/zed/settings.json` / `%APPDATA%\Zed`                                             | `context_servers.codeatlas`           |
+| **Continue.dev**               | Workspace & Global | `.continue/config.json` & `~/.continue/...`                                                 | `modelContextProtocolServers[]`       |
+| **OpenHands & Devin**          | Workspace          | `.openhands/mcp.json`                                                                       | `mcpServers.codeatlas`                |
+| **Amazon Q Developer**         | Global             | `~/.aws/amazonq/mcp.json`                                                                   | `mcpServers.codeatlas`                |
+| **Universal Fallback**         | Workspace          | `.mcp.json`                                                                                 | `mcpServers.codeatlas`                |
+
+---
+
+## 📝 Manual Configuration Reference (Optional)
+
+If you prefer manual setup, add the following to your AI assistant's configuration file:
+
+### 1. Google Antigravity & Codex
+
+Add to `.agents/mcp_config.json` in your workspace root:
 
 ```json
 {
@@ -42,25 +89,30 @@ Create or edit `.agents/mcp_config.json` in your repository root:
 }
 ```
 
----
+### 2. Cursor
 
-### 2. Claude Code CLI
+Add to `.cursor/mcp.json` in your workspace root:
 
-Connect CodeAtlas to your Claude Code command line tool with a single command:
+```json
+{
+  "mcpServers": {
+    "codeatlas": {
+      "command": "atlas",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+### 3. Claude Code CLI
 
 ```bash
 claude mcp add codeatlas atlas -- mcp
 ```
 
----
+### 4. Claude Desktop
 
-### 3. Claude Desktop
-
-Add CodeAtlas to your Claude Desktop configuration file:
-
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+Add to `%APPDATA%\Claude\claude_desktop_config.json` (Windows) or `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
 
 ```json
 {
@@ -73,19 +125,16 @@ Add CodeAtlas to your Claude Desktop configuration file:
 }
 ```
 
----
+### 5. Windsurf (Cascade)
 
-### 4. Cursor / Windsurf / Cline / Roo Code
-
-Add to your editor's MCP settings:
+Add to `~/.codeium/windsurf/mcp_config.json`:
 
 ```json
 {
   "mcpServers": {
     "codeatlas": {
       "command": "atlas",
-      "args": ["mcp"],
-      "type": "stdio"
+      "args": ["mcp"]
     }
   }
 }
