@@ -5,6 +5,27 @@
   "version": "1.1.0",
   "private": true,
   "publisher": "shditz",
+  "icon": "icon.png",
+  "galleryBanner": {
+    "color": "#090d16",
+    "theme": "dark"
+  },
+  "keywords": [
+    "ai",
+    "context",
+    "mcp",
+    "ast",
+    "graph",
+    "architecture",
+    "codebase",
+    "cursor",
+    "antigravity",
+    "claude"
+  ],
+  "homepage": "https://github.com/shditz/codeatlas",
+  "bugs": {
+    "url": "https://github.com/shditz/codeatlas/issues"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -22,6 +43,7 @@
   "activationEvents": [
     "onStartupFinished"
   ],
+
   "contributes": {
     "viewsContainers": {
       "activitybar": [
