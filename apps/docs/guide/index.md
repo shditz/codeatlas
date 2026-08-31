@@ -33,21 +33,27 @@ flowchart LR
 ```
 
 ### 1. High-Throughput AST & Semantic Parser
+
 Analyzes code syntax trees using Tree-sitter parsers and semantic resolvers to extract symbol declarations, type inheritance (`extends`/`implements`), path mappings (`@/*`), and framework primitives in milliseconds.
 
 ### 2. Automated Secret Redaction Layer
-Scans file content *in-memory* with high-entropy regex patterns, replacing cloud keys (Anthropic, OpenAI, AWS, GCP, GitHub), JWTs, and database passwords with redaction tokens before indexing or sending to LLMs.
+
+Scans file content _in-memory_ with high-entropy regex patterns, replacing cloud keys (Anthropic, OpenAI, AWS, GCP, GitHub), JWTs, and database passwords with redaction tokens before indexing or sending to LLMs.
 
 ### 3. Framework-Specific Semantics
+
 Understands conventions natively: React Hooks (`use*`), Next.js App Router (`page.tsx`, `layout.tsx`, `route.ts`), NestJS Dependency Injection (`@Controller`, `@Injectable`, `@Module`), and Prisma Schema (`.prisma` models, enums, relations).
 
 ### 4. True Architecture DDD Guardrails
+
 Automatically classifies files into 5 domain-driven layers (Presentation, Application, Domain, Infrastructure, Shared) and enforces architectural boundaries with `atlas analyze --architecture`.
 
 ### 5. Native Model Context Protocol (MCP) Server (16 Tools)
+
 Allows external AI agents to query codebase topology, trace call hierarchies (`atlas_trace_execution_path`), discover entry points (`atlas_find_entry_points`), and plan complex features (`atlas_plan_feature`).
 
 ### 6. Local-First Privacy
+
 All AST parsing, SQLite caching, graph rendering, and rule compilation execute strictly on your local machine with zero telemetry.
 
 ---

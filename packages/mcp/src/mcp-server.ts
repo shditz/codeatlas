@@ -394,7 +394,8 @@ export class McpServer {
             },
             toNode: {
               type: 'string',
-              description: 'Target relative file path (e.g. "packages/storage/src/repositories.ts")',
+              description:
+                'Target relative file path (e.g. "packages/storage/src/repositories.ts")',
             },
           },
           required: ['fromNode', 'toNode'],

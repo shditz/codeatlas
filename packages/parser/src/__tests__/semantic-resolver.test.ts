@@ -63,7 +63,11 @@ export class UserServiceImpl extends BaseService implements IUserService {
     );
 
     const result = await resolveProjectSemantics(
-      ['src/interfaces/user.service.ts', 'src/services/base.service.ts', 'src/services/user.service.impl.ts'],
+      [
+        'src/interfaces/user.service.ts',
+        'src/services/base.service.ts',
+        'src/services/user.service.impl.ts',
+      ],
       { rootDir: tmpDir },
     );
 
@@ -120,7 +124,9 @@ export function handleUser(): User {
     );
 
     const importEdge = result.edges.find(
-      (e) => e.sourceFile === 'src/controllers/user.controller.ts' && e.targetFile === 'src/models/user.ts',
+      (e) =>
+        e.sourceFile === 'src/controllers/user.controller.ts' &&
+        e.targetFile === 'src/models/user.ts',
     );
 
     expect(importEdge).toBeDefined();

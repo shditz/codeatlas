@@ -74,7 +74,8 @@ export class TypeScriptSemanticResolver implements SemanticResolver {
       const fileName = sourceFile.fileName;
       if (
         fileName.includes('node_modules') ||
-        (fileName.endsWith('.d.ts') && !absoluteFiles.some((f) => path.resolve(f) === path.resolve(fileName)))
+        (fileName.endsWith('.d.ts') &&
+          !absoluteFiles.some((f) => path.resolve(f) === path.resolve(fileName)))
       ) {
         continue;
       }
@@ -201,9 +202,7 @@ export class TypeScriptSemanticResolver implements SemanticResolver {
       }
     }
 
-    logger.debug(
-      `Semantic TypeScript resolution extracted ${edgeMap.size} unique semantic edges.`,
-    );
+    logger.debug(`Semantic TypeScript resolution extracted ${edgeMap.size} unique semantic edges.`);
 
     return {
       edges: Array.from(edgeMap.values()),
@@ -218,12 +217,7 @@ export class TypeScriptSemanticResolver implements SemanticResolver {
     compilerOptions: ts.CompilerOptions,
     rootDir: string,
   ): string | undefined {
-    const resolved = ts.resolveModuleName(
-      importPath,
-      containingFile,
-      compilerOptions,
-      ts.sys,
-    );
+    const resolved = ts.resolveModuleName(importPath, containingFile, compilerOptions, ts.sys);
 
     if (resolved && resolved.resolvedModule) {
       const resolvedFileName = resolved.resolvedModule.resolvedFileName;

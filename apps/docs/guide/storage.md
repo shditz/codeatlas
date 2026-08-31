@@ -101,4 +101,4 @@ CodeAtlas executes automated, transactional migrations on startup:
 - **WAL Mode Enabled**: Writes operate via Write-Ahead Logging (`PRAGMA journal_mode = WAL`), enabling concurrent non-blocking reads.
 - **Synchronous Normal**: Optimized disk sync behavior (`PRAGMA synchronous = NORMAL`) for maximum indexing throughput.
 - **Full-Text FTS5**: Tokenized with `porter unicode61` for sub-millisecond keyword and symbol searches.
-- **Automated Secret Redaction**: Secrets are sanitized *before* entering SQLite FTS tables.
+- **Automated Secret Redaction**: Secrets are sanitized _before_ entering SQLite FTS tables.

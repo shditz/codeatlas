@@ -39,23 +39,23 @@ When AI coding agents work on mid-to-large repositories, they face two core bott
 
 CodeAtlas uses native **Tree-sitter** grammars and semantic resolvers to extract syntax trees, exported symbols, call references, and import dependencies:
 
-| Tier                               | Language / Framework | File Extensions                                                         | Capabilities                                                                 |
-| :--------------------------------- | :------------------- | :---------------------------------------------------------------------- | :--------------------------------------------------------------------------- |
-| **Tier 1 (Full AST & Semantics)**  | TypeScript / TSX     | `.ts`, `.tsx`, `.mts`, `.cts`                                           | Semantic Type Inheritance, `@/*` Path Mapping, React Hooks, Next.js Routes    |
-|                                    | JavaScript / JSX     | `.js`, `.jsx`, `.mjs`, `.cjs`                                           | AST Symbols, Call Graph, Imports, Cyclomatic Complexity                      |
-|                                    | NestJS               | `.ts`                                                                   | Controller, Provider, Module Decorators & Dependency Injection               |
-|                                    | Prisma Schema        | `.prisma`                                                               | Models, Enums, Field Definitions, Cross-Model Relational Graph               |
-|                                    | Python               | `.py`                                                                   | AST Functions/Classes, Call Graph, Module Imports                            |
-|                                    | Go                   | `.go`                                                                   | AST Structs/Functions, Call Graph, Package Imports                           |
-|                                    | Rust                 | `.rs`                                                                   | AST Structs/Traits/Impl, Call Graph, Crate Imports                           |
-|                                    | PHP                  | `.php`, `.phtml`                                                        | AST Classes/Methods, Call Graph, Namespace Imports                           |
-| **Tier 2 (Symbol & Structure)**    | Java                 | `.java`                                                                 | AST Classes, Methods, Import Graph                                           |
-|                                    | C#                   | `.cs`                                                                   | AST Classes, Methods, Namespace Graph                                        |
-|                                    | C / C++              | `.c`, `.h`, `.cpp`, `.hpp`, `.cc`                                       | AST Functions, Structs, Header Includes                                      |
-|                                    | Ruby                 | `.rb`                                                                   | AST Classes, Modules, Method Definitions                                     |
-|                                    | Kotlin               | `.kt`, `.kts`                                                           | AST Classes, Functions, Import Graph                                         |
-|                                    | Swift                | `.swift`                                                                | AST Structs, Protocols, Class Definitions                                    |
-| **Tier 3 (Content & Search)**      | Data & Markup        | `.json`, `.yaml`, `.toml`, `.md`, `.html`, `.css`, `.sql`, `Dockerfile` | FTS5 Full-Text Search (BM25 ranking), Secret Redaction, Token Counting       |
+| Tier                              | Language / Framework | File Extensions                                                         | Capabilities                                                               |
+| :-------------------------------- | :------------------- | :---------------------------------------------------------------------- | :------------------------------------------------------------------------- |
+| **Tier 1 (Full AST & Semantics)** | TypeScript / TSX     | `.ts`, `.tsx`, `.mts`, `.cts`                                           | Semantic Type Inheritance, `@/*` Path Mapping, React Hooks, Next.js Routes |
+|                                   | JavaScript / JSX     | `.js`, `.jsx`, `.mjs`, `.cjs`                                           | AST Symbols, Call Graph, Imports, Cyclomatic Complexity                    |
+|                                   | NestJS               | `.ts`                                                                   | Controller, Provider, Module Decorators & Dependency Injection             |
+|                                   | Prisma Schema        | `.prisma`                                                               | Models, Enums, Field Definitions, Cross-Model Relational Graph             |
+|                                   | Python               | `.py`                                                                   | AST Functions/Classes, Call Graph, Module Imports                          |
+|                                   | Go                   | `.go`                                                                   | AST Structs/Functions, Call Graph, Package Imports                         |
+|                                   | Rust                 | `.rs`                                                                   | AST Structs/Traits/Impl, Call Graph, Crate Imports                         |
+|                                   | PHP                  | `.php`, `.phtml`                                                        | AST Classes/Methods, Call Graph, Namespace Imports                         |
+| **Tier 2 (Symbol & Structure)**   | Java                 | `.java`                                                                 | AST Classes, Methods, Import Graph                                         |
+|                                   | C#                   | `.cs`                                                                   | AST Classes, Methods, Namespace Graph                                      |
+|                                   | C / C++              | `.c`, `.h`, `.cpp`, `.hpp`, `.cc`                                       | AST Functions, Structs, Header Includes                                    |
+|                                   | Ruby                 | `.rb`                                                                   | AST Classes, Modules, Method Definitions                                   |
+|                                   | Kotlin               | `.kt`, `.kts`                                                           | AST Classes, Functions, Import Graph                                       |
+|                                   | Swift                | `.swift`                                                                | AST Structs, Protocols, Class Definitions                                  |
+| **Tier 3 (Content & Search)**     | Data & Markup        | `.json`, `.yaml`, `.toml`, `.md`, `.html`, `.css`, `.sql`, `Dockerfile` | FTS5 Full-Text Search (BM25 ranking), Secret Redaction, Token Counting     |
 
 ---
 
@@ -84,7 +84,7 @@ CodeAtlas includes an automated **Benchmark Suite** (`pnpm run benchmark`) evalu
 npm install -g @codeatlas-ai/cli
 ```
 
-*(Or build locally from source with `pnpm install && pnpm build && pnpm --filter @codeatlas-ai/cli link --global`)*
+_(Or build locally from source with `pnpm install && pnpm build && pnpm --filter @codeatlas-ai/cli link --global`)_
 
 ### 2. Initialize in Your Project
 
@@ -114,26 +114,26 @@ atlas rules generate all -y
 
 ## 🛠️ CLI Commands Cheat Sheet
 
-| Command                | Category        | Description                                                                                  |
-| :--------------------- | :-------------- | :------------------------------------------------------------------------------------------- |
-| `atlas init`           | **Setup**       | Auto-detects project stack and initializes `.atlas/` folder, `.atlasignore`, and config.     |
-| `atlas scan`           | **Setup**       | Fast scan detecting languages, frameworks, workspaces, and monorepo structure.               |
-| `atlas index`          | **Core**        | Parses AST with Tree-sitter, computes complexity, and audits code health (Dead code/DAG).    |
-| `atlas watch`          | **Realtime**    | Watches directory for file changes and updates the graph incrementally in real time.         |
-| `atlas context`        | **AI Context**  | Extracts token-budgeted prompt packs with intent routing (`--intent bug\|feature\|refactor`).  |
-| `atlas export`         | **AI Context**  | Exports context packs into Markdown files for manual LLM chat sessions.                      |
-| `atlas diff`           | **Quality**     | Calculates Semantic Blast Radius and severity ratings from Git diffs.                        |
-| `atlas analyze`        | **Quality**     | Audits DDD layer regressions (`--architecture`), dead code, circular dependencies, & churn.  |
-| `atlas doctor`         | **Quality**     | Runs repository health checks and provides a readiness score.                                |
-| `atlas pr`             | **Quality**     | Generates an architectural PR summary for AI Code Reviews.                                   |
-| `atlas search`         | **Search**      | Semantic & Full-text search with synonym query expansion via SQLite FTS5 (BM25 ranking).     |
-| `atlas query`          | **Search**      | Natural language (NL2Cypher) or Cypher graph queries.                                        |
-| `atlas map`            | **Visual**      | Displays an ASCII tree map of directories and exported symbols.                              |
-| `atlas rules list`     | **Rules**       | Lists all discovered AI rule files.                                                          |
-| `atlas rules validate` | **Rules**       | Checks for rule conflicts and consistency.                                                   |
+| Command                | Category        | Description                                                                                   |
+| :--------------------- | :-------------- | :-------------------------------------------------------------------------------------------- |
+| `atlas init`           | **Setup**       | Auto-detects project stack and initializes `.atlas/` folder, `.atlasignore`, and config.      |
+| `atlas scan`           | **Setup**       | Fast scan detecting languages, frameworks, workspaces, and monorepo structure.                |
+| `atlas index`          | **Core**        | Parses AST with Tree-sitter, computes complexity, and audits code health (Dead code/DAG).     |
+| `atlas watch`          | **Realtime**    | Watches directory for file changes and updates the graph incrementally in real time.          |
+| `atlas context`        | **AI Context**  | Extracts token-budgeted prompt packs with intent routing (`--intent bug\|feature\|refactor`). |
+| `atlas export`         | **AI Context**  | Exports context packs into Markdown files for manual LLM chat sessions.                       |
+| `atlas diff`           | **Quality**     | Calculates Semantic Blast Radius and severity ratings from Git diffs.                         |
+| `atlas analyze`        | **Quality**     | Audits DDD layer regressions (`--architecture`), dead code, circular dependencies, & churn.   |
+| `atlas doctor`         | **Quality**     | Runs repository health checks and provides a readiness score.                                 |
+| `atlas pr`             | **Quality**     | Generates an architectural PR summary for AI Code Reviews.                                    |
+| `atlas search`         | **Search**      | Semantic & Full-text search with synonym query expansion via SQLite FTS5 (BM25 ranking).      |
+| `atlas query`          | **Search**      | Natural language (NL2Cypher) or Cypher graph queries.                                         |
+| `atlas map`            | **Visual**      | Displays an ASCII tree map of directories and exported symbols.                               |
+| `atlas rules list`     | **Rules**       | Lists all discovered AI rule files.                                                           |
+| `atlas rules validate` | **Rules**       | Checks for rule conflicts and consistency.                                                    |
 | `atlas rules generate` | **Rules**       | Generates evidence-backed guidelines (`--proposal`, `-y`, `antigravity`, `claude`, `cursor`). |
-| `atlas clean`          | **Maintenance** | Cleans local cache, database, and snapshots.                                                 |
-| `atlas mcp`            | **Integration** | Starts the official Model Context Protocol (MCP) server with 16 tools over `stdio`.          |
+| `atlas clean`          | **Maintenance** | Cleans local cache, database, and snapshots.                                                  |
+| `atlas mcp`            | **Integration** | Starts the official Model Context Protocol (MCP) server with 16 tools over `stdio`.           |
 
 ---
 
@@ -181,24 +181,24 @@ Add to `%APPDATA%\Claude\claude_desktop_config.json` (Windows) or `~/Library/App
 
 ## 🧰 The 16 CodeAtlas MCP Tools
 
-| Tool Name                          | Category         | Description                                                            |
-| :--------------------------------- | :--------------- | :--------------------------------------------------------------------- |
-| `atlas_scan`                       | Exploration      | Scans workspace metadata, languages, and monorepo structure.           |
-| `atlas_index`                      | Core             | Updates local AST symbols, dependencies, and temporal git metrics.     |
-| `atlas_search`                     | Search           | Full-text FTS5 BM25 search across symbols and files (secret-redacted).  |
-| `atlas_get_context`                | Context Packing  | Task-intent (`bug`/`feature`/`refactor`) token-budgeted context pack.  |
-| `atlas_graph_query`                | Graph            | Executes Cypher graph traversal queries across code dependencies.      |
-| `atlas_pr_diff`                    | Impact Analysis  | Analyzes git diffs, calculates blast radius, and flags breaking edits. |
-| `atlas_compress`                   | Token Saving     | Compresses source code into AST signature skeletons with redaction.    |
-| `atlas_get_map`                    | Visual           | Returns hierarchical directory tree and exported symbols.              |
-| `atlas_get_rules`                  | Rules            | Discovers and validates project AI coding rules.                       |
-| `atlas_doctor`                     | Health           | Runs repository health checks and SQLite index verification.           |
-| `atlas_analyze`                    | Architecture     | Audits DDD layer regressions, circular imports, and dead code.         |
-| `atlas_trace_execution_path`       | Deep Tracing     | Traces call chains upwards to entry points or downwards to leaves.     |
-| `atlas_find_entry_points`          | Architecture     | Identifies controllers, routes, CLI handlers, and root exports.        |
-| `atlas_calculate_change_surface`   | Impact Analysis  | Computes downstream blast radius for proposed symbol modifications.    |
-| `atlas_security_audit`             | Security         | SAST audit detecting potential vulnerabilities and sensitive secrets.  |
-| `atlas_plan_feature`               | AI Blueprint     | Generates step-by-step implementation blueprints and context files.    |
+| Tool Name                        | Category        | Description                                                            |
+| :------------------------------- | :-------------- | :--------------------------------------------------------------------- |
+| `atlas_scan`                     | Exploration     | Scans workspace metadata, languages, and monorepo structure.           |
+| `atlas_index`                    | Core            | Updates local AST symbols, dependencies, and temporal git metrics.     |
+| `atlas_search`                   | Search          | Full-text FTS5 BM25 search across symbols and files (secret-redacted). |
+| `atlas_get_context`              | Context Packing | Task-intent (`bug`/`feature`/`refactor`) token-budgeted context pack.  |
+| `atlas_graph_query`              | Graph           | Executes Cypher graph traversal queries across code dependencies.      |
+| `atlas_pr_diff`                  | Impact Analysis | Analyzes git diffs, calculates blast radius, and flags breaking edits. |
+| `atlas_compress`                 | Token Saving    | Compresses source code into AST signature skeletons with redaction.    |
+| `atlas_get_map`                  | Visual          | Returns hierarchical directory tree and exported symbols.              |
+| `atlas_get_rules`                | Rules           | Discovers and validates project AI coding rules.                       |
+| `atlas_doctor`                   | Health          | Runs repository health checks and SQLite index verification.           |
+| `atlas_analyze`                  | Architecture    | Audits DDD layer regressions, circular imports, and dead code.         |
+| `atlas_trace_execution_path`     | Deep Tracing    | Traces call chains upwards to entry points or downwards to leaves.     |
+| `atlas_find_entry_points`        | Architecture    | Identifies controllers, routes, CLI handlers, and root exports.        |
+| `atlas_calculate_change_surface` | Impact Analysis | Computes downstream blast radius for proposed symbol modifications.    |
+| `atlas_security_audit`           | Security        | SAST audit detecting potential vulnerabilities and sensitive secrets.  |
+| `atlas_plan_feature`             | AI Blueprint    | Generates step-by-step implementation blueprints and context files.    |
 
 ---
 

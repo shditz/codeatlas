@@ -58,7 +58,7 @@ describe('DependencyGraph Agent Intelligence Tools', () => {
       'src/repositories/user.repository.ts',
     ]);
     expect(path?.steps).toHaveLength(3);
-    expect(path?.totalConfidence).toBe(0.95); 
+    expect(path?.totalConfidence).toBe(0.95);
   });
 
   it('finds top-level ingress entry points', () => {

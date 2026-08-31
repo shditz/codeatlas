@@ -27,21 +27,27 @@ CodeAtlas provides native Tree-sitter bindings and semantic extraction for:
 ## 🧩 Framework-Specific Semantic Adapters
 
 ### 1. React Custom Hooks
+
 Functions starting with `use[A-Z0-9].*` (e.g., `useAuth`, `useLocalStorage`) are automatically recognized as `SymbolKind: 'hook'` instead of generic functions.
 
 ### 2. Next.js App Router
+
 Files located under `app/**/` follow App Router conventions:
+
 - `page.tsx` default exports are tagged as `SymbolKind: 'page'`.
 - `layout.tsx` default exports are tagged as `SymbolKind: 'layout'`.
 - `route.ts` HTTP method handlers (`GET`, `POST`, `PUT`, `DELETE`) are tagged as `SymbolKind: 'route_handler'`.
 
 ### 3. NestJS Dependency Injection
+
 Class decorators are parsed to establish dependency injection relationships:
+
 - `@Controller(...)` $\rightarrow$ `SymbolKind: 'controller'`
 - `@Injectable(...)`, `@Service(...)`, `@Repository(...)` $\rightarrow$ `SymbolKind: 'provider'`
 - `@Module(...)` $\rightarrow$ `SymbolKind: 'module'`
 
 ### 4. Prisma Schema
+
 Parses `schema.prisma` files to extract database entity definitions (`SymbolKind: 'model'`) and connects cross-model relations as dependency edges in the graph database.
 
 ---

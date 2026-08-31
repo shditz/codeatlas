@@ -126,7 +126,6 @@ export class CodebaseAnalyzer {
     };
   }
 
-
   detectCycles(): CycleDetectionResult {
     return new CycleDetector(this.graph).detectCycles();
   }

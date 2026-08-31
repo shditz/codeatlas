@@ -1,12 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type {
-  ArchitectureReport,
-  PackageManager,
-  ScanResult,
-} from '@codeatlas-ai/core';
-
-
+import type { ArchitectureReport, PackageManager, ScanResult } from '@codeatlas-ai/core';
 
 export interface ProposedRule {
   id: string;
@@ -171,7 +165,10 @@ export class RuleGenerator {
 
       const boundedContexts = this.architectureReport.boundedContexts || [];
       if (boundedContexts.length > 1) {
-        const sampleContexts = boundedContexts.slice(0, 4).map((c) => c.name).join(', ');
+        const sampleContexts = boundedContexts
+          .slice(0, 4)
+          .map((c) => c.name)
+          .join(', ');
         proposed.push({
           id: 'arch_bounded_context_public_api',
           category: 'architecture',

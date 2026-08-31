@@ -28,7 +28,7 @@ CodeAtlas is built to keep your code private and secure on your local machine:
      - **JWT Tokens**: Bearer JWT tokens $\rightarrow$ `[REDACTED_JWT_TOKEN]`.
      - **Database Credentials**: Connection URIs (PostgreSQL, MySQL, MongoDB, Redis) $\rightarrow$ `postgres://user:[REDACTED_PASSWORD]@host/db`.
      - **Configuration Secrets**: Sensitive key assignments in `.env` and config files $\rightarrow$ `[REDACTED_SECRET]`.
-   - Redacted *in-memory* before hashing and inserting into SQLite search databases (`files_fts`).
+   - Redacted _in-memory_ before hashing and inserting into SQLite search databases (`files_fts`).
 3. **Deterministic Ignore Filters**: CodeAtlas automatically respects `.gitignore` and `.atlasignore` to bypass build artifacts, cache directories, and key bundles.
 4. **Zero Telemetry**: CodeAtlas contains zero telemetry, tracking pings, third-party analytics, or remote error logging.
 5. **Sandboxed Webview**: The VS Code Extension Webview operates within a sandboxed context, enforcing strict Content Security Policies (CSP) and local resource root boundaries.

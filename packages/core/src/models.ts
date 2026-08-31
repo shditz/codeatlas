@@ -368,12 +368,7 @@ export interface TechnicalDebtHotspot {
 }
 
 export type ArchitectureLayerType =
-  | 'presentation'
-  | 'application'
-  | 'domain'
-  | 'infrastructure'
-  | 'shared'
-  | 'custom';
+  'presentation' | 'application' | 'domain' | 'infrastructure' | 'shared' | 'custom';
 
 export interface ArchitectureLayer {
   name: string;
@@ -398,10 +393,7 @@ export interface ArchitectureViolation {
   sourceContext?: string;
   targetContext?: string;
   violationType:
-    | 'LAYER_REGRESSION'
-    | 'BOUNDED_CONTEXT_LEAK'
-    | 'PUBLIC_API_BYPASS'
-    | 'CUSTOM_RULE_VIOLATION';
+    'LAYER_REGRESSION' | 'BOUNDED_CONTEXT_LEAK' | 'PUBLIC_API_BYPASS' | 'CUSTOM_RULE_VIOLATION';
   severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
   rule: string;
   description: string;
@@ -440,4 +432,3 @@ export interface CodebaseAnalytics {
   gitHotspots?: TechnicalDebtHotspot[];
   architectureReport?: ArchitectureReport;
 }
-

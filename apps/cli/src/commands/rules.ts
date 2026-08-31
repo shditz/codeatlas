@@ -111,7 +111,10 @@ export function registerRulesCommand(program: Command): void {
     )
     .option('--force', 'Overwrite existing files if present')
     .option('-y, --yes', 'Accept all evidence-based rules automatically (non-interactive)')
-    .option('--proposal', 'Save proposed rules with evidence citations to PROPOSED_RULES.md instead of overwriting')
+    .option(
+      '--proposal',
+      'Save proposed rules with evidence citations to PROPOSED_RULES.md instead of overwriting',
+    )
     .action(
       async (
         target: string | undefined,
@@ -123,14 +126,15 @@ export function registerRulesCommand(program: Command): void {
         const { Scanner } = await import('@codeatlas-ai/indexer');
         const { RuleGenerator } = await import('@codeatlas-ai/rules');
         const { CodebaseAnalyzer } = await import('@codeatlas-ai/analytics');
-        const { isInitialized, openDatabase, getOrCreateProject, loadConfig } = await import(
-          '../utils.js'
-        );
+        const { isInitialized, openDatabase, getOrCreateProject, loadConfig } =
+          await import('../utils.js');
 
         console.log('');
         console.log(chalk.bold.cyan('🔍 CodeAtlas Evidence-Based AI Rules Generator'));
         console.log(chalk.dim('='.repeat(55)));
-        console.log(chalk.dim('Analyzing repository architecture, test runners, and conventions...\n'));
+        console.log(
+          chalk.dim('Analyzing repository architecture, test runners, and conventions...\n'),
+        );
 
         const scanner = new Scanner({ root: cwd });
         const scanResult = await scanner.scan();
@@ -175,7 +179,9 @@ export function registerRulesCommand(program: Command): void {
         );
 
         for (const [idx, rule] of proposedRules.entries()) {
-          console.log(`  ${chalk.cyan(`[${idx + 1}]`)} ${chalk.bold(rule.title)} ${chalk.dim(`(${rule.category})`)}`);
+          console.log(
+            `  ${chalk.cyan(`[${idx + 1}]`)} ${chalk.bold(rule.title)} ${chalk.dim(`(${rule.category})`)}`,
+          );
           console.log(`      ${chalk.white(rule.ruleText)}`);
           console.log(`      ${chalk.dim('Evidence:')} ${chalk.italic.yellow(rule.evidence)}\n`);
         }
@@ -263,7 +269,9 @@ export function registerRulesCommand(program: Command): void {
           targetsToGenerate = [selectedTarget];
         } else {
           console.log(chalk.red(`Unknown target: ${selectedTarget}`));
-          console.log(chalk.dim(`Supported targets: ${Object.keys(targetMapping).join(', ')}, all`));
+          console.log(
+            chalk.dim(`Supported targets: ${Object.keys(targetMapping).join(', ')}, all`),
+          );
           return;
         }
 
@@ -302,7 +310,6 @@ export function registerRulesCommand(program: Command): void {
         );
       },
     );
-
 
   rules.action(async () => {
     rules.commands.find((c) => c.name() === 'list')?.parse(process.argv);

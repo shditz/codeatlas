@@ -307,13 +307,22 @@ function resolveNextJsRouteSymbolKind(
   if (!match) return null;
 
   const filename = match[2];
-  if (filename === 'page' && (isExported || name === 'default' || name === 'Page' || name.toLowerCase().includes('page'))) {
+  if (
+    filename === 'page' &&
+    (isExported || name === 'default' || name === 'Page' || name.toLowerCase().includes('page'))
+  ) {
     return 'page';
   }
-  if (filename === 'layout' && (isExported || name === 'default' || name === 'Layout' || name.toLowerCase().includes('layout'))) {
+  if (
+    filename === 'layout' &&
+    (isExported || name === 'default' || name === 'Layout' || name.toLowerCase().includes('layout'))
+  ) {
     return 'layout';
   }
-  if (filename === 'route' && ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'].includes(name)) {
+  if (
+    filename === 'route' &&
+    ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'].includes(name)
+  ) {
     return 'route_handler';
   }
   return null;
@@ -322,7 +331,8 @@ function resolveNextJsRouteSymbolKind(
 function resolveNestJsClassKind(node: AstNode): SymbolKind | null {
   const checkText = (txt: string): SymbolKind | null => {
     if (/@Controller\s*(?:\(|$)/.test(txt)) return 'controller';
-    if (/@Injectable\s*(?:\(|$)|@Service\s*(?:\(|$)|@Repository\s*(?:\(|$)/.test(txt)) return 'provider';
+    if (/@Injectable\s*(?:\(|$)|@Service\s*(?:\(|$)|@Repository\s*(?:\(|$)/.test(txt))
+      return 'provider';
     if (/@Module\s*(?:\(|$)/.test(txt)) return 'module';
     return null;
   };
@@ -1838,7 +1848,10 @@ function extractTypeScriptSymbolsAndImportsRegex(
         }
       }
 
-      currentClass = (kind === 'class' || kind === 'controller' || kind === 'provider' || kind === 'module') ? name : currentClass;
+      currentClass =
+        kind === 'class' || kind === 'controller' || kind === 'provider' || kind === 'module'
+          ? name
+          : currentClass;
       symbols.push({
         name,
         kind,
@@ -2283,4 +2296,3 @@ function extractPrismaSymbolsAndImports(
     }
   }
 }
-

@@ -107,10 +107,10 @@ export class BenchmarkRunner {
       const ranker = new Ranker({
         weights: {
           lexical_weight: 0.35,
-          symbol_weight: 0.20,
+          symbol_weight: 0.2,
           path_weight: 0.15,
-          dependency_weight: 0.10,
-          module_weight: 0.10,
+          dependency_weight: 0.1,
+          module_weight: 0.1,
           rule_weight: 0.05,
           recency_weight: 0.05,
         },

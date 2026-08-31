@@ -93,7 +93,11 @@ export class UsersService {
 })
 export class UsersModule {}
 `;
-      const ctrlResult = await parseFile('src/users/users.controller.ts', controllerCode, 'typescript');
+      const ctrlResult = await parseFile(
+        'src/users/users.controller.ts',
+        controllerCode,
+        'typescript',
+      );
       const srvResult = await parseFile('src/users/users.service.ts', serviceCode, 'typescript');
       const modResult = await parseFile('src/users/users.module.ts', moduleCode, 'typescript');
 

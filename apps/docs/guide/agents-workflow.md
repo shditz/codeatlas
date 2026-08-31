@@ -12,8 +12,8 @@ To make your AI agent perform at its peak, two systems work in tandem:
 🚀 Peak AI Performance = MCP Server (16 Tools) + AGENTS.md (Evidence-Backed Rules)
 ```
 
-1. **The Tools (MCP Server)**: Gives your AI the *ability* to query AST symbols, trace call chains, and calculate downstream impact.
-2. **The Motivation (`AGENTS.md` / `.cursorrules`)**: Gives your AI explicit *instructions* to query CodeAtlas before making assumptions or modifying critical files.
+1. **The Tools (MCP Server)**: Gives your AI the _ability_ to query AST symbols, trace call chains, and calculate downstream impact.
+2. **The Motivation (`AGENTS.md` / `.cursorrules`)**: Gives your AI explicit _instructions_ to query CodeAtlas before making assumptions or modifying critical files.
 
 ---
 

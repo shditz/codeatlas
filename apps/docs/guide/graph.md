@@ -24,6 +24,7 @@ CodeAtlas models codebase relationships as an attributed, directed property grap
 ### Edge Attributes
 
 Every dependency edge in CodeAtlas contains:
+
 - `source_path`: Originating source file.
 - `target_path`: Resolved destination file.
 - `kind`: `import`, `require`, `export_from`, `type_reference`, `call`.

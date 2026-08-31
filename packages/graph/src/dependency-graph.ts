@@ -426,7 +426,10 @@ export class DependencyGraph {
     const blast = this.getBlastRadius(filePaths, maxDepth);
     const affectedCount = blast.directlyAffected.length + blast.transitivelyAffected.length;
 
-    let riskScore = (blast.directlyAffected.length * 2.0 + blast.transitivelyAffected.length * 1.0) / Math.max(1, this.nodes.size) * 100;
+    let riskScore =
+      ((blast.directlyAffected.length * 2.0 + blast.transitivelyAffected.length * 1.0) /
+        Math.max(1, this.nodes.size)) *
+      100;
     riskScore = Math.min(100, Math.round(riskScore * 10) / 10);
 
     let riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'LOW';
@@ -439,9 +442,7 @@ export class DependencyGraph {
     }
 
     const allAffected = [...blast.directlyAffected, ...blast.transitivelyAffected];
-    const recommendedTestFiles = allAffected.filter((f) =>
-      /(test|spec|__tests__)/i.test(f),
-    );
+    const recommendedTestFiles = allAffected.filter((f) => /(test|spec|__tests__)/i.test(f));
 
     return {
       targetFiles: filePaths,

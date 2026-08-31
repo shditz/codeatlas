@@ -322,4 +322,3 @@ export function registerAnalyzeCommand(program: Command): void {
       },
     );
 }
-

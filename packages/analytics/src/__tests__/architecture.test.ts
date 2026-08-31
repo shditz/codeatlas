@@ -13,13 +13,37 @@ describe('ArchitectureAnalyzer (True Architecture Model)', () => {
   it('detects clean layered architecture with zero violations', () => {
     const edges: DependencyEdge[] = [
       // Controller -> Service
-      { source: 'src/controllers/user.controller.ts', target: 'src/services/user.service.ts', kind: 'import', symbols: ['UserService'], weight: 1 },
+      {
+        source: 'src/controllers/user.controller.ts',
+        target: 'src/services/user.service.ts',
+        kind: 'import',
+        symbols: ['UserService'],
+        weight: 1,
+      },
       // Service -> Repository
-      { source: 'src/services/user.service.ts', target: 'src/repositories/user.repository.ts', kind: 'import', symbols: ['UserRepository'], weight: 1 },
+      {
+        source: 'src/services/user.service.ts',
+        target: 'src/repositories/user.repository.ts',
+        kind: 'import',
+        symbols: ['UserRepository'],
+        weight: 1,
+      },
       // Service -> Domain Model
-      { source: 'src/services/user.service.ts', target: 'src/domain/user.model.ts', kind: 'import', symbols: ['User'], weight: 1 },
+      {
+        source: 'src/services/user.service.ts',
+        target: 'src/domain/user.model.ts',
+        kind: 'import',
+        symbols: ['User'],
+        weight: 1,
+      },
       // Repository -> Domain Model
-      { source: 'src/repositories/user.repository.ts', target: 'src/domain/user.model.ts', kind: 'import', symbols: ['User'], weight: 1 },
+      {
+        source: 'src/repositories/user.repository.ts',
+        target: 'src/domain/user.model.ts',
+        kind: 'import',
+        symbols: ['User'],
+        weight: 1,
+      },
     ];
     graph.addEdges(edges);
 
@@ -139,12 +163,20 @@ describe('ArchitectureAnalyzer (True Architecture Model)', () => {
     const report = analyzer.analyze();
 
     // No public API bypass violation
-    expect(report.violations.filter((v) => v.violationType === 'PUBLIC_API_BYPASS')).toHaveLength(0);
+    expect(report.violations.filter((v) => v.violationType === 'PUBLIC_API_BYPASS')).toHaveLength(
+      0,
+    );
   });
 
   it('enforces custom allow / disallow architecture rules', () => {
     const edges: DependencyEdge[] = [
-      { source: 'src/web/router.ts', target: 'src/db/client.ts', kind: 'import', symbols: [], weight: 1 },
+      {
+        source: 'src/web/router.ts',
+        target: 'src/db/client.ts',
+        kind: 'import',
+        symbols: [],
+        weight: 1,
+      },
     ];
     graph.addEdges(edges);
 

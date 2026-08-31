@@ -110,19 +110,25 @@ sequenceDiagram
 ## Package Responsibilities
 
 ### `@codeatlas-ai/core`
+
 The central domain layer. Defines all canonical interfaces (`SymbolInfo`, `FileInfo`, `ContextPack`, `RuleConfig`), language mappings, and the **`SecretScanner`** engine with high-entropy entropy filters.
 
 ### `@codeatlas-ai/parser`
+
 Tree-sitter AST extraction pipeline, **TypeScript Semantic Resolver** (inheritance and `@/*` aliases), and **Framework Adapters** (React Hooks, Next.js App Router, NestJS DI, Prisma Schema).
 
 ### `@codeatlas-ai/storage`
+
 Encapsulates SQLite interactions via Node 22 native `node:sqlite`. Manages WAL mode, composite indexes, FTS5 full-text search, and database migrations (1–5).
 
 ### `@codeatlas-ai/analytics`
+
 The **`ArchitectureAnalyzer`** performs automatic DDD layer classification, detects layer regressions and context leaks, computes project Clean Scores, and runs SAST security taint tracking.
 
 ### `@codeatlas-ai/rules`
+
 The **`RuleGenerator`** inspects project evidence (`tsconfig.json`, `package.json`, test configurations) and produces evidence-backed guidelines for Antigravity (`AGENTS.md`), Claude (`CLAUDE.md`), and Cursor (`.cursorrules`).
 
 ### `@codeatlas-ai/mcp`
+
 Model Context Protocol server implementing 16 AI tools for deep call graph tracing, symbol blast radius calculations, architectural sanity audits, and feature implementation blueprints.

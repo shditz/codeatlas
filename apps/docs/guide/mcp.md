@@ -97,24 +97,24 @@ Add to your editor's MCP settings:
 
 Once connected, your AI assistant will have access to the following 16 specialized tools:
 
-| Tool Name                          | Category         | Description & Purpose                                                                                   |
-| :--------------------------------- | :--------------- | :------------------------------------------------------------------------------------------------------ |
-| `atlas_scan`                       | Exploration      | Scans workspace metadata, programming languages, and monorepo workspace package layout.                 |
-| `atlas_index`                      | Core             | Updates local AST symbols, dependencies, and temporal git metrics with automatic secret redaction.      |
-| `atlas_search`                     | Search           | Full-text FTS5 BM25 search across symbols and files (secrets automatically redacted).                   |
-| `atlas_get_context`                | Context Packing  | Intent-driven (`bug`/`feature`/`refactor`) token-budgeted prompt packs with directory tree structure.  |
-| `atlas_graph_query`                | Graph            | Executes Cypher graph traversal queries across code dependencies.                                       |
-| `atlas_pr_diff`                    | Impact Analysis  | Analyzes git diffs, calculates downstream blast radius, and flags breaking edits.                       |
-| `atlas_compress`                   | Token Saving     | Compresses source code into AST signature skeletons with in-memory secret scrubbing.                    |
-| `atlas_get_map`                    | Visual           | Returns hierarchical directory tree and exported symbols for codebase navigation.                       |
-| `atlas_get_rules`                  | Rules            | Discovers and validates project AI coding rules across all formats (`AGENTS.md`, `CLAUDE.md`, etc.).   |
-| `atlas_doctor`                     | Health           | Runs repository health checks and SQLite index integrity verification.                                  |
-| `atlas_analyze`                    | Architecture     | Audits DDD layer regressions, circular imports, dead code, and temporal git churn hotspots.             |
-| `atlas_trace_execution_path`       | Deep Tracing     | Traces call hierarchies upwards to entry points or downwards to leaf dependencies.                      |
-| `atlas_find_entry_points`          | Architecture     | Identifies controllers, Next.js route handlers, CLI commands, and root exported functions.              |
-| `atlas_calculate_change_surface`   | Impact Analysis  | Computes downstream blast radius for proposed symbol modifications before making changes.               |
-| `atlas_security_audit`             | Security         | SAST security audit detecting injection vulnerabilities, sensitive credentials, and exposed endpoints. |
-| `atlas_plan_feature`               | AI Blueprint     | Autonomous planning tool: generates step-by-step implementation blueprints and context files.          |
+| Tool Name                        | Category        | Description & Purpose                                                                                  |
+| :------------------------------- | :-------------- | :----------------------------------------------------------------------------------------------------- |
+| `atlas_scan`                     | Exploration     | Scans workspace metadata, programming languages, and monorepo workspace package layout.                |
+| `atlas_index`                    | Core            | Updates local AST symbols, dependencies, and temporal git metrics with automatic secret redaction.     |
+| `atlas_search`                   | Search          | Full-text FTS5 BM25 search across symbols and files (secrets automatically redacted).                  |
+| `atlas_get_context`              | Context Packing | Intent-driven (`bug`/`feature`/`refactor`) token-budgeted prompt packs with directory tree structure.  |
+| `atlas_graph_query`              | Graph           | Executes Cypher graph traversal queries across code dependencies.                                      |
+| `atlas_pr_diff`                  | Impact Analysis | Analyzes git diffs, calculates downstream blast radius, and flags breaking edits.                      |
+| `atlas_compress`                 | Token Saving    | Compresses source code into AST signature skeletons with in-memory secret scrubbing.                   |
+| `atlas_get_map`                  | Visual          | Returns hierarchical directory tree and exported symbols for codebase navigation.                      |
+| `atlas_get_rules`                | Rules           | Discovers and validates project AI coding rules across all formats (`AGENTS.md`, `CLAUDE.md`, etc.).   |
+| `atlas_doctor`                   | Health          | Runs repository health checks and SQLite index integrity verification.                                 |
+| `atlas_analyze`                  | Architecture    | Audits DDD layer regressions, circular imports, dead code, and temporal git churn hotspots.            |
+| `atlas_trace_execution_path`     | Deep Tracing    | Traces call hierarchies upwards to entry points or downwards to leaf dependencies.                     |
+| `atlas_find_entry_points`        | Architecture    | Identifies controllers, Next.js route handlers, CLI commands, and root exported functions.             |
+| `atlas_calculate_change_surface` | Impact Analysis | Computes downstream blast radius for proposed symbol modifications before making changes.              |
+| `atlas_security_audit`           | Security        | SAST security audit detecting injection vulnerabilities, sensitive credentials, and exposed endpoints. |
+| `atlas_plan_feature`             | AI Blueprint    | Autonomous planning tool: generates step-by-step implementation blueprints and context files.          |
 
 ---
 

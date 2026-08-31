@@ -26,10 +26,7 @@ export class RetrievalEngine {
     private filesByPath: Map<string, FileInfo>,
   ) {}
 
-  retrieve(
-    query: string,
-    optionsOrLimit: number | RetrievalOptions = 50,
-  ): RetrievalResult {
+  retrieve(query: string, optionsOrLimit: number | RetrievalOptions = 50): RetrievalResult {
     const startTime = Date.now();
     const options: RetrievalOptions =
       typeof optionsOrLimit === 'number' ? { limit: optionsOrLimit } : (optionsOrLimit ?? {});
@@ -129,7 +126,12 @@ export class RetrievalEngine {
           });
         }
       } else if (intent === 'feature') {
-        if (filePath.includes('interface') || filePath.includes('model') || filePath.includes('type') || filePath.includes('schema')) {
+        if (
+          filePath.includes('interface') ||
+          filePath.includes('model') ||
+          filePath.includes('type') ||
+          filePath.includes('schema')
+        ) {
           candidate.sources.push({
             type: 'symbol',
             score: 2.0,
@@ -156,7 +158,9 @@ export class RetrievalEngine {
       .slice(0, limit);
 
     const duration = Date.now() - startTime;
-    logger.debug(`Retrieved ${candidates.length} candidates (intent: ${intent ?? 'default'}) in ${duration}ms`);
+    logger.debug(
+      `Retrieved ${candidates.length} candidates (intent: ${intent ?? 'default'}) in ${duration}ms`,
+    );
 
     return { candidates, queryTerms, duration };
   }

@@ -21,7 +21,13 @@ export function registerContextCommand(program: Command): void {
     .action(
       async (
         task: string,
-        options: { budget: string; limit: string; intent?: string; json?: boolean; verbose?: boolean },
+        options: {
+          budget: string;
+          limit: string;
+          intent?: string;
+          json?: boolean;
+          verbose?: boolean;
+        },
       ) => {
         const cwd = process.cwd();
         ensureInitialized(cwd);

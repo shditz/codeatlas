@@ -127,7 +127,10 @@ export class ArchitectureAnalyzer {
 
     const totalViolations = violations.length;
     const totalFiles = allFilePaths.length || 1;
-    const penalty = Math.min(100, Math.round(((critical * 20 + high * 10 + medium * 5 + low * 2) / totalFiles) * 50));
+    const penalty = Math.min(
+      100,
+      Math.round(((critical * 20 + high * 10 + medium * 5 + low * 2) / totalFiles) * 50),
+    );
     const cleanScore = Math.max(0, 100 - (totalViolations === 0 ? 0 : Math.max(10, penalty)));
 
     const report: ArchitectureReport = {
@@ -287,9 +290,7 @@ export class ArchitectureAnalyzer {
       if (match && match[1]) {
         const contextName = match[1];
         if (!discoveredContexts.has(contextName)) {
-          discoveredContexts.set(contextName, [
-            `**/${contextName}/**`,
-          ]);
+          discoveredContexts.set(contextName, [`**/${contextName}/**`]);
         }
       }
     }
@@ -529,12 +530,7 @@ export class ArchitectureAnalyzer {
     ) {
       return 'infrastructure';
     }
-    if (
-      n.includes('shared') ||
-      n.includes('common') ||
-      n.includes('util') ||
-      n.includes('core')
-    ) {
+    if (n.includes('shared') || n.includes('common') || n.includes('util') || n.includes('core')) {
       return 'shared';
     }
     return 'custom';
@@ -578,7 +574,10 @@ export class ArchitectureAnalyzer {
         }
       }
 
-      const cleanP = p.replace(/\*\*/g, '').replace(/\*/g, '').replace(/^\/+|\/+$/g, '');
+      const cleanP = p
+        .replace(/\*\*/g, '')
+        .replace(/\*/g, '')
+        .replace(/^\/+|\/+$/g, '');
       if (cleanP && normalized.includes(cleanP)) {
         return true;
       }

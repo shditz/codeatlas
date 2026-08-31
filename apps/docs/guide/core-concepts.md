@@ -47,7 +47,7 @@ Using `atlas analyze --architecture`, CodeAtlas flags architectural regressions 
 Developer privacy and security are enforced at the ingestion boundary:
 
 - The built-in **`SecretScanner`** uses high-entropy regex patterns to scrub Private Keys, Cloud API keys (Anthropic, OpenAI, AWS, GCP, GitHub), JWTs, and database passwords.
-- Content is sanitized *before* writing to SQLite FTS5 search tables and before returning MCP outputs to external LLMs.
+- Content is sanitized _before_ writing to SQLite FTS5 search tables and before returning MCP outputs to external LLMs.
 
 ---
 

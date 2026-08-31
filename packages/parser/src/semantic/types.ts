@@ -1,10 +1,6 @@
 import type { DependencyKind, Language } from '@codeatlas-ai/core';
 
-export type SemanticRelationKind =
-  | DependencyKind
-  | 'type-reference'
-  | 'call'
-  | 'instantiates';
+export type SemanticRelationKind = DependencyKind | 'type-reference' | 'call' | 'instantiates';
 
 export interface SemanticEdge {
   sourceFile: string;

@@ -53,56 +53,56 @@ The monorepo is managed with `pnpm` workspaces and `tsup` for ultra-fast ESM/DTS
 
 ### 1. Delivery & Applications (`apps/`)
 
-| App                         | Description                                                                                                                                                                                |
-| :-------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`apps/cli`**              | The main developer CLI executable (`atlas`). Handles commands like `init`, `scan`, `index`, `context`, `diff`, `doctor`, `watch`, `analyze`, `rules`, and `mcp`.                          |
-| **`apps/vscode-extension`** | VS Code / Cursor extension providing a visual Knowledge Graph viewer, code lens context triggers, and local server bridge.                                                                 |
-| **`apps/mcp-server`**       | Standalone stdio MCP server entry point exposing 16 specialized tools for direct integration into AI agent runners.                                                                        |
-| **`apps/docs`**             | VitePress documentation portal containing full guides, architecture deep-dives, CLI reference, and API contracts.                                                                          |
-| **`apps/webview`**          | React force-directed 2D/3D graph visualization canvas for exploring repository dependencies.                                                                                              |
+| App                         | Description                                                                                                                                                      |
+| :-------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`apps/cli`**              | The main developer CLI executable (`atlas`). Handles commands like `init`, `scan`, `index`, `context`, `diff`, `doctor`, `watch`, `analyze`, `rules`, and `mcp`. |
+| **`apps/vscode-extension`** | VS Code / Cursor extension providing a visual Knowledge Graph viewer, code lens context triggers, and local server bridge.                                       |
+| **`apps/mcp-server`**       | Standalone stdio MCP server entry point exposing 16 specialized tools for direct integration into AI agent runners.                                              |
+| **`apps/docs`**             | VitePress documentation portal containing full guides, architecture deep-dives, CLI reference, and API contracts.                                                |
+| **`apps/webview`**          | React force-directed 2D/3D graph visualization canvas for exploring repository dependencies.                                                                     |
 
 ---
 
 ### 2. Ingestion & Syntactic Layer (`packages/`)
 
-| Package                     | Description                                                                                                                                                                                                                                               |
-| :-------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`@codeatlas-ai/core`**    | Core domain models (`SymbolInfo`, `FileInfo`, `ContextPack`, `RuleConfig`), language mappings, and the **`SecretScanner`** redaction engine that scrubs API keys, private keys, JWTs, and passwords from index databases and LLM payloads.                 |
-| **`@codeatlas-ai/parser`**  | Multi-language Tree-sitter AST parser, **TypeScript Semantic Resolver** (resolving `extends`, `implements`, and `tsconfig.json` path mappings `@/*`), and **Framework Adapters** (React Hooks `use*`, Next.js App Router, NestJS DI, Prisma Schema).   |
-| **`@codeatlas-ai/indexer`** | Directory walker, stack auto-detection (`Scanner`), batch AST extraction with concurrent worker pools, and real-time incremental watcher (`Watcher`). Applies secret redaction on raw disk reads before indexing.                                        |
-| **`@codeatlas-ai/git`**     | Native Git CLI wrapper for tracking staged files, churn metrics, branch diffs, commit history, and co-change frequencies.                                                                                                                                 |
+| Package                     | Description                                                                                                                                                                                                                                          |
+| :-------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`@codeatlas-ai/core`**    | Core domain models (`SymbolInfo`, `FileInfo`, `ContextPack`, `RuleConfig`), language mappings, and the **`SecretScanner`** redaction engine that scrubs API keys, private keys, JWTs, and passwords from index databases and LLM payloads.           |
+| **`@codeatlas-ai/parser`**  | Multi-language Tree-sitter AST parser, **TypeScript Semantic Resolver** (resolving `extends`, `implements`, and `tsconfig.json` path mappings `@/*`), and **Framework Adapters** (React Hooks `use*`, Next.js App Router, NestJS DI, Prisma Schema). |
+| **`@codeatlas-ai/indexer`** | Directory walker, stack auto-detection (`Scanner`), batch AST extraction with concurrent worker pools, and real-time incremental watcher (`Watcher`). Applies secret redaction on raw disk reads before indexing.                                    |
+| **`@codeatlas-ai/git`**     | Native Git CLI wrapper for tracking staged files, churn metrics, branch diffs, commit history, and co-change frequencies.                                                                                                                            |
 
 ---
 
 ### 3. Knowledge Graph & Storage Layer
 
-| Package                           | Description                                                                                                                                                                                      |
-| :-------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Package                           | Description                                                                                                                                                                                                |
+| :-------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`@codeatlas-ai/storage`**       | SQLite embedded engine with WAL mode and SQLite FTS5 full-text search (BM25 ranking). Manages automatic database migrations (Schema 1–5: initial schema, embeddings, complexity, confidence, git metrics). |
-| **`@codeatlas-ai/graph`**         | Directed Acyclic Graph (DAG) computation engine. Calculates blast radius, transitive dependencies, resolution confidence scores, and graph topological sorting.                                   |
-| **`@codeatlas-ai/token-counter`** | Deterministic token counting engine compatible with GPT-4, Claude, and Gemini tokenizers.                                                                                                        |
+| **`@codeatlas-ai/graph`**         | Directed Acyclic Graph (DAG) computation engine. Calculates blast radius, transitive dependencies, resolution confidence scores, and graph topological sorting.                                            |
+| **`@codeatlas-ai/token-counter`** | Deterministic token counting engine compatible with GPT-4, Claude, and Gemini tokenizers.                                                                                                                  |
 
 ---
 
 ### 4. Intelligence, Analytics & Retrieval
 
-| Package                         | Description                                                                                                                                                                                                                                 |
-| :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **`@codeatlas-ai/analytics`**   | Codebase health & architecture engine: **`ArchitectureAnalyzer`** (DDD 5-tier layer classification, regression detection, public API boundary bypasses), dead code detection, cyclomatic complexity hotspots, and taint tracking.          |
-| **`@codeatlas-ai/retrieval`**   | Hybrid search engine combining FTS5 keyword BM25 scoring with Graph proximity traversal. Supports task-intent routing (`--intent bug`, `feature`, `refactor`).                                                                             |
-| **`@codeatlas-ai/ranking`**     | Multi-factor ranker: adjusts file scores based on graph centrality, PageRank, recency, import depth, and temporal git churn.                                                                                                                |
-| **`@codeatlas-ai/compression`** | AST Skeletonizer. Compresses large files into type signatures and interface outlines with automatic secret redaction to save up to 92% token budgets.                                                                                      |
-| **`@codeatlas-ai/rules`**       | Discovers, validates, and standardizes AI coding rules (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`). Features **`RuleGenerator`** with evidence citations, interactive prompts, and `--proposal` generation.                                  |
-| **`@codeatlas-ai/context`**     | Assembles the final `ContextPack` respecting token budgets, file compression modes, task intent, and visual directory tree structures.                                                                                                     |
+| Package                         | Description                                                                                                                                                                                                                       |
+| :------------------------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`@codeatlas-ai/analytics`**   | Codebase health & architecture engine: **`ArchitectureAnalyzer`** (DDD 5-tier layer classification, regression detection, public API boundary bypasses), dead code detection, cyclomatic complexity hotspots, and taint tracking. |
+| **`@codeatlas-ai/retrieval`**   | Hybrid search engine combining FTS5 keyword BM25 scoring with Graph proximity traversal. Supports task-intent routing (`--intent bug`, `feature`, `refactor`).                                                                    |
+| **`@codeatlas-ai/ranking`**     | Multi-factor ranker: adjusts file scores based on graph centrality, PageRank, recency, import depth, and temporal git churn.                                                                                                      |
+| **`@codeatlas-ai/compression`** | AST Skeletonizer. Compresses large files into type signatures and interface outlines with automatic secret redaction to save up to 92% token budgets.                                                                             |
+| **`@codeatlas-ai/rules`**       | Discovers, validates, and standardizes AI coding rules (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`). Features **`RuleGenerator`** with evidence citations, interactive prompts, and `--proposal` generation.                        |
+| **`@codeatlas-ai/context`**     | Assembles the final `ContextPack` respecting token budgets, file compression modes, task intent, and visual directory tree structures.                                                                                            |
 
 ---
 
 ### 5. AI Protocols & Querying
 
-| Package                       | Description                                                                                                                                                 |
-| :---------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Package                       | Description                                                                                                                                                     |
+| :---------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`@codeatlas-ai/mcp`**       | Model Context Protocol (MCP) server implementation with 16 high-level agent tools (`atlas_trace_execution_path`, `atlas_security_audit`, `atlas_plan_feature`). |
-| **`@codeatlas-ai/nl2cypher`** | Translates natural language questions into deterministic Cypher-like queries on the graph.                                                                 |
+| **`@codeatlas-ai/nl2cypher`** | Translates natural language questions into deterministic Cypher-like queries on the graph.                                                                      |
 
 ---
 

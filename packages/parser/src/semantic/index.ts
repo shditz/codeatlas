@@ -1,9 +1,5 @@
 import type { Language } from '@codeatlas-ai/core';
-import type {
-  SemanticResolver,
-  SemanticResolverOptions,
-  SemanticProjectResult,
-} from './types.js';
+import type { SemanticResolver, SemanticResolverOptions, SemanticProjectResult } from './types.js';
 import { TypeScriptSemanticResolver } from './ts-semantic-resolver.js';
 
 export * from './types.js';

@@ -73,4 +73,3 @@ export function parseConfig(raw: unknown): AtlasConfig {
 export function defaultConfig(): AtlasConfig {
   return AtlasConfigSchema.parse({});
 }
-

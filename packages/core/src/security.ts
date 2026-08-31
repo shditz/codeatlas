@@ -20,7 +20,8 @@ export interface SecretPattern {
 export const DEFAULT_SECRET_PATTERNS: SecretPattern[] = [
   {
     name: 'Private Key',
-    regex: /-----BEGIN (?:[A-Z0-9_-]+ )?PRIVATE KEY-----[\s\S]*?-----END (?:[A-Z0-9_-]+ )?PRIVATE KEY-----/g,
+    regex:
+      /-----BEGIN (?:[A-Z0-9_-]+ )?PRIVATE KEY-----[\s\S]*?-----END (?:[A-Z0-9_-]+ )?PRIVATE KEY-----/g,
     placeholder: '[REDACTED_PRIVATE_KEY]',
   },
   {
@@ -65,12 +66,14 @@ export const DEFAULT_SECRET_PATTERNS: SecretPattern[] = [
   },
   {
     name: 'Database Connection String with Password',
-    regex: /((?:postgres|postgresql|mysql|mongodb|mongodb\+srv|redis|amqp):\/\/[^:\s]+:)([^@\s]+)(@)/gi,
+    regex:
+      /((?:postgres|postgresql|mysql|mongodb|mongodb\+srv|redis|amqp):\/\/[^:\s]+:)([^@\s]+)(@)/gi,
     placeholder: '$1[REDACTED_PASSWORD]$3',
   },
   {
     name: 'Config Secret Assignment',
-    regex: /((?:api[_-]?key|secret[_-]?key|secret|password|passwd|auth[_-]?token|access[_-]?token|client[_-]?secret|private[_-]?key)\s*[:=]\s*["']?)(?!(?:\[REDACTED_))([^"'\r\n\s]{8,})(["']?)/gi,
+    regex:
+      /((?:api[_-]?key|secret[_-]?key|secret|password|passwd|auth[_-]?token|access[_-]?token|client[_-]?secret|private[_-]?key)\s*[:=]\s*["']?)(?!(?:\[REDACTED_))([^"'\r\n\s]{8,})(["']?)/gi,
     placeholder: '$1[REDACTED_SECRET]$3',
   },
 ];

@@ -174,4 +174,3 @@ export function generateConfigTOML(config: AtlasConfig): string {
 
   return lines.join('\n');
 }
-

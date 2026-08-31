@@ -2,7 +2,13 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { createLogger, hashContent, normalizePath, getExtension } from '@codeatlas-ai/shared';
-import { canParse, detectLanguage, isTestFile, isGeneratedFile, redactSecrets } from '@codeatlas-ai/core';
+import {
+  canParse,
+  detectLanguage,
+  isTestFile,
+  isGeneratedFile,
+  redactSecrets,
+} from '@codeatlas-ai/core';
 import { parseFile, resolveProjectSemantics, type ParseResult } from '@codeatlas-ai/parser';
 import type { AtlasDatabase } from '@codeatlas-ai/storage';
 import {

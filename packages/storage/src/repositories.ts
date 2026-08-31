@@ -656,4 +656,3 @@ export class GitMetricsRepository {
     };
   }
 }
-

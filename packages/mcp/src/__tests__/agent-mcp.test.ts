@@ -24,14 +24,24 @@ describe('MCP Server Agent-Oriented Tools & Task-Aware Context', () => {
     fs.mkdirSync(path.join(tmpDir, 'src', 'api'), { recursive: true });
     fs.mkdirSync(path.join(tmpDir, 'src', 'services'), { recursive: true });
     fs.writeFileSync(path.join(tmpDir, 'src', 'api', 'router.ts'), 'export class PaymentRouter {}');
-    fs.writeFileSync(path.join(tmpDir, 'src', 'services', 'payment.service.ts'), 'export class PaymentService {}');
-    fs.writeFileSync(path.join(tmpDir, 'src', 'services', 'payment.service.spec.ts'), 'describe("PaymentService", () => {});');
+    fs.writeFileSync(
+      path.join(tmpDir, 'src', 'services', 'payment.service.ts'),
+      'export class PaymentService {}',
+    );
+    fs.writeFileSync(
+      path.join(tmpDir, 'src', 'services', 'payment.service.spec.ts'),
+      'describe("PaymentService", () => {});',
+    );
 
     const db = new AtlasDatabase(path.join(atlasDir, 'atlas.db'));
     runMigrations(db);
 
     const normalizedRoot = tmpDir.replace(/\\/g, '/');
-    const projRes = db.run('INSERT INTO projects (name, root) VALUES (?, ?)', 'test', normalizedRoot);
+    const projRes = db.run(
+      'INSERT INTO projects (name, root) VALUES (?, ?)',
+      'test',
+      normalizedRoot,
+    );
     const projectId = Number(projRes.lastInsertRowid);
 
     const fileRepo = new FileRepository(db);
@@ -84,8 +94,16 @@ describe('MCP Server Agent-Oriented Tools & Task-Aware Context', () => {
     });
 
     searchRepo.indexFile(1, 'src/api/router.ts', 'PaymentRouter route post charge');
-    searchRepo.indexFile(2, 'src/services/payment.service.ts', 'PaymentService processPayment stripe refund');
-    searchRepo.indexFile(3, 'src/services/payment.service.spec.ts', 'describe PaymentService test failed payment refund');
+    searchRepo.indexFile(
+      2,
+      'src/services/payment.service.ts',
+      'PaymentService processPayment stripe refund',
+    );
+    searchRepo.indexFile(
+      3,
+      'src/services/payment.service.spec.ts',
+      'describe PaymentService test failed payment refund',
+    );
 
     depRepo.insertBatch(projectId, [
       {
