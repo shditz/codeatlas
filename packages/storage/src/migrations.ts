@@ -146,8 +146,6 @@ const MIGRATIONS: Migration[] = [
       CREATE VIRTUAL TABLE IF NOT EXISTS files_fts USING fts5(
         relative_path,
         content,
-        content='files',
-        content_rowid='id',
         tokenize='porter unicode61'
       );
 

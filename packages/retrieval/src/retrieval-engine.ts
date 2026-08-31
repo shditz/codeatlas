@@ -186,4 +186,13 @@ const STOP_WORDS = new Set([
   'use',
   'do',
   'be',
+  'find',
+  'how',
+  'where',
+  'what',
+  'locate',
+  'which',
+  'who',
+  'when',
+  'why',
 ]);

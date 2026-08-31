@@ -1,0 +1,42 @@
+{
+  "name": "@codeatlas-ai/benchmark",
+  "version": "0.4.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "start": "node dist/index.js",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@codeatlas-ai/core": "workspace:*",
+    "@codeatlas-ai/shared": "workspace:*",
+    "@codeatlas-ai/storage": "workspace:*",
+    "@codeatlas-ai/indexer": "workspace:*",
+    "@codeatlas-ai/graph": "workspace:*",
+    "@codeatlas-ai/ranking": "workspace:*",
+    "@codeatlas-ai/retrieval": "workspace:*",
+    "@codeatlas-ai/context": "workspace:*",
+    "@codeatlas-ai/rules": "workspace:*",
+    "@codeatlas-ai/token-counter": "workspace:*",
+    "chalk": "^5.3.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shditz/codeatlas.git",
+    "directory": "packages/benchmark"
+  }
+}

@@ -37,6 +37,7 @@
     "clean": "pnpm -r run clean && rimraf node_modules",
     "docs:dev": "pnpm --filter @codeatlas-ai/docs docs:dev",
     "docs:build": "pnpm --filter @codeatlas-ai/docs docs:build",
+    "benchmark": "pnpm --filter @codeatlas-ai/benchmark build && pnpm --filter @codeatlas-ai/benchmark start",
     "prepare": "pnpm build",
     "changeset": "changeset",
     "version-packages": "changeset version",

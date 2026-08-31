@@ -55,6 +55,23 @@ CodeAtlas uses native **Tree-sitter** grammars to extract syntax trees, exported
 
 ---
 
+## 📊 Empirical Benchmarks (Verified on Real-World Repos)
+
+CodeAtlas includes an automated **Benchmark Suite** (`pnpm run benchmark`) evaluated against real-world open-source repositories to measure context accuracy, retrieval recall, and token reduction:
+
+### 📦 Dataset: `expressjs/express` (96 files, 71k raw tokens)
+
+| Task Scenario                       | Target Ground Truth                                    | Retrieval Recall | Context Tokens | Token Savings   | Latency  |
+| :---------------------------------- | :----------------------------------------------------- | :--------------- | :------------- | :-------------- | :------- |
+| **Routing & Dispatching**           | `lib/application.js`, `lib/express.js`                 | **100%**         | 6,364          | **91%**         | 26ms     |
+| **Server Bootstrap (`app.listen`)** | `lib/application.js`, `lib/express.js`                 | **50%**          | 4,555          | **94%**         | 32ms     |
+| **JSON Response Serialization**     | `lib/response.js`                                      | **100%**         | 5,124          | **93%**         | 56ms     |
+| **Request Cookie & Header Parsing** | `lib/request.js`                                       | **100%**         | 6,285          | **91%**         | 17ms     |
+| **View Engine Template Resolution** | `lib/view.js`, `lib/application.js`, `lib/response.js` | **67%**          | 6,344          | **91%**         | 59ms     |
+| **Overall Empirical Average**       | —                                                      | **83% Recall**   | —              | **92% Savings** | **38ms** |
+
+---
+
 ## 📦 Quick Start in 3 Minutes
 
 ### 1. Install Globally

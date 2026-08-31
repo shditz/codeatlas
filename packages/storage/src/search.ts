@@ -193,11 +193,52 @@ export class SearchRepository {
   }
 
   private sanitizeQuery(query: string): string {
+    const STOP_WORDS = new Set([
+      'a',
+      'an',
+      'and',
+      'are',
+      'as',
+      'at',
+      'be',
+      'by',
+      'for',
+      'from',
+      'has',
+      'he',
+      'in',
+      'is',
+      'it',
+      'its',
+      'of',
+      'on',
+      'that',
+      'the',
+      'to',
+      'was',
+      'were',
+      'will',
+      'with',
+      'how',
+      'where',
+      'what',
+      'find',
+      'which',
+      'who',
+      'when',
+      'why',
+      'can',
+      'does',
+      'do',
+      'locate',
+    ]);
+
     const rawTerms = query
       .replace(/[^\w\s]/g, ' ')
       .trim()
       .split(/\s+/)
-      .filter((term) => term.length > 0);
+      .map((t) => t.toLowerCase())
+      .filter((term) => term.length >= 2 && !STOP_WORDS.has(term));
 
     if (rawTerms.length === 0) return '""';
 

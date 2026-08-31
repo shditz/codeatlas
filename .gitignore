@@ -43,3 +43,4 @@ context-pack.md
 **/.vitepress/cache/**
 **/.vitepress/dist/**
 PROJECT_CONTEXT.md
+.benchmarks/

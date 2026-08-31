@@ -256,6 +256,42 @@ importers:
         specifier: workspace:*
         version: link:../storage
 
+  packages/benchmark:
+    dependencies:
+      '@codeatlas-ai/context':
+        specifier: workspace:*
+        version: link:../context
+      '@codeatlas-ai/core':
+        specifier: workspace:*
+        version: link:../core
+      '@codeatlas-ai/graph':
+        specifier: workspace:*
+        version: link:../graph
+      '@codeatlas-ai/indexer':
+        specifier: workspace:*
+        version: link:../indexer
+      '@codeatlas-ai/ranking':
+        specifier: workspace:*
+        version: link:../ranking
+      '@codeatlas-ai/retrieval':
+        specifier: workspace:*
+        version: link:../retrieval
+      '@codeatlas-ai/rules':
+        specifier: workspace:*
+        version: link:../rules
+      '@codeatlas-ai/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@codeatlas-ai/storage':
+        specifier: workspace:*
+        version: link:../storage
+      '@codeatlas-ai/token-counter':
+        specifier: workspace:*
+        version: link:../token-counter
+      chalk:
+        specifier: ^5.3.0
+        version: 5.6.2
+
   packages/compression:
     dependencies:
       '@codeatlas-ai/core':
