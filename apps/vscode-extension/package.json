@@ -58,14 +58,23 @@
       "codeatlas-sidebar": [
         {
           "id": "codeatlas.overview",
-          "name": "Codebase Architecture & Map"
+          "name": "Architecture & Codebase Map"
+        },
+        {
+          "id": "codeatlas.analytics",
+          "name": "Architecture Health & Diagnostics"
         },
         {
           "id": "codeatlas.rules",
-          "name": "AI Agent Rules"
+          "name": "AI Agent Rules & Governance"
+        },
+        {
+          "id": "codeatlas.tools",
+          "name": "Quick Actions & AI Tools"
         }
       ]
     },
+
     "commands": [
       {
         "command": "codeatlas.indexCodebase",
@@ -150,6 +159,7 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
+    "@codeatlas-ai/analytics": "workspace:*",
     "@codeatlas-ai/core": "workspace:*",
     "@codeatlas-ai/shared": "workspace:*",
     "@codeatlas-ai/storage": "workspace:*",
@@ -162,6 +172,7 @@
     "@codeatlas-ai/compression": "workspace:*",
     "@codeatlas-ai/retrieval": "workspace:*"
   },
+
   "devDependencies": {
     "@types/vscode": "^1.90.0"
   }

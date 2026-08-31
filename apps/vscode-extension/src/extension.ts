@@ -30,7 +30,12 @@ import type {
   Framework,
   PackageManager,
 } from '@codeatlas-ai/core';
-import { CodeAtlasOverviewProvider, CodeAtlasRulesProvider } from './providers/tree-provider.js';
+import {
+  CodeAtlasOverviewProvider,
+  CodeAtlasRulesProvider,
+  CodeAtlasAnalyticsProvider,
+  CodeAtlasToolsProvider,
+} from './providers/tree-provider.js';
 import { GraphViewProvider } from './providers/graph-view-provider.js';
 import { CodeAtlasCodeLensProvider } from './providers/codelens-provider.js';
 
@@ -38,6 +43,8 @@ let db: AtlasDatabase | null = null;
 let watcher: RepositoryWatcher | null = null;
 let overviewProvider: CodeAtlasOverviewProvider;
 let rulesProvider: CodeAtlasRulesProvider;
+let analyticsProvider: CodeAtlasAnalyticsProvider;
+let toolsProvider: CodeAtlasToolsProvider;
 let codelensProvider: CodeAtlasCodeLensProvider;
 let outputChannel: vscode.OutputChannel;
 
@@ -79,10 +86,15 @@ export function activate(context: vscode.ExtensionContext): void {
 
   overviewProvider = new CodeAtlasOverviewProvider(db, workspaceRoot, projectId);
   rulesProvider = new CodeAtlasRulesProvider(workspaceRoot);
+  analyticsProvider = new CodeAtlasAnalyticsProvider(db, workspaceRoot, projectId);
+  toolsProvider = new CodeAtlasToolsProvider(workspaceRoot);
   codelensProvider = new CodeAtlasCodeLensProvider(db, workspaceRoot, projectId);
 
   vscode.window.registerTreeDataProvider('codeatlas.overview', overviewProvider);
+  vscode.window.registerTreeDataProvider('codeatlas.analytics', analyticsProvider);
   vscode.window.registerTreeDataProvider('codeatlas.rules', rulesProvider);
+  vscode.window.registerTreeDataProvider('codeatlas.tools', toolsProvider);
+
 
   context.subscriptions.push(
     vscode.languages.registerCodeLensProvider(
@@ -143,8 +155,10 @@ export function activate(context: vscode.ExtensionContext): void {
           const result = await indexer.index();
 
           overviewProvider.setDatabase(db, projectId);
+          analyticsProvider.setDatabase(db, projectId);
           codelensProvider.setDatabase(db, projectId);
           rulesProvider.refresh();
+
 
           if (result.errors && result.errors.length > 0) {
             vscode.window.showWarningMessage(

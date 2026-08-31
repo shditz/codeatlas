@@ -160,6 +160,9 @@ importers:
 
   apps/vscode-extension:
     dependencies:
+      '@codeatlas-ai/analytics':
+        specifier: workspace:*
+        version: link:../../packages/analytics
       '@codeatlas-ai/compression':
         specifier: workspace:*
         version: link:../../packages/compression
