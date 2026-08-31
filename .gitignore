@@ -44,3 +44,5 @@ context-pack.md
 **/.vitepress/dist/**
 PROJECT_CONTEXT.md
 .benchmarks/
+.agents/
+.atlasignore

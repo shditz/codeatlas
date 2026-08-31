@@ -73,16 +73,10 @@ jobs:
           EXT_VERSION=$(node -p "require('./apps/vscode-extension/package.json').version")
           VSIX_FILE="codeatlas-vscode-${EXT_VERSION}.vsix"
 
-          gh release upload "v${EXT_VERSION}" "${VSIX_FILE}" codeatlas-vscode.vsix --clobber || true
-          gh release upload "codeatlas-vscode@${EXT_VERSION}" "${VSIX_FILE}" codeatlas-vscode.vsix --clobber || true
-
-          for tag in $(git tag --points-at HEAD); do
-            gh release upload "$tag" "${VSIX_FILE}" codeatlas-vscode.vsix --clobber || true
-          done
-
-          LATEST_TAG=$(gh release view --json tagName -q .tagName 2>/dev/null || echo "")
-          if [ -n "$LATEST_TAG" ]; then
-            gh release upload "$LATEST_TAG" "${VSIX_FILE}" codeatlas-vscode.vsix --clobber || true
+          if gh release view "v${EXT_VERSION}" >/dev/null 2>&1; then
+            gh release upload "v${EXT_VERSION}" "${VSIX_FILE}" codeatlas-vscode.vsix --clobber
+          else
+            gh release create "v${EXT_VERSION}" "${VSIX_FILE}" codeatlas-vscode.vsix --title "v${EXT_VERSION}" --generate-notes
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
