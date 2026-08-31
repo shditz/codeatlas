@@ -98,16 +98,24 @@ export class CodeAtlasOverviewProvider implements vscode.TreeDataProvider<CodeAt
     }
 
     if (element.contextValue === 'category_files') {
-      const files: FileInfo[] = fileRepo.getAll(this.projectId).slice(0, 50);
-      return files.map(
-        (f) =>
-          new CodeAtlasTreeItem(
-            f.relativePath,
-            vscode.TreeItemCollapsibleState.None,
-            'file_item',
-            `[${f.language}]`,
-          ),
-      );
+      const files: FileInfo[] = fileRepo.getAll(this.projectId).slice(0, 100);
+      return files.map((f) => {
+        const item = new CodeAtlasTreeItem(
+          f.relativePath,
+          vscode.TreeItemCollapsibleState.None,
+          'file_item',
+          `[${f.language}]`,
+        );
+        const absPath = path.isAbsolute(f.path)
+          ? f.path
+          : path.join(this.workspaceRoot, f.relativePath);
+        item.command = {
+          command: 'vscode.open',
+          title: 'Open File',
+          arguments: [vscode.Uri.file(absPath)],
+        };
+        return item;
+      });
     }
 
     if (element.contextValue === 'category_symbols') {
@@ -116,17 +124,36 @@ export class CodeAtlasOverviewProvider implements vscode.TreeDataProvider<CodeAt
         .flatMap((f) =>
           f.id ? symbolRepo.getByFile(f.id).map((s) => ({ ...s, filePath: f.relativePath })) : [],
         )
-        .slice(0, 50);
-      return symbols.map(
-        (s: SymbolInfo) =>
-          new CodeAtlasTreeItem(
-            `${s.name} (${s.kind})`,
-            vscode.TreeItemCollapsibleState.None,
-            'symbol_item',
-            s.filePath,
-          ),
-      );
+        .slice(0, 100);
+      return symbols.map((s: SymbolInfo) => {
+        const item = new CodeAtlasTreeItem(
+          `${s.name} (${s.kind})`,
+          vscode.TreeItemCollapsibleState.None,
+          'symbol_item',
+          s.filePath,
+        );
+        const absPath = path.isAbsolute(s.filePath || '')
+          ? s.filePath || ''
+          : path.join(this.workspaceRoot, s.filePath || '');
+        item.command = {
+          command: 'vscode.open',
+          title: 'Open Symbol',
+          arguments: [
+            vscode.Uri.file(absPath),
+            {
+              selection: new vscode.Range(
+                Math.max(0, s.line - 1),
+                Math.max(0, (s.columnNum || 1) - 1),
+                Math.max(0, (s.endLine || s.line) - 1),
+                0,
+              ),
+            },
+          ],
+        };
+        return item;
+      });
     }
+
 
     return [];
   }

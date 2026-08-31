@@ -70,27 +70,32 @@
       {
         "command": "codeatlas.indexCodebase",
         "title": "Index / Refresh Codebase",
-        "category": "CodeAtlas"
+        "category": "CodeAtlas",
+        "icon": "$(refresh)"
       },
       {
         "command": "codeatlas.exportContext",
         "title": "Export Context for AI Agent",
-        "category": "CodeAtlas"
+        "category": "CodeAtlas",
+        "icon": "$(cloud-download)"
       },
       {
         "command": "codeatlas.generatePRContext",
         "title": "Generate Git PR Context",
-        "category": "CodeAtlas"
+        "category": "CodeAtlas",
+        "icon": "$(git-pull-request)"
       },
       {
         "command": "codeatlas.queryGraph",
         "title": "Run Cypher Graph Query",
-        "category": "CodeAtlas"
+        "category": "CodeAtlas",
+        "icon": "$(search)"
       },
       {
         "command": "codeatlas.toggleWatcher",
         "title": "Toggle Real-time Watcher",
-        "category": "CodeAtlas"
+        "category": "CodeAtlas",
+        "icon": "$(eye)"
       },
       {
         "command": "codeatlas.openGraphView",
@@ -120,14 +125,25 @@
       ],
       "view/title": [
         {
+          "command": "codeatlas.indexCodebase",
+          "when": "view == codeatlas.overview",
+          "group": "navigation@1"
+        },
+        {
           "command": "codeatlas.openGraphView",
           "when": "view == codeatlas.overview",
-          "group": "navigation"
+          "group": "navigation@2"
+        },
+        {
+          "command": "codeatlas.exportContext",
+          "when": "view == codeatlas.overview",
+          "group": "navigation@3"
         }
       ]
     }
   },
   "scripts": {
+
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
