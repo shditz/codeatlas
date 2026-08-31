@@ -1,7 +1,10 @@
 import type { Command } from 'commander';
 import chalk from 'chalk';
+import type { SymbolInfo } from '@codeatlas-ai/core';
 import { Indexer } from '@codeatlas-ai/indexer';
 import { GitService } from '@codeatlas-ai/git';
+import { CodebaseAnalyzer } from '@codeatlas-ai/analytics';
+import { SymbolRepository } from '@codeatlas-ai/storage';
 import { ensureInitialized, openDatabase, getOrCreateProject, loadConfig } from '../utils.js';
 import { formatDuration } from '@codeatlas-ai/shared';
 
@@ -56,19 +59,53 @@ export function registerIndexCommand(program: Command): void {
         }
 
         if (spinner) spinner.succeed('Indexing complete');
-      } catch (err: any) {
-        if (spinner) spinner.fail(`Indexing failed: ${err.message}`);
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        if (spinner) spinner.fail(`Indexing failed: ${errorMsg}`);
         throw err;
+      }
+
+      // Compute Code Health & Architectural Insights
+      let deadCodeCount = 0;
+      let deadSymbolsCount = 0;
+      let topComplexSymbols: SymbolInfo[] = [];
+      let cycleCount = 0;
+
+      try {
+        const analyzer = new CodebaseAnalyzer({ db, projectId, rootDir: cwd });
+        const deadItems = analyzer.detectDeadCode();
+        deadCodeCount = deadItems.filter((d) => d.kind === 'file').length;
+        deadSymbolsCount = deadItems.filter((d) => d.kind === 'symbol').length;
+        cycleCount = analyzer.detectCycles().cycleCount;
+
+        const symbolRepo = new SymbolRepository(db);
+        topComplexSymbols = symbolRepo.getTopComplex(3, projectId);
+      } catch {
+        // Non-blocking analysis
       }
 
       db.close();
 
       if (options.json) {
-        console.log(JSON.stringify(result, null, 2));
+        console.log(
+          JSON.stringify(
+            {
+              ...result,
+              insights: {
+                deadFiles: deadCodeCount,
+                deadSymbols: deadSymbolsCount,
+                cycles: cycleCount,
+                topComplexSymbols,
+              },
+            },
+            null,
+            2,
+          ),
+        );
         return;
       }
 
-      console.log(chalk.bold('Index Results'));
+      console.log(chalk.bold('\nIndex Results'));
       console.log('');
       console.log(`  ${chalk.green('✓')} ${chalk.dim('Files indexed')}     ${result.filesIndexed}`);
       console.log(`  ${chalk.dim('○')} ${chalk.dim('Files unchanged')}   ${result.filesSkipped}`);
@@ -88,6 +125,42 @@ export function registerIndexCommand(program: Command): void {
       console.log(
         `  ${chalk.dim('⏱')} ${chalk.dim('Duration')}         ${formatDuration(result.duration)}`,
       );
+
+      console.log(chalk.bold('\n  🧠 Code Health & Intelligence Insights'));
+      if (deadCodeCount > 0 || deadSymbolsCount > 0) {
+        console.log(
+          `    ${chalk.yellow('⚠')} ${chalk.dim('Potential Dead Code:')} ${chalk.yellow(
+            `${deadCodeCount} file(s), ${deadSymbolsCount} orphan symbol(s)`,
+          )}`,
+        );
+      } else {
+        console.log(
+          `    ${chalk.green('✓')} ${chalk.dim('Dead Code Status:')}   ${chalk.green('No orphaned files detected')}`,
+        );
+      }
+
+      if (cycleCount > 0) {
+        console.log(
+          `    ${chalk.red('✗')} ${chalk.dim('Circular Dependencies:')} ${chalk.red(
+            `${cycleCount} cycle(s) found`,
+          )}`,
+        );
+      } else {
+        console.log(
+          `    ${chalk.green('✓')} ${chalk.dim('Architecture:')}       ${chalk.green('Clean DAG (0 dependency cycles)')}`,
+        );
+      }
+
+      if (topComplexSymbols.length > 0) {
+        console.log(`    ${chalk.dim('Complexity Hotspots:')}`);
+        for (const sym of topComplexSymbols) {
+          const score = sym.cyclomaticComplexity ?? 1;
+          const scoreColor = score > 15 ? chalk.red.bold : score > 8 ? chalk.yellow : chalk.dim;
+          console.log(
+            `      • ${chalk.white(sym.name)} ${scoreColor(`(Complexity: ${score})`)} ${chalk.dim(`in ${sym.filePath}:${sym.line}`)}`,
+          );
+        }
+      }
 
       if (result.errors.length > 0 && options.verbose) {
         console.log('');

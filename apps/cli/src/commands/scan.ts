@@ -27,8 +27,9 @@ export function registerScanCommand(program: Command): void {
       try {
         result = await scanner.scan();
         if (spinner) spinner.succeed('Scan complete');
-      } catch (err: any) {
-        if (spinner) spinner.fail(`Scan failed: ${err.message}`);
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        if (spinner) spinner.fail(`Scan failed: ${errorMsg}`);
         throw err;
       }
 
@@ -89,6 +90,19 @@ export function registerScanCommand(program: Command): void {
         console.log(chalk.bold('  Frameworks'));
         for (const fw of result.detectedFrameworks) {
           console.log(`    ${chalk.green('●')} ${fw}`);
+        }
+      }
+
+      if (result.isMonorepo && result.workspaces.length > 0) {
+        console.log('');
+        console.log(chalk.bold(`  Workspaces (${result.workspaces.length})`));
+        for (const ws of result.workspaces.slice(0, 15)) {
+          console.log(`    ${chalk.cyan('⬡')} ${ws}`);
+        }
+        if (result.workspaces.length > 15) {
+          console.log(
+            `    ${chalk.dim(`... and ${result.workspaces.length - 15} more workspaces`)}`,
+          );
         }
       }
 

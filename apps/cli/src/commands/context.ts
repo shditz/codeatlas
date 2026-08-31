@@ -117,6 +117,17 @@ export function registerContextCommand(program: Command): void {
           }
         }
 
+        if (contextPack.files.length > 0) {
+          console.log('');
+          console.log(chalk.bold('  📂 Selected Context Structure'));
+          const treeLines = renderFileTree(
+            contextPack.files.map((f) => ({ relativePath: f.relativePath, mode: f.mode })),
+          );
+          for (const line of treeLines) {
+            console.log(`    ${chalk.dim(line)}`);
+          }
+        }
+
         console.log('');
         console.log(chalk.bold('  Token Budget'));
         console.log('');
@@ -151,4 +162,46 @@ export function registerContextCommand(program: Command): void {
         console.log('');
       },
     );
+}
+
+function renderFileTree(files: { relativePath: string; mode: string }[]): string[] {
+  interface TreeNode {
+    [key: string]: TreeNode | null;
+  }
+  const root: TreeNode = {};
+
+  for (const f of files) {
+    const parts = f.relativePath.split('/');
+    let current = root;
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i]!;
+      if (i === parts.length - 1) {
+        current[`${part} [${f.mode}]`] = null;
+      } else {
+        if (!current[part]) {
+          current[part] = {};
+        }
+        current = current[part] as TreeNode;
+      }
+    }
+  }
+
+  const lines: string[] = [];
+  function printNode(node: TreeNode, prefix: string = '') {
+    const keys = Object.keys(node).sort();
+    keys.forEach((key, index) => {
+      const isLast = index === keys.length - 1;
+      const connector = isLast ? '└── ' : '├── ';
+      const child = node[key];
+      if (child === null || child === undefined) {
+        lines.push(`${prefix}${connector}${key}`);
+      } else {
+        lines.push(`${prefix}${connector}${key}/`);
+        printNode(child, prefix + (isLast ? '    ' : '│   '));
+      }
+    });
+  }
+
+  printNode(root);
+  return lines;
 }

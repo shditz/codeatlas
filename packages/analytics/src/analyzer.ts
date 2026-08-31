@@ -53,19 +53,21 @@ export class CodebaseAnalyzer {
 
   analyze(options?: DeadCodeDetectorOptions): CodebaseAnalytics {
     let files: ReturnType<FileRepository['getAll']> = [];
+    let symbols: ReturnType<SymbolRepository['getAllByProject']> = [];
     let symbolCount = 0;
 
     if (this.db) {
       const fileRepo = new FileRepository(this.db);
       const symbolRepo = new SymbolRepository(this.db);
       files = fileRepo.getAll(this.projectId);
+      symbols = symbolRepo.getAllByProject(this.projectId);
       symbolCount = symbolRepo.countByProject(this.projectId);
     }
 
     const cycleDetector = new CycleDetector(this.graph);
     const cycleRes = cycleDetector.detectCycles();
 
-    const deadCodeDetector = new DeadCodeDetector(this.graph, files, [], options);
+    const deadCodeDetector = new DeadCodeDetector(this.graph, files, symbols, options);
     const deadCode = deadCodeDetector.detectDeadCode();
 
     const metricsCalculator = new MetricsCalculator(
@@ -110,11 +112,14 @@ export class CodebaseAnalyzer {
 
   detectDeadCode(options?: DeadCodeDetectorOptions): DeadCodeItem[] {
     let files: ReturnType<FileRepository['getAll']> = [];
+    let symbols: ReturnType<SymbolRepository['getAllByProject']> = [];
     if (this.db) {
       const fileRepo = new FileRepository(this.db);
+      const symbolRepo = new SymbolRepository(this.db);
       files = fileRepo.getAll(this.projectId);
+      symbols = symbolRepo.getAllByProject(this.projectId);
     }
-    return new DeadCodeDetector(this.graph, files, [], options).detectDeadCode();
+    return new DeadCodeDetector(this.graph, files, symbols, options).detectDeadCode();
   }
 
   getMetricsSummary(): GraphMetricsSummary {

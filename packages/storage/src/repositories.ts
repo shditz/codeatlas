@@ -189,6 +189,32 @@ export class SymbolRepository {
     return row?.count ?? 0;
   }
 
+  getAllByProject(projectId?: number): SymbolInfo[] {
+    let query =
+      'SELECT symbols.*, files.relative_path as file_path FROM symbols JOIN files ON symbols.file_id = files.id';
+    const params: unknown[] = [];
+    if (projectId !== undefined) {
+      query += ' WHERE files.project_id = ?';
+      params.push(projectId);
+    }
+    const rows = this.db.all<Record<string, unknown>>(query, ...params);
+    return rows.map((r) => this.mapRow(r));
+  }
+
+  getTopComplex(limit: number = 10, projectId?: number): SymbolInfo[] {
+    let query =
+      'SELECT symbols.*, files.relative_path as file_path FROM symbols JOIN files ON symbols.file_id = files.id WHERE symbols.cyclomatic_complexity IS NOT NULL';
+    const params: unknown[] = [];
+    if (projectId !== undefined) {
+      query += ' AND files.project_id = ?';
+      params.push(projectId);
+    }
+    query += ' ORDER BY symbols.cyclomatic_complexity DESC LIMIT ?';
+    params.push(limit);
+    const rows = this.db.all<Record<string, unknown>>(query, ...params);
+    return rows.map((r) => this.mapRow(r));
+  }
+
   countByProject(projectId: number): number {
     const row = this.db.get<{ count: number }>(
       'SELECT COUNT(*) as count FROM symbols WHERE file_id IN (SELECT id FROM files WHERE project_id = ?)',

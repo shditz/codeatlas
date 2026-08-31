@@ -347,6 +347,34 @@ export class McpServer {
           required: ['feature'],
         },
       },
+      {
+        name: 'atlas_detect_dead_code',
+        description:
+          'Detect unreferenced files and orphan exported symbols (dead code) across the repository graph with actionable remediation hints.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            ignoreTestFiles: {
+              type: 'boolean',
+              description: 'Whether to ignore test files (default: true)',
+            },
+          },
+        },
+      },
+      {
+        name: 'atlas_complexity_report',
+        description:
+          'Analyze and rank code symbols by Cyclomatic Complexity to identify technical debt, refactoring candidates, and complex functions.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            limit: {
+              type: 'number',
+              description: 'Maximum number of top complex symbols to return (default: 15)',
+            },
+          },
+        },
+      },
     ];
   }
 
@@ -1258,6 +1286,80 @@ export class McpServer {
         };
 
         return JSON.stringify(plan, null, 2);
+      }
+
+      case 'atlas_detect_dead_code': {
+        const { db, projectId } = this.openDb();
+        const analyzer = new CodebaseAnalyzer({ db, projectId, rootDir: this.rootDir });
+        const deadItems = analyzer.detectDeadCode({
+          ignoreTestFiles: args.ignoreTestFiles !== false,
+        });
+
+        const deadFiles = deadItems.filter((i) => i.kind === 'file');
+        const deadSymbols = deadItems.filter((i) => i.kind === 'symbol');
+
+        return JSON.stringify(
+          {
+            summary: {
+              totalDeadItems: deadItems.length,
+              deadFilesCount: deadFiles.length,
+              deadSymbolsCount: deadSymbols.length,
+            },
+            deadFiles,
+            deadSymbols,
+            recommendation:
+              deadItems.length > 0
+                ? 'Review unreferenced files and orphan symbols for safe removal or export cleanup.'
+                : 'No dead code or orphan exported symbols detected. Clean architecture!',
+          },
+          null,
+          2,
+        );
+      }
+
+      case 'atlas_complexity_report': {
+        const { db, projectId } = this.openDb();
+        const symbolRepo = new SymbolRepository(db);
+        const limit = typeof args.limit === 'number' ? args.limit : 15;
+        const topSymbols = symbolRepo.getTopComplex(limit, projectId);
+
+        const averageComplexity =
+          topSymbols.length > 0
+            ? Math.round(
+                (topSymbols.reduce((acc, s) => acc + (s.cyclomaticComplexity ?? 1), 0) /
+                  topSymbols.length) *
+                  10,
+              ) / 10
+            : 0;
+
+        return JSON.stringify(
+          {
+            limit,
+            evaluatedSymbolsCount: topSymbols.length,
+            averageTopComplexity: averageComplexity,
+            topComplexSymbols: topSymbols.map((s) => ({
+              name: s.name,
+              kind: s.kind,
+              filePath: s.filePath,
+              line: s.line,
+              complexity: s.cyclomaticComplexity ?? 1,
+              riskLevel:
+                (s.cyclomaticComplexity ?? 1) > 15
+                  ? 'high'
+                  : (s.cyclomaticComplexity ?? 1) > 8
+                    ? 'medium'
+                    : 'low',
+              refactorAdvice:
+                (s.cyclomaticComplexity ?? 1) > 15
+                  ? 'High branching complexity. Consider decomposing into smaller subroutines or extracting strategy handlers.'
+                  : (s.cyclomaticComplexity ?? 1) > 8
+                    ? 'Moderate branching complexity. Ensure adequate unit test branch coverage.'
+                    : 'Low complexity, easy to maintain.',
+            })),
+          },
+          null,
+          2,
+        );
       }
 
       default:

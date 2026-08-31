@@ -1,7 +1,30 @@
-# CodeAtlas ignore patterns
+# =========================================
+# CodeAtlas Smart Ignore Configuration
+# Auto-generated based on detected tech stack
+# =========================================
+
+# Security & Secrets
 .env
 .env.*
 *.pem
 *.key
 *.cert
+*.pfx
 secrets/
+
+# Build & Dependency Artifacts
+# Node.js & Web
+node_modules/
+dist/
+build/
+out/
+.next/
+.nuxt/
+.svelte-kit/
+.turbo/
+coverage/
+
+# JVM / Gradle / Maven
+build/
+.gradle/
+target/

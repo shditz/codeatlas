@@ -46,6 +46,8 @@ describe('Model Context Protocol (MCP) Server', () => {
     expect(toolNames).toContain('atlas_doctor');
     expect(toolNames).toContain('atlas_analyze');
     expect(toolNames).toContain('atlas_sql_query');
+    expect(toolNames).toContain('atlas_detect_dead_code');
+    expect(toolNames).toContain('atlas_complexity_report');
   });
 
   it('executes atlas_analyze tool successfully', async () => {
@@ -275,5 +277,46 @@ describe('Model Context Protocol (MCP) Server', () => {
     expect(data.status).toBe('ready');
     expect(Array.isArray(data.recommendedWorkflow)).toBe(true);
     expect(Array.isArray(data.primaryTouchpoints)).toBe(true);
+  });
+
+  it('executes atlas_detect_dead_code tool returning structured dead code analysis', async () => {
+    const server = new McpServer();
+    const response = await server.handleMessage({
+      jsonrpc: '2.0',
+      id: 'dead-code-1',
+      method: 'tools/call',
+      params: {
+        name: 'atlas_detect_dead_code',
+        arguments: {},
+      },
+    });
+
+    expect(response?.result).toBeDefined();
+    const content = (response?.result as { content: Array<{ text: string }> }).content;
+    const data = JSON.parse(content[0]!.text);
+    expect(data.summary).toBeDefined();
+    expect(Array.isArray(data.deadFiles)).toBe(true);
+    expect(Array.isArray(data.deadSymbols)).toBe(true);
+    expect(data.recommendation).toBeDefined();
+  });
+
+  it('executes atlas_complexity_report tool returning ranked complexity items', async () => {
+    const server = new McpServer();
+    const response = await server.handleMessage({
+      jsonrpc: '2.0',
+      id: 'complexity-1',
+      method: 'tools/call',
+      params: {
+        name: 'atlas_complexity_report',
+        arguments: { limit: 10 },
+      },
+    });
+
+    expect(response?.result).toBeDefined();
+    const content = (response?.result as { content: Array<{ text: string }> }).content;
+    const data = JSON.parse(content[0]!.text);
+    expect(data.limit).toBe(10);
+    expect(data.evaluatedSymbolsCount).toBeDefined();
+    expect(Array.isArray(data.topComplexSymbols)).toBe(true);
   });
 });
