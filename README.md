@@ -116,11 +116,11 @@ CodeAtlas provides a native extension (`.vsix`) for any VS Code-compatible IDE (
 
 ### Installation Guide:
 
-1. Download or build the `codeatlas-vscode-1.5.0.vsix` file.
+1. Download or build the `codeatlas-vscode-1.5.1.vsix` file.
 2. Open your editor (VS Code, Antigravity, Cursor, etc.).
 3. Go to the **Extensions** view (`Ctrl+Shift+X` on Windows/Linux or `Cmd+Shift+X` on macOS).
 4. Click the **`...`** (Views and More Actions) menu at the top right of the Extensions panel.
-5. Select **"Install from VSIX..."** and choose the `codeatlas-vscode-1.5.0.vsix` file.
+5. Select **"Install from VSIX..."** and choose the `codeatlas-vscode-1.5.1.vsix` file.
 
 Once installed, click the **CodeAtlas map icon** in your Activity Bar to access the Architecture & Codebase Map, Analytics, AI Governance rules, and Quick Actions.
 

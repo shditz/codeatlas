@@ -1,6 +1,6 @@
 # 🗺️ CodeAtlas — AI Context Intelligence for VS Code
 
-[![Version](https://img.shields.io/badge/version-1.5.0-blue.svg)](https://github.com/shditz/codeatlas)
+[![Version](https://img.shields.io/badge/version-1.5.1-blue.svg)](https://github.com/shditz/codeatlas)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/shditz/codeatlas/blob/main/LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-VS%20Code%20%7C%20Antigravity%20%7C%20Cursor%20%7C%20Windsurf-purple.svg)](https://github.com/shditz/codeatlas)
 
@@ -26,12 +26,12 @@
 
 CodeAtlas is packaged as a standard VS Code Extension (`.vsix`) and is fully compatible with **VS Code**, **Google Antigravity**, **Cursor**, **Windsurf**, and other VS Code-based editors.
 
-1. Download or build the `codeatlas-vscode-1.5.0.vsix` file.
+1. Download or build the `codeatlas-vscode-1.5.1.vsix` file.
 2. Open your editor (VS Code, Antigravity, Cursor, etc.).
 3. Go to the **Extensions** view (`Ctrl+Shift+X` on Windows/Linux or `Cmd+Shift+X` on macOS).
 4. Click the **`...`** (Views and More Actions) icon at the top right of the Extensions panel.
 5. Select **"Install from VSIX..."** from the dropdown menu.
-6. Locate and select the `codeatlas-vscode-1.5.0.vsix` file to install it.
+6. Locate and select the `codeatlas-vscode-1.5.1.vsix` file to install it.
 
 ### 2. Index Your Workspace
 
