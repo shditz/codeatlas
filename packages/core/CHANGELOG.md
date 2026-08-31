@@ -1,5 +1,15 @@
 # @codeatlas-ai/core
 
+## 0.4.0
+
+### Minor Changes
+
+- feat: smart init auto-detection, code health & dead code analytics, directory tree context packing, and advanced MCP tools.
+
+### Patch Changes
+
+- @codeatlas-ai/shared@0.4.0
+
 ## 0.3.0
 
 ### Minor Changes

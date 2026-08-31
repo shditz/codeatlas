@@ -1,5 +1,20 @@
 # @codeatlas-ai/analytics
 
+## 0.4.0
+
+### Minor Changes
+
+- feat: smart init auto-detection, code health & dead code analytics, directory tree context packing, and advanced MCP tools.
+
+### Patch Changes
+
+- Updated dependencies
+  - @codeatlas-ai/core@0.4.0
+  - @codeatlas-ai/graph@0.4.0
+  - @codeatlas-ai/storage@0.4.0
+  - @codeatlas-ai/git@0.4.0
+  - @codeatlas-ai/shared@0.4.0
+
 ## 0.3.0
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @codeatlas-ai/git
 
+## 0.4.0
+
+### Patch Changes
+
+- Updated dependencies
+  - @codeatlas-ai/core@0.4.0
+  - @codeatlas-ai/shared@0.4.0
+
 ## 0.3.0
 
 ### Patch Changes

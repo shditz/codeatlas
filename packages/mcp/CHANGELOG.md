@@ -1,5 +1,32 @@
 # @codeatlas-ai/mcp
 
+## 0.4.0
+
+### Minor Changes
+
+- feat: smart init auto-detection, code health & dead code analytics, directory tree context packing, and advanced MCP tools.
+
+### Patch Changes
+
+- Updated dependencies
+  - @codeatlas-ai/core@0.4.0
+  - @codeatlas-ai/graph@0.4.0
+  - @codeatlas-ai/parser@0.4.0
+  - @codeatlas-ai/storage@0.4.0
+  - @codeatlas-ai/analytics@0.4.0
+  - @codeatlas-ai/context@0.4.0
+  - @codeatlas-ai/indexer@0.4.0
+  - @codeatlas-ai/retrieval@0.4.0
+  - @codeatlas-ai/compression@0.4.0
+  - @codeatlas-ai/exporters@0.4.0
+  - @codeatlas-ai/git@0.4.0
+  - @codeatlas-ai/llm@0.4.0
+  - @codeatlas-ai/nl2cypher@0.4.0
+  - @codeatlas-ai/ranking@0.4.0
+  - @codeatlas-ai/rules@0.4.0
+  - @codeatlas-ai/token-counter@0.4.0
+  - @codeatlas-ai/shared@0.4.0
+
 ## 0.3.0
 
 ### Minor Changes

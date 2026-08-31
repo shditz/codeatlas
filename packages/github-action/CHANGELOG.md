@@ -1,5 +1,19 @@
 # @codeatlas-ai/github-action
 
+## 0.4.0
+
+### Patch Changes
+
+- Updated dependencies
+  - @codeatlas-ai/core@0.4.0
+  - @codeatlas-ai/storage@0.4.0
+  - @codeatlas-ai/context@0.4.0
+  - @codeatlas-ai/indexer@0.4.0
+  - @codeatlas-ai/exporters@0.4.0
+  - @codeatlas-ai/git@0.4.0
+  - @codeatlas-ai/rules@0.4.0
+  - @codeatlas-ai/shared@0.4.0
+
 ## 0.3.0
 
 ### Patch Changes
