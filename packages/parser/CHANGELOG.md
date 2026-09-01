@@ -1,5 +1,15 @@
 # @codeatlas-ai/parser
 
+## 2.0.0
+
+### Major Changes
+
+- Tree-sitter concrete syntax tree parser supporting 20+ languages and framework adapters.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.0.0`.
+
 ## 0.4.0
 
 ### Minor Changes

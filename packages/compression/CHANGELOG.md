@@ -1,5 +1,15 @@
 # @codeatlas-ai/compression
 
+## 2.0.0
+
+### Major Changes
+
+- AST Skeletonizer and context token compression saving up to 92% LLM prompt budget.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.0.0`.
+
 ## 0.4.0
 
 ### Patch Changes

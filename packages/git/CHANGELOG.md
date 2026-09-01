@@ -1,5 +1,15 @@
 # @codeatlas-ai/git
 
+## 2.0.0
+
+### Major Changes
+
+- Git commit churn tracking, co-change frequencies, and branch diff surface analysis.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.0.0`.
+
 ## 0.4.0
 
 ### Patch Changes

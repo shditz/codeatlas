@@ -1,5 +1,15 @@
 # @codeatlas-ai/exporters
 
+## 2.0.0
+
+### Major Changes
+
+- Architecture schema exporter and multi-repo federation metadata format.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.0.0`.
+
 ## 0.4.0
 
 ### Patch Changes

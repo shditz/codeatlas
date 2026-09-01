@@ -1,5 +1,15 @@
 # @codeatlas-ai/github-action
 
+## 2.0.0
+
+### Major Changes
+
+- CI/CD architecture quality gate GitHub Action for PR risk evaluation.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.0.0`.
+
 ## 0.4.0
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @codeatlas-ai/rules
 
+## 2.0.0
+
+### Major Changes
+
+- AI rule generator and live architecture blueprint synchronizer for AGENTS.md, CLAUDE.md, and .cursor/rules/.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.0.0`.
+
 ## 0.4.0
 
 ### Patch Changes

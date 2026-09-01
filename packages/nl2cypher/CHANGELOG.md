@@ -1,5 +1,15 @@
 # @codeatlas-ai/nl2cypher
 
+## 2.0.0
+
+### Major Changes
+
+- Natural language to Cypher query translator for dependency graph exploration.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.0.0`.
+
 ## 0.4.0
 
 ### Patch Changes

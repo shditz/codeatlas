@@ -1,127 +1,249 @@
-# CodeAtlas Architecture & System Design 🗺️
+# CodeAtlas Architecture & System Design
 
-> **The Local-First Context Intelligence & Architecture Engine for AI Coding Agents**
-
-This document provides a comprehensive technical overview of the CodeAtlas codebase, design decisions, data structures, and the relationships between the packages in this monorepo.
+This document describes the architectural design, core pipelines, data structures, dependency boundaries, and technical decisions of CodeAtlas.
 
 ---
 
-## 🏛️ High-Level System Architecture
+## 1. Architectural Principles
 
-CodeAtlas operates strictly **local-first** without external cloud dependencies. It converts raw source code into an AST-backed Knowledge Graph in SQLite, exposing high-level architectural intelligence to AI Coding Agents (such as Google Antigravity, Claude Code, Cursor, Windsurf, and Copilot) via CLI, VS Code Extension, and the Model Context Protocol (MCP).
+CodeAtlas is built around six foundational engineering principles:
 
-```mermaid
-graph TD
-    User([Developer / AI Agent]) --> CLI[apps/cli]
-    User --> VSCode[apps/vscode-extension]
-    User --> MCPClient[Claude / Cursor / Antigravity MCP]
+1. **Local-First Execution**: All indexing, AST parsing, graph computations, and context assembly execute locally on the developer's machine. Core functionality requires zero network connectivity.
+2. **Deterministic Indexing**: The same codebase state and configuration produce identical graph topologies, symbol tables, and complexity scores.
+3. **Explicit Trust Boundaries**: Repository source files, external MCP tool invocations, and editor messages are treated as untrusted input. File system interactions are strictly bounded to the workspace root.
+4. **Separation of Concerns**: Ingestion, parsing, persistence, graph computation, retrieval, and presentation are decoupled into isolated packages with unidirectional dependency flow.
+5. **Defense-in-Depth Privacy**: Credentials and secrets are scrubbed in-memory before entering the local database and re-checked before egress to AI clients.
+6. **Graceful Degradation**: Individual file parsing failures, malformed syntax trees, or unsupported languages never abort the overall indexing pipeline.
 
-    MCPClient --> MCPServer[packages/mcp: 16 AI Tools]
-    CLI --> IndexerEngine[packages/indexer]
-    CLI --> ContextEnginePkg[packages/context]
-    CLI --> AnalyticsEngine[packages/analytics]
-    VSCode --> MCPServer
+---
 
-    subgraph "Core Ingestion & Parser Layer"
-        IndexerEngine --> SecretScanner[packages/core: SecretScanner Redaction]
-        IndexerEngine --> Parser[packages/parser: Tree-sitter + Semantic Resolvers]
-        Parser --> FrameworkAdapters[Framework Adapters: React, Next.js, NestJS, Prisma]
-        IndexerEngine --> Git[packages/git: GitService & Temporal Churn]
-    end
+## 2. System Overview
 
-    subgraph "Storage & Graph Database Layer"
-        Parser --> Storage[packages/storage: SQLite + FTS5 + Migrations 1-5]
-        Storage --> Graph[packages/graph: DependencyGraph DAG Engine]
-    end
+### 2.1 Logical Architecture
 
-    subgraph "Intelligence & Retrieval Layer"
-        AnalyticsEngine --> ArchitectureAnalyzer[ArchitectureAnalyzer: DDD Layering & Regressions]
-        AnalyticsEngine --> Storage
-        AnalyticsEngine --> Graph
-        ContextEnginePkg --> Retrieval[packages/retrieval: Intent-Aware BM25 + Graph Traversal]
-        Retrieval --> Ranking[packages/ranking: PageRank + Heuristics]
-        ContextEnginePkg --> Compression[packages/compression: AST Skeletonizer]
-        ContextEnginePkg --> Rules[packages/rules: Evidence-Based AI Rule Generator]
-    end
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Client Interfaces                             │
+│       CLI (`atlas`)    │   VS Code Extension   │   MCP Stdio Server     │
+└────────────────┬───────────────────────┬───────────────────────┬────────┘
+                 │                       │                       │
+                 ▼                       ▼                       ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Application Layer                             │
+│   Context Packing   │  AI Rule Generator  │  Architecture Analyzer     │
+└────────────────┬───────────────────────┬───────────────────────┬────────┘
+                 │                       │                       │
+                 ▼                       ▼                       ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Intelligence Layer                            │
+│   Multi-Source Retrieval  │  Ranking & Fusion  │  AST Skeletonizer      │
+└────────────────┬───────────────────────┬───────────────────────────────┘
+                 │                       │
+                 ▼                       ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Graph & Core Layer                            │
+│   Directed Dependency Graph (DAG) Engine  │  SecretScanner Redaction    │
+└────────────────────────────────────────┬────────────────────────────────┘
+                                         │
+                                         ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Storage & Parsing                             │
+│   SQLite Database (WAL Mode) + FTS5    │  Tree-sitter AST & Resolvers   │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 📦 Monorepo Package Breakdown
+## 3. Core Data Pipelines
 
-The monorepo is managed with `pnpm` workspaces and `tsup` for ultra-fast ESM/DTS builds across internal packages and application runtimes:
+### 3.1 Indexing Pipeline (Write Path)
 
-### 1. Delivery & Applications (`apps/`)
+The indexing pipeline transforms raw repository files into structured graph nodes, symbols, and full-text search indexes:
 
-| App                         | Description                                                                                                                                                      |
-| :-------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`apps/cli`**              | The main developer CLI executable (`atlas`). Handles commands like `init`, `scan`, `index`, `context`, `diff`, `doctor`, `watch`, `analyze`, `rules`, and `mcp`. |
-| **`apps/vscode-extension`** | VS Code / Cursor extension providing a visual Knowledge Graph viewer, code lens context triggers, and local server bridge.                                       |
-| **`apps/mcp-server`**       | Standalone stdio MCP server entry point exposing 16 specialized tools for direct integration into AI agent runners.                                              |
-| **`apps/docs`**             | VitePress documentation portal containing full guides, architecture deep-dives, CLI reference, and API contracts.                                                |
-| **`apps/webview`**          | React force-directed 2D/3D graph visualization canvas for exploring repository dependencies.                                                                     |
+```
+Source Files (Disk)
+       │
+       ▼
+1. File Scanner (Filters `.gitignore`, `.atlasignore`, and binary files)
+       │
+       ▼
+2. Secret Redaction (`SecretScanner` scrubs credentials in-memory)
+       │
+       ▼
+3. AST Parsing (Tree-sitter parses syntax trees & computes cyclomatic complexity)
+       │
+       ▼
+4. Semantic Resolution (Resolves path aliases `@/*`, type inheritance `extends`/`implements`)
+       │
+       ▼
+5. Persistence (`@codeatlas-ai/storage` commits files, symbols, deps, and FTS5 tokens to SQLite)
+       │
+       ▼
+6. Graph Materialization (Constructs in-memory directed dependency graph)
+```
 
----
+### 3.2 Context Retrieval Pipeline (Read Path)
 
-### 2. Ingestion & Syntactic Layer (`packages/`)
+When an AI assistant or developer requests context for a specific task:
 
-| Package                     | Description                                                                                                                                                                                                                                          |
-| :-------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`@codeatlas-ai/core`**    | Core domain models (`SymbolInfo`, `FileInfo`, `ContextPack`, `RuleConfig`), language mappings, and the **`SecretScanner`** redaction engine that scrubs API keys, private keys, JWTs, and passwords from index databases and LLM payloads.           |
-| **`@codeatlas-ai/parser`**  | Multi-language Tree-sitter AST parser, **TypeScript Semantic Resolver** (resolving `extends`, `implements`, and `tsconfig.json` path mappings `@/*`), and **Framework Adapters** (React Hooks `use*`, Next.js App Router, NestJS DI, Prisma Schema). |
-| **`@codeatlas-ai/indexer`** | Directory walker, stack auto-detection (`Scanner`), batch AST extraction with concurrent worker pools, and real-time incremental watcher (`Watcher`). Applies secret redaction on raw disk reads before indexing.                                    |
-| **`@codeatlas-ai/git`**     | Native Git CLI wrapper for tracking staged files, churn metrics, branch diffs, commit history, and co-change frequencies.                                                                                                                            |
-
----
-
-### 3. Knowledge Graph & Storage Layer
-
-| Package                           | Description                                                                                                                                                                                                |
-| :-------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`@codeatlas-ai/storage`**       | SQLite embedded engine with WAL mode and SQLite FTS5 full-text search (BM25 ranking). Manages automatic database migrations (Schema 1–5: initial schema, embeddings, complexity, confidence, git metrics). |
-| **`@codeatlas-ai/graph`**         | Directed Acyclic Graph (DAG) computation engine. Calculates blast radius, transitive dependencies, resolution confidence scores, and graph topological sorting.                                            |
-| **`@codeatlas-ai/token-counter`** | Deterministic token counting engine compatible with GPT-4, Claude, and Gemini tokenizers.                                                                                                                  |
-
----
-
-### 4. Intelligence, Analytics & Retrieval
-
-| Package                         | Description                                                                                                                                                                                                                       |
-| :------------------------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`@codeatlas-ai/analytics`**   | Codebase health & architecture engine: **`ArchitectureAnalyzer`** (DDD 5-tier layer classification, regression detection, public API boundary bypasses), dead code detection, cyclomatic complexity hotspots, and taint tracking. |
-| **`@codeatlas-ai/retrieval`**   | Hybrid search engine combining FTS5 keyword BM25 scoring with Graph proximity traversal. Supports task-intent routing (`--intent bug`, `feature`, `refactor`).                                                                    |
-| **`@codeatlas-ai/ranking`**     | Multi-factor ranker: adjusts file scores based on graph centrality, PageRank, recency, import depth, and temporal git churn.                                                                                                      |
-| **`@codeatlas-ai/compression`** | AST Skeletonizer. Compresses large files into type signatures and interface outlines with automatic secret redaction to save up to 92% token budgets.                                                                             |
-| **`@codeatlas-ai/rules`**       | Discovers, validates, and standardizes AI coding rules (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`). Features **`RuleGenerator`** with evidence citations, interactive prompts, and `--proposal` generation.                        |
-| **`@codeatlas-ai/context`**     | Assembles the final `ContextPack` respecting token budgets, file compression modes, task intent, and visual directory tree structures.                                                                                            |
-
----
-
-### 5. AI Protocols & Querying
-
-| Package                       | Description                                                                                                                                                                                                                                                                            |
-| :---------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`@codeatlas-ai/mcp`**       | Model Context Protocol (MCP) server implementation with 16 high-level agent tools (`atlas_trace_execution_path`, `atlas_security_audit`, `atlas_plan_feature`) and **`McpConfigurator`** (1-Click multi-agent installer for 14+ AI assistants with safe non-destructive JSON merging). |
-| **`@codeatlas-ai/nl2cypher`** | Translates natural language questions into deterministic Cypher-like queries on the graph.                                                                                                                                                                                             |
+```
+Task Query & Intent (`bug` | `feature` | `refactor`)
+       │
+       ▼
+1. Hybrid Search (FTS5 BM25 keyword match + Graph proximity expansion)
+       │
+       ▼
+2. Relevance Ranking (PageRank centrality + Git churn + Import depth weighting)
+       │
+       ▼
+3. Token Budget Allocation (Dynamically allocates tokens across prioritized files)
+       │
+       ▼
+4. AST Skeletonization (Compresses non-essential files into type signatures)
+       │
+       ▼
+5. Egress Sanitization (Re-verifies payload for sensitive tokens)
+       │
+       ▼
+Context Pack (Delivered via MCP JSON-RPC or CLI output)
+```
 
 ---
 
-## 🗄️ SQLite Database Schema & Migrations
+## 4. Package Responsibilities & Dependency Rules
 
-CodeAtlas uses schema migrations to evolve `.atlas/atlas.db`:
+CodeAtlas is organized as a monorepo under `packages/*` and `apps/*`. Dependencies must follow a strict downward hierarchy:
 
-1. **Migration 1 (`initial_schema`)**: `projects`, `files`, `symbols`, `dependencies`, `rules`, and SQLite FTS5 search virtual tables.
-2. **Migration 2 (`embeddings_table`)**: Vector embedding storage table for future semantic indexing.
-3. **Migration 3 (`add_cyclomatic_complexity`)**: Adds `cyclomatic_complexity` column to `symbols` table for AST structural complexity calculation.
-4. **Migration 4 (`add_dependency_confidence_and_resolution`)**: Adds `confidence` (0.0 to 1.0) and `resolution_reason` to `dependencies` table for tracking resolved TypeScript semantics.
-5. **Migration 5 (`create_git_metrics_table`)**: Adds `git_metrics` table (`file_id`, `commit_count`, `last_modified`, `churn_score`) for temporal change analysis.
+```
+apps/ (cli, vscode-extension, mcp-server, webview, docs)
+  └── packages/context, packages/analytics, packages/mcp
+        └── packages/retrieval, packages/ranking, packages/compression, packages/rules
+              └── packages/graph, packages/indexer
+                    └── packages/parser, packages/storage, packages/git
+                          └── packages/core, packages/shared
+```
+
+### Invariant Dependency Rules
+
+- **`packages/core`** must have zero internal package dependencies. It defines shared domain models (`SymbolInfo`, `FileInfo`, `ContextPack`), configuration interfaces, and `SecretScanner`.
+- **`packages/parser`** must never depend on `storage`, `retrieval`, or `mcp`. It is a pure syntax extraction layer.
+- **`packages/storage`** must not import UI or LLM client libraries. It handles SQLite connections, transactions, and migrations.
+- **`packages/graph`** implements pure in-memory graph algorithms (Tarjan SCC, PageRank, Louvain clustering, Blast Radius BFS) independent of database adapters.
+- **`apps/*`** must not contain direct database queries; they interact with the engine via service classes.
 
 ---
 
-## 🔒 Security Architecture (Redaction Layer)
+## 5. Storage Architecture & Data Model
 
-To protect developer secrets and corporate intellectual property, CodeAtlas implements an in-memory `SecretScanner` layer:
+CodeAtlas stores all repository intelligence in a single embedded SQLite database file located at `.atlas/atlas.db` using **Write-Ahead Logging (WAL)** mode for concurrent read/write access.
 
-- **Regex Entropy Engine**: Matches Private Keys (RSA, EC, OpenSSH, PGP), Cloud API keys (Anthropic, OpenAI, AWS, GCP, GitHub, Slack, Stripe), JWT tokens, and database URI passwords.
-- **Ingestion Interception**: Raw file contents read by `Indexer` are sanitized before hashing, AST parsing, and insertion into SQLite FTS tables.
-- **Egress Interception**: MCP tool outputs and compression engines sanitize code before streaming JSON-RPC responses to external LLMs.
+### 5.1 Entity Relationship Model
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                          projects                           │
+│  id (PK), name, root_path, created_at, updated_at           │
+└──────────────┬───────────────────────────────┬──────────────┘
+               │ 1                             │ 1
+               │                               │
+               ▼ *                             ▼ *
+┌─────────────────────────────┐   ┌─────────────────────────────┐
+│            files            │   │            rules            │
+│  id (PK), project_id (FK),  │   │  id (PK), project_id (FK),  │
+│  path, hash, lines, lang    │   │  path, scope, content       │
+└──────┬──────────────┬───────┘   └─────────────────────────────┘
+       │ 1            │ 1
+       │              │
+       ▼ *            ▼ *
+┌──────────────┐ ┌──────────────┐ ┌─────────────────────────────┐
+│   symbols    │ │ dependencies │ │         git_metrics         │
+│ id (PK),     │ │ id (PK),     │ │ file_id (PK, FK),           │
+│ file_id (FK),│ │ project_id,  │ │ commit_count, last_modified,│
+│ name, kind,  │ │ source_path, │ │ churn_score                 │
+│ line_start,  │ │ target_path, │ └─────────────────────────────┘
+│ complexity   │ │ kind, conf   │
+└──────────────┘ └──────────────┘
+```
+
+### 5.2 Full-Text Search (FTS5)
+
+Text search is powered by SQLite's native `FTS5` extension:
+
+- `files_fts`: Full-text search across relative file paths and sanitized source text.
+- `symbols_fts`: Tokenized symbol names and identifiers for sub-millisecond symbol lookups.
+- BM25 ranking algorithm scores keyword relevance, boosted by structural centrality metrics during retrieval.
+
+---
+
+## 6. Security & Trust Boundaries
+
+```
+                 Untrusted Filesystem Input
+                             │
+                             ▼
+                    [ SecretScanner ]
+                             │
+               ┌─────────────┴─────────────┐
+               ▼                           ▼
+       [ Parser Engine ]           [ FTS5 Storage ]
+               │                           │
+               └─────────────┬─────────────┘
+                             ▼
+                    Local SQLite Database
+                             │
+                             ▼
+                    [ Egress Sanitizer ]
+                             │
+                             ▼
+                    AI Agent via MCP Stdio
+```
+
+- **Ingestion Redaction**: Raw buffers read from disk pass through `SecretScanner` to mask private keys, cloud tokens, database URIs, and JWTs before AST parsing or SQLite persistence.
+- **Egress Verification**: Context packs generated for LLM consumption pass through a secondary redaction check to ensure no dynamically evaluated secrets leak over the MCP transport.
+- **Isolated Webview Boundary**: The VS Code Extension webview runs in an isolated context with restricted `localResourceRoots` and strict Content Security Policy (CSP).
+
+---
+
+## 7. Key Design Decisions
+
+### Why SQLite?
+
+- **Zero-Configuration & Portability**: Runs embedded inside Node.js 22 (`node:sqlite`) without requiring an external database daemon (PostgreSQL, Neo4j, or Redis).
+- **Embedded Full-Text Search**: Built-in SQLite FTS5 provides fast BM25 ranking without external search infrastructure.
+- **Single-File Isolation**: The entire index lives in `.atlas/atlas.db`, making cache invalidation and cleanup as simple as deleting the `.atlas/` folder.
+
+### Why Tree-sitter?
+
+- **Polyglot Parsing**: High-quality, maintained concrete syntax tree grammars across 20+ programming languages.
+- **Resilience**: Tree-sitter is an error-tolerant parser that produces usable syntax trees even when files contain syntax errors or are actively being typed by a developer.
+
+### Why Model Context Protocol (MCP)?
+
+- **Universal AI Standard**: Decouples CodeAtlas from vendor-specific AI models, allowing Google Antigravity, Claude Code, Cursor, Windsurf, and custom CLI agents to query repository intelligence via standard JSON-RPC over `stdio`.
+
+### Why Directed Dependency Graph?
+
+- **Deterministic Structural Analysis**: Codebase dependencies are not strictly acyclic—circular imports occur frequently in real repositories. A general directed graph enables cycle detection (Tarjan SCC), centrality analysis (PageRank), and blast radius traversal (BFS/DFS).
+
+---
+
+## 8. Failure Modes & Graceful Degradation
+
+| Failure Scenario                  | System Response & Mitigation                                                                                                                         |
+| :-------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Individual File Parser Error**  | The error is caught and logged. The file is indexed as text for FTS search without AST symbols. Indexing continues for the remainder of the project. |
+| **Corrupted SQLite Database**     | `atlas doctor` detects integrity violations. Running `atlas clean && atlas index` recreates the SQLite schema cleanly from source files.             |
+| **Circular Dependency in Code**   | Graph traversals track visited nodes with depth limits, preventing infinite recursion while logging the cycle for architectural health reporting.    |
+| **Unsupported Language Grammar**  | The file is indexed via FTS5 for keyword matching without AST symbol decomposition.                                                                  |
+| **Large File Threshold Exceeded** | Files exceeding the configured size limit (`max_file_size` in `.atlas/config.toml`) are skipped to protect memory budgets.                           |
+
+---
+
+## 9. Extension Points
+
+CodeAtlas is architected for modular extension:
+
+- **Adding a Language Parser**: Implement an AST extractor in `packages/parser/src/` conforming to Tree-sitter grammar node mappings.
+- **Adding a Framework Adapter**: Register a decorator/route handler extractor in `packages/parser/src/frameworks/` to recognize framework idioms (e.g. Next.js, Spring, FastAPI).
+- **Adding an MCP Tool**: Register tool schemas and execution handlers in `packages/mcp/src/mcp-server.ts`.
+- **Custom Architecture Rules**: Define forbidden layer relationships in `.atlas/config.toml` under `[architecture.rules.disallow]`.

@@ -1,5 +1,15 @@
 # @codeatlas-ai/mcp
 
+## 2.0.0
+
+### Major Changes
+
+- Model Context Protocol (MCP) server implementation with 16 tools and 1-click multi-agent configurator.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.0.0`.
+
 ## 0.4.0
 
 ### Minor Changes

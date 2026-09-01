@@ -1,5 +1,15 @@
 # @codeatlas-ai/token-counter
 
+## 2.0.0
+
+### Major Changes
+
+- Deterministic token counting engine compatible with GPT-4, Claude, and Gemini tokenizers.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.0.0`.
+
 ## 0.4.0
 
 ### Patch Changes

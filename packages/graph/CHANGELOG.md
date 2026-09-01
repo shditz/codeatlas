@@ -1,5 +1,15 @@
 # @codeatlas-ai/graph
 
+## 2.0.0
+
+### Major Changes
+
+- Directed dependency graph engine, PageRank centrality, Louvain clustering, and Tarjan SCC cycle detection.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.0.0`.
+
 ## 0.4.0
 
 ### Minor Changes

@@ -1,5 +1,15 @@
 # @codeatlas-ai/ranking
 
+## 2.0.0
+
+### Major Changes
+
+- Multi-factor relevance ranker with PageRank, temporal git churn, and import depth scoring.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.0.0`.
+
 ## 0.4.0
 
 ### Patch Changes

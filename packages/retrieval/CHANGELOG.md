@@ -1,5 +1,15 @@
 # @codeatlas-ai/retrieval
 
+## 2.0.0
+
+### Major Changes
+
+- Hybrid multi-source retrieval combining SQLite FTS5 BM25 search with graph proximity expansion.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.0.0`.
+
 ## 0.4.0
 
 ### Minor Changes

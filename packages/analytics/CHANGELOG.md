@@ -1,5 +1,15 @@
 # @codeatlas-ai/analytics
 
+## 2.0.0
+
+### Major Changes
+
+- Architecture health engine, DDD 5-tier layer classification, regression detection, and multi-repo aggregator.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.0.0`.
+
 ## 0.4.0
 
 ### Minor Changes

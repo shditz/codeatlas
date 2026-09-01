@@ -1,5 +1,15 @@
 # @codeatlas-ai/shared
 
+## 2.0.0
+
+### Major Changes
+
+- Shared error types, Result<T, E> utilities, and structured logger.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.0.0`.
+
 ## 0.4.0
 
 ## 0.3.0

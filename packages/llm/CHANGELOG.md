@@ -1,5 +1,15 @@
 # @codeatlas-ai/llm
 
+## 2.0.0
+
+### Major Changes
+
+- LLM provider abstractions and token counter bindings.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.0.0`.
+
 ## 0.4.0
 
 ### Patch Changes

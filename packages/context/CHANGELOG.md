@@ -1,5 +1,15 @@
 # @codeatlas-ai/context
 
+## 2.0.0
+
+### Major Changes
+
+- Intent-aware context pack assembly, token budgeting, and prioritized symbol resolution.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.0.0`.
+
 ## 0.4.0
 
 ### Minor Changes

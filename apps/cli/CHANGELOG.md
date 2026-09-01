@@ -1,5 +1,21 @@
 # @codeatlas-ai/cli
 
+## 2.0.0
+
+### Major Changes
+
+- **7-Mode Architecture Heatmap**: Interactive 2D/3D WebGL force-directed graph canvas with real-time coloring for Language, Clusters, Git Churn, Instability, Blast Radius Impact, Debt Hotspots, and Lines of Code.
+- **Live Blast Radius Impact Analysis**: Real-time Status Bar monitor and QuickPick analyzer computing direct and cascading breakages with 1-click prompt export for AI assistants.
+- **Automated AI Rules & Live Architecture Blueprint Sync**: Injects and synchronizes live DAG architecture summaries into `.cursor/rules/`, `CLAUDE.md`, `AGENTS.md`, and `GEMINI.md`.
+- **AI Linter Guard & Auto-Repair**: Active editor diagnostics for circular import cycles (Tarjan SCC) and DDD layer regressions with QuickFix code actions.
+- **Multi-Repo & Microservices Global Mesh Aggregator**: Aggregate monorepo packages or decentralized polyrepos into a unified service mesh with automated HTTP endpoint-to-client discovery.
+- **Universal Polyglot Language Engine**: Concrete syntax tree parsing and dependency extraction for Dart, Scala, Lua, Elixir, Erlang, Zig, GraphQL, Vue, Svelte, Astro, and SQL schemas.
+- **SQLite FTS5 Re-indexing Fixes**: Robust SQLite full-text search index handling with zero constraint collisions on re-index.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.0.0`.
+
 ## 0.4.0
 
 ### Minor Changes

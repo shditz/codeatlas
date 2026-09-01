@@ -1,5 +1,15 @@
 # @codeatlas-ai/core
 
+## 2.0.0
+
+### Major Changes
+
+- Unified domain types, configuration schemas, and SecretScanner credential redaction engine.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.0.0`.
+
 ## 0.4.0
 
 ### Minor Changes

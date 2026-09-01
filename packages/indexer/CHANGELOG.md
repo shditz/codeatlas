@@ -1,5 +1,15 @@
 # @codeatlas-ai/indexer
 
+## 2.0.0
+
+### Major Changes
+
+- Directory scanner, concurrent AST extraction worker pool, and real-time incremental watcher.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.0.0`.
+
 ## 0.4.0
 
 ### Minor Changes

@@ -1,5 +1,15 @@
 # @codeatlas-ai/storage
 
+## 2.0.0
+
+### Major Changes
+
+- Embedded SQLite database with WAL mode, FTS5 full-text search, and automated schema migrations.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.0.0`.
+
 ## 0.4.0
 
 ### Minor Changes
