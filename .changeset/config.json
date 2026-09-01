@@ -8,7 +8,7 @@
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [
-    "codeatlas-vscode",
+    "codeatlas-official",
     "webview",
     "@codeatlas-ai/docs",
     "@codeatlas-ai/jetbrains-plugin",

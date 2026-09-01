@@ -64,19 +64,20 @@ jobs:
           cp -r apps/webview/dist/* apps/vscode-extension/webview/dist/
           EXT_VERSION=$(node -p "require('./apps/vscode-extension/package.json').version")
           cd apps/vscode-extension
-          npx --yes @vscode/vsce package --no-dependencies -o "../../codeatlas-vscode-${EXT_VERSION}.vsix"
+          npx --yes @vscode/vsce package --no-dependencies -o "../../codeatlas-official-${EXT_VERSION}.vsix"
           cd ../..
-          cp "codeatlas-vscode-${EXT_VERSION}.vsix" codeatlas-vscode.vsix
+          cp "codeatlas-official-${EXT_VERSION}.vsix" codeatlas-official.vsix
+          cp "codeatlas-official-${EXT_VERSION}.vsix" codeatlas-vscode.vsix
 
       - name: Upload VS Code Extension (.vsix) to GitHub Releases
         run: |
           EXT_VERSION=$(node -p "require('./apps/vscode-extension/package.json').version")
-          VSIX_FILE="codeatlas-vscode-${EXT_VERSION}.vsix"
+          VSIX_FILE="codeatlas-official-${EXT_VERSION}.vsix"
 
           if gh release view "v${EXT_VERSION}" >/dev/null 2>&1; then
-            gh release upload "v${EXT_VERSION}" "${VSIX_FILE}" codeatlas-vscode.vsix --clobber
+            gh release upload "v${EXT_VERSION}" "${VSIX_FILE}" codeatlas-official.vsix codeatlas-vscode.vsix --clobber
           else
-            gh release create "v${EXT_VERSION}" "${VSIX_FILE}" codeatlas-vscode.vsix --title "v${EXT_VERSION}" --generate-notes
+            gh release create "v${EXT_VERSION}" "${VSIX_FILE}" codeatlas-official.vsix codeatlas-vscode.vsix --title "v${EXT_VERSION}" --generate-notes
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
