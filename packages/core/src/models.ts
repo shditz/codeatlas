@@ -153,6 +153,7 @@ export interface FileInfo {
   symbolCount: number;
   importCount: number;
   exportCount: number;
+  lines?: number;
   lastModified?: number;
 }
 
@@ -431,4 +432,45 @@ export interface CodebaseAnalytics {
   instabilities: NodeMetrics[];
   gitHotspots?: TechnicalDebtHotspot[];
   architectureReport?: ArchitectureReport;
+}
+
+export interface ServiceEndpoint {
+  path: string;
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'ALL' | string;
+  protocol: 'http' | 'grpc' | 'graphql' | 'websocket' | 'event' | 'package';
+  handler?: string;
+  sourceFile?: string;
+}
+
+export interface ServiceNode {
+  id: string;
+  name: string;
+  version?: string;
+  repoUrl?: string;
+  rootPath?: string;
+  fileCount: number;
+  symbolCount: number;
+  exportedApis: ServiceEndpoint[];
+  consumedApis: ServiceEndpoint[];
+  dependencies: string[];
+  tags?: string[];
+}
+
+export interface CrossServiceEdge {
+  id: string;
+  sourceService: string;
+  targetService: string;
+  type: 'api_call' | 'package_dep' | 'event_stream' | 'shared_db';
+  protocol?: string;
+  endpoint?: string;
+  weight?: number;
+  description?: string;
+}
+
+export interface MultiRepoSchema {
+  schemaVersion: '1.0';
+  timestamp: string;
+  name?: string;
+  services: ServiceNode[];
+  crossServiceEdges: CrossServiceEdge[];
 }

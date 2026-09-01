@@ -288,9 +288,10 @@ export class ArchitectureAnalyzer {
       );
 
       if (match && match[1]) {
+        const fullPrefix = match[0].toLowerCase();
         const contextName = match[1];
         if (!discoveredContexts.has(contextName)) {
-          discoveredContexts.set(contextName, [`**/${contextName}/**`]);
+          discoveredContexts.set(contextName, [`**/${fullPrefix}/**`, `${fullPrefix}/**`]);
         }
       }
     }

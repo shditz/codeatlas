@@ -70,4 +70,44 @@ describe('Rules Engine', () => {
     expect(conflicts).toHaveLength(1);
     expect(conflicts[0]?.reason).toContain('indentation');
   });
+
+  it('generates and synchronizes architecture block in AI rule files', async () => {
+    const { RuleGenerator } = await import('../index.js');
+    const generator = new RuleGenerator({ rootDir: tempDir });
+
+    const archBlock = generator.generateArchitectureBlock({
+      projectName: 'test-project',
+      totalFiles: 42,
+      totalSymbols: 150,
+      totalDependencies: 88,
+      circularDependencyCount: 0,
+      keyModules: [{ name: 'Auth', path: 'src/auth', description: 'Authentication subsystem' }],
+    });
+
+    expect(archBlock).toContain('CodeAtlas Live Architecture & Dependency Blueprint');
+    expect(archBlock).toContain('42 files');
+    expect(archBlock).toContain('Clean DAG');
+
+    const originalContent = '# My Project Instructions\nAlways be concise.';
+    const synced = RuleGenerator.syncArchitectureBlock(originalContent, archBlock);
+
+    expect(synced).toContain(originalContent);
+    expect(synced).toContain(RuleGenerator.START_MARKER);
+    expect(synced).toContain(RuleGenerator.END_MARKER);
+    expect(synced).toContain('42 files');
+
+    // Updating existing block
+    const updatedArchBlock = generator.generateArchitectureBlock({
+      projectName: 'test-project',
+      totalFiles: 43,
+      totalSymbols: 155,
+      totalDependencies: 90,
+      circularDependencyCount: 1,
+    });
+
+    const reSynced = RuleGenerator.syncArchitectureBlock(synced, updatedArchBlock);
+    expect(reSynced).toContain('43 files');
+    expect(reSynced).not.toContain('42 files');
+    expect(reSynced).toContain('**Active Circular Dependencies**: 1');
+  });
 });

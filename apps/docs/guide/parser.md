@@ -18,8 +18,17 @@ CodeAtlas provides native Tree-sitter bindings and semantic extraction for:
 | **PHP**              | `.php`, `.phtml`              | Classes, Traits, Interfaces, Functions, `use` statements, `include`/`require`                         |
 | **Go**               | `.go`                         | Structs, Interfaces, Functions, Methods, Package Imports                                              |
 | **Rust**             | `.rs`                         | Structs, Traits, Impl blocks, Enums, Functions, `use` declarations                                    |
+| **Dart / Flutter**   | `.dart`                       | Classes, Enums, Mixins, Async Methods, Package Imports                                                |
+| **Scala**            | `.scala`, `.sc`               | Case Classes, Traits, Companion Objects, Package Imports                                              |
+| **Lua**              | `.lua`                        | Modules, Functions, Methods, `require(...)` Calls                                                     |
+| **Elixir & Erlang**  | `.ex`, `.exs`, `.erl`         | Modules, Public/Private Functions, Includes, Aliases                                                  |
+| **Zig**              | `.zig`                        | Structs, Public Functions, `@import(...)`                                                             |
+| **GraphQL**          | `.graphql`, `.gql`            | Types, Inputs, Interfaces, Queries, Mutations                                                         |
+| **Vue/Svelte/Astro** | `.vue`, `.svelte`, `.astro`   | Script AST Extraction, Component Symbols, Relative Imports                                            |
+| **SQL Schemas**      | `.sql`                        | Table Definitions, Views, Stored Procedures/Functions                                                 |
 | **C# / Java**        | `.cs`, `.java`                | Classes, Interfaces, Methods, Namespaces/Packages, Imports                                            |
 | **C / C++**          | `.c`, `.cpp`, `.h`, `.hpp`    | Functions, Structs, Classes, Header Includes                                                          |
+| **Ruby / Kotlin**    | `.rb`, `.kt`, `.kts`          | Classes, Modules, Functions, Imports                                                                  |
 | **Data & Markup**    | `.json`, `.yaml`, `.toml`     | Schema validation and structural metadata                                                             |
 
 ---

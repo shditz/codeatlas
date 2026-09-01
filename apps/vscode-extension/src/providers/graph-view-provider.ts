@@ -8,6 +8,11 @@ import {
   runMigrations,
 } from '@codeatlas-ai/storage';
 import { DependencyGraph } from '@codeatlas-ai/graph';
+import {
+  MetricsCalculator,
+  GitMetricsAnalyzer,
+  type TechnicalDebtHotspot,
+} from '@codeatlas-ai/analytics';
 
 export class GraphViewProvider {
   public static currentPanel: GraphViewProvider | undefined;
@@ -17,6 +22,7 @@ export class GraphViewProvider {
 
   private _db: AtlasDatabase | null = null;
   private _projectId: number = 1;
+  private _pendingFocus: { nodeId: string; symbolName?: string } | null = null;
 
   public static createOrShow(
     extensionUri: vscode.Uri,
@@ -72,6 +78,13 @@ export class GraphViewProvider {
         switch (message.command) {
           case 'ready':
             this._sendGraphData();
+            if (this._pendingFocus) {
+              this._panel.webview.postMessage({
+                command: 'focusNode',
+                nodeId: this._pendingFocus.nodeId,
+                symbolName: this._pendingFocus.symbolName,
+              });
+            }
             return;
           case 'openFile':
             if (message.path) {
@@ -96,6 +109,19 @@ export class GraphViewProvider {
       null,
       this._disposables,
     );
+  }
+
+  public focusNode(nodeId: string, symbolName?: string) {
+    this._pendingFocus = { nodeId, symbolName };
+    const column = vscode.window.activeTextEditor
+      ? vscode.window.activeTextEditor.viewColumn
+      : vscode.ViewColumn.One;
+    this._panel.reveal(column);
+    this._panel.webview.postMessage({
+      command: 'focusNode',
+      nodeId,
+      symbolName,
+    });
   }
 
   public setDatabase(db: AtlasDatabase | null, projectId: number) {
@@ -171,6 +197,7 @@ export class GraphViewProvider {
           type: 'file',
           language: f.language || ext || 'text',
           size: f.size || 0,
+          lines: f.lines || 0,
           val: Math.max(2, Math.min(8, Math.sqrt(f.size || 100) * 0.3)),
           color,
         });
@@ -236,10 +263,47 @@ export class GraphViewProvider {
         }
       }
 
-      const nodes = Array.from(nodeMap.values()).map((node) => ({
-        ...node,
-        communityId: communities.get(node.id) ?? 0,
-      }));
+      const metricsCalc = new MetricsCalculator(graph, files.length);
+      const nodeMetrics = metricsCalc.calculateNodeMetrics();
+      const nodeMetricsMap = new Map(nodeMetrics.map((m) => [m.id, m]));
+
+      const wsFolders = vscode.workspace.workspaceFolders;
+      const wsRoot =
+        wsFolders && wsFolders.length > 0 && wsFolders[0] ? wsFolders[0].uri.fsPath : '';
+      const hotspotMap = new Map<string, TechnicalDebtHotspot>();
+      if (wsRoot) {
+        try {
+          const gitAnalyzer = new GitMetricsAnalyzer(wsRoot);
+          if (gitAnalyzer.isGitAvailable()) {
+            const hotspots = gitAnalyzer.analyzeHotspots(nodeMetrics);
+            for (const h of hotspots) {
+              hotspotMap.set(h.filePath, h);
+            }
+          }
+        } catch {
+          // Ignore git metrics failures gracefully
+        }
+      }
+
+      const nodes = Array.from(nodeMap.values()).map((node) => {
+        const metric = nodeMetricsMap.get(node.id);
+        const hotspot = hotspotMap.get(node.id);
+        const pageRank = graph.getPageRank(node.id);
+
+        return {
+          ...node,
+          communityId: communities.get(node.id) ?? 0,
+          inDegree: metric?.inDegree ?? 0,
+          outDegree: metric?.outDegree ?? 0,
+          instability: metric?.instability ?? 0,
+          isGodObject: metric?.isGodObject ?? false,
+          churnScore: hotspot?.churnScore ?? 0,
+          hotspotScore: hotspot?.hotspotScore ?? 0,
+          riskLevel: hotspot?.riskLevel ?? 'low',
+          recommendation: hotspot?.recommendation ?? '',
+          pageRank: pageRank !== undefined ? Number(pageRank.toFixed(4)) : 0,
+        };
+      });
 
       this._panel.webview.postMessage({
         command: 'setGraphData',
@@ -248,6 +312,35 @@ export class GraphViewProvider {
     } catch (err) {
       console.error('Failed to get graph data:', err);
     }
+  }
+
+  public setCustomGraphData(
+    data: {
+      nodes: Array<Record<string, unknown>>;
+      edges?: Array<Record<string, unknown>>;
+      links?: Array<Record<string, unknown>>;
+    },
+    panelTitle: string = 'CodeAtlas Multi-Repo Ecosystem',
+  ): void {
+    this._panel.title = panelTitle;
+    const links = data.links || data.edges || [];
+    const nodes = data.nodes.map((n) => ({
+      ...n,
+      name: (n.label as string) || (n.name as string) || (n.id as string),
+      path: (n.path as string) || (n.id as string),
+      val: (n.size as number) || (n.val as number) || 15,
+      color:
+        n.type === 'service'
+          ? '#38bdf8'
+          : n.type === 'endpoint'
+            ? '#34d399'
+            : (n.color as string) || '#818cf8',
+    }));
+
+    this._panel.webview.postMessage({
+      command: 'setGraphData',
+      data: { nodes, links },
+    });
   }
 
   public dispose() {

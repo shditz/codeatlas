@@ -11,6 +11,7 @@ export class SearchRepository {
   constructor(private db: AtlasDatabase) {}
 
   indexFile(fileId: number, relativePath: string, content: string): void {
+    this.removeFile(fileId);
     this.db.run(
       'INSERT INTO files_fts(rowid, relative_path, content) VALUES (?, ?, ?)',
       fileId,
@@ -21,16 +22,14 @@ export class SearchRepository {
 
   removeFile(fileId: number): void {
     try {
-      this.db.run(
-        "INSERT INTO files_fts(files_fts, rowid, relative_path, content) VALUES ('delete', ?, '', '')",
-        fileId,
-      );
+      this.db.run('DELETE FROM files_fts WHERE rowid = ?', fileId);
     } catch {
       // Ignore if FTS entry doesn't exist
     }
   }
 
   indexSymbol(symbolId: number, name: string, signature: string | null): void {
+    this.removeSymbol(symbolId);
     this.db.run(
       'INSERT INTO symbols_fts(rowid, name, signature) VALUES (?, ?, ?)',
       symbolId,

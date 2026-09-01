@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { McpServer } from '../mcp-server.js';
+import { McpServer } from '../index.js';
 import {
   AtlasDatabase,
   runMigrations,
@@ -20,7 +20,6 @@ describe('MCP Server Agent-Oriented Tools & Task-Aware Context', () => {
     const atlasDir = path.join(tmpDir, '.atlas');
     fs.mkdirSync(atlasDir, { recursive: true });
 
-    // Create source directories and physical files for context engine
     fs.mkdirSync(path.join(tmpDir, 'src', 'api'), { recursive: true });
     fs.mkdirSync(path.join(tmpDir, 'src', 'services'), { recursive: true });
     fs.writeFileSync(path.join(tmpDir, 'src', 'api', 'router.ts'), 'export class PaymentRouter {}');

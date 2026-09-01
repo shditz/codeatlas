@@ -1,6 +1,6 @@
 # 🗺️ CodeAtlas — AI Context Intelligence for VS Code
 
-[![Version](https://img.shields.io/badge/version-1.5.1-blue.svg)](https://github.com/shditz/codeatlas)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/shditz/codeatlas)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/shditz/codeatlas/blob/main/LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-VS%20Code%20%7C%20Antigravity%20%7C%20Cursor%20%7C%20Windsurf-purple.svg)](https://github.com/shditz/codeatlas)
 
@@ -12,8 +12,13 @@
 ## ✨ Features at a Glance
 
 - 🌐 **Interactive 2D / 3D Architecture Graph Canvas**: Explore full-codebase dependencies with real-time WebGL force-directed graphs and Spotlight tracing.
+- 🌡️ **7-Mode Architecture Heatmap**: Switch dynamically between `Language`, `Cluster`, `Git Churn`, `Instability`, `Blast Radius Impact`, `Debt Hotspot`, and `Size` coloring.
+- ⚡ **CodeLens "Explain with Graph"**: 1-click CodeLens above classes, functions, and files to spotlight-zoom the visualizer camera directly to relevant subgraph nodes.
+- 🔥 **Live "Blast Radius" Telemetry**: Status Bar (`$(flame) Blast: X files`) and QuickPick impact analysis showing direct callers and cascading dependents with 1-click prompt export for AI assistants.
+- 🔄 **Automated AI Rules & Live Architecture Sync**: Keep `.cursorrules`, `CLAUDE.md`, `AGENTS.md`, and `GEMINI.md` continuously synchronized with live codebase DAG blueprints between `<!-- CODEATLAS:START_ARCHITECTURE_MAP -->` tags.
+- 🛡️ **AI Linter Guard & Auto-Repair**: Active editor diagnostics for circular dependencies and DDD layer violations with instant QuickFix refactoring actions.
+- 🏢 **Multi-Repo & Microservices Global Mesh**: Aggregate monorepo packages or decentralized polyrepos into a unified architecture graph with automated REST/HTTP endpoint discovery.
 - 🌳 **Codebase Architecture & Map Sidebar**: Instant AST symbol explorer (Classes, Functions, Interfaces, Cyclomatic Complexity).
-- 📜 **AI Agent Rules Governance**: Real-time discovery, conflict validation, and unified synchronization for `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, and more.
 - 📦 **Token-Budgeted Context Export**: Right-click any file to generate secret-redacted, compressed AST signatures (saving up to 92% LLM tokens).
 - ⚡ **Model Context Protocol (MCP) Integration**: Connects with 16 native tools for real-time autonomous agent querying.
 - 🔒 **100% Local-First & Zero Telemetry**: Embedded SQLite (`.atlas/atlas.db`) powered by Node 22 native SQLite with automatic secret sanitization.
@@ -26,12 +31,12 @@
 
 CodeAtlas is packaged as a standard VS Code Extension (`.vsix`) and is fully compatible with **VS Code**, **Google Antigravity**, **Cursor**, **Windsurf**, and other VS Code-based editors.
 
-1. Download or build the `codeatlas-vscode-1.5.1.vsix` file.
+1. Download or build the `codeatlas-official-2.0.0.vsix` file.
 2. Open your editor (VS Code, Antigravity, Cursor, etc.).
 3. Go to the **Extensions** view (`Ctrl+Shift+X` on Windows/Linux or `Cmd+Shift+X` on macOS).
 4. Click the **`...`** (Views and More Actions) icon at the top right of the Extensions panel.
 5. Select **"Install from VSIX..."** from the dropdown menu.
-6. Locate and select the `codeatlas-vscode-1.5.1.vsix` file to install it.
+6. Locate and select the `codeatlas-official-2.0.0.vsix` file to install it.
 
 ### 2. Index Your Workspace
 
@@ -65,31 +70,37 @@ This automatically configures Google Antigravity, Cursor, Claude Desktop, Windsu
 
 Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and type `CodeAtlas`:
 
-| Command                                  | Description                                                                  |
-| :--------------------------------------- | :--------------------------------------------------------------------------- |
-| `CodeAtlas: Open Interactive Graph View` | Opens the 3D/2D force-directed dependency graph tab                          |
-| `CodeAtlas: Index / Refresh Codebase`    | Re-indexes AST symbols, dependencies, and git churn                          |
-| `CodeAtlas: Export Context for AI Agent` | Generates a compressed context pack for the active file or task              |
-| `CodeAtlas: Generate Git PR Context`     | Creates a comprehensive architectural blast-radius summary for Pull Requests |
-| `CodeAtlas: Generate AI Agent Rules`     | Generates evidence-backed guidelines for AI agents                           |
-| `CodeAtlas: Run Cypher Graph Query`      | Executes graph queries across codebase dependencies                          |
-| `CodeAtlas: Toggle Real-time Watcher`    | Enables/disables live background indexing on file save (`Ctrl+S`)            |
-| `CodeAtlas: Start MCP Server`            | Starts Model Context Protocol stdio server                                   |
-| `CodeAtlas: Run Architecture Audit`      | Audits security vulnerabilities, DDD layers, and dead code                   |
-| `CodeAtlas: Search Codebase Symbols`     | Full-text and symbol search with BM25 ranking                                |
-| `CodeAtlas: Initialize Workspace`        | Initializes CodeAtlas `.atlas/` database                                     |
-| `CodeAtlas: Scan Workspace`              | Fast metadata and tech-stack structure scan                                  |
-| `CodeAtlas: Run Health Diagnostics`      | Evaluates overall repository health score (0-100)                            |
-| `CodeAtlas: Validate AI Rules`           | Validates rule syntax and detects conflicting instructions                   |
-| `CodeAtlas: Clean Cache & Database`      | Safely resets and clears local SQLite cache                                  |
+| Command                                                   | Description                                                                    |
+| :-------------------------------------------------------- | :----------------------------------------------------------------------------- |
+| `CodeAtlas: Open Interactive Graph View`                  | Opens the 3D/2D force-directed dependency graph tab                            |
+| `CodeAtlas: Index / Refresh Codebase`                     | Re-indexes AST symbols, dependencies, and git churn                            |
+| `CodeAtlas: Analyze Blast Radius Impact`                  | Real-time impact analysis of active file and 1-click prompt export for AI      |
+| `CodeAtlas: Sync AI Rules & Architecture Map`             | Synchronizes live DAG architecture blueprint into `.cursorrules` / `CLAUDE.md` |
+| `CodeAtlas: Open Multi-Repo & Microservices Map`          | Aggregates monorepos or polyrepos into a global architecture network           |
+| `CodeAtlas: Export Architecture Schema (.codeatlas.json)` | Exports service schema for multi-repo sharing and service mesh mapping         |
+| `CodeAtlas: Export Context for AI Agent`                  | Generates a compressed context pack for the active file or task                |
+| `CodeAtlas: Generate Git PR Context`                      | Creates a comprehensive architectural blast-radius summary for Pull Requests   |
+| `CodeAtlas: Generate AI Agent Rules`                      | Generates evidence-backed guidelines for AI agents                             |
+| `CodeAtlas: Run Cypher Graph Query`                       | Executes graph queries across codebase dependencies                            |
+| `CodeAtlas: Toggle Real-time Watcher`                     | Enables/disables live background indexing on file save (`Ctrl+S`)              |
+| `CodeAtlas: Start MCP Server`                             | Starts Model Context Protocol stdio server                                     |
+| `CodeAtlas: Run Architecture Audit`                       | Audits security vulnerabilities, DDD layers, and dead code                     |
+| `CodeAtlas: Search Codebase Symbols`                      | Full-text and symbol search with BM25 ranking                                  |
+| `CodeAtlas: Initialize Workspace`                         | Initializes CodeAtlas `.atlas/` database                                       |
+| `CodeAtlas: Scan Workspace`                               | Fast metadata and tech-stack structure scan                                    |
+| `CodeAtlas: Run Health Diagnostics`                       | Evaluates overall repository health score (0-100)                              |
+| `CodeAtlas: Validate AI Rules`                            | Validates rule syntax and detects conflicting instructions                     |
+| `CodeAtlas: Clean Cache & Database`                       | Safely resets and clears local SQLite cache                                    |
 
 ---
 
-## 🖱️ Context Menu Integration
+## 🖱️ Context Menu & Editor Integration
 
 - **File Explorer**: Right-click any file or folder ➔ **CodeAtlas: Export Context for AI Agent**.
 - **Editor Tab**: Right-click in the active editor ➔ **CodeAtlas: Export Context for AI Agent**.
 - **Editor Title Bar**: Click the **Graph** icon to view the dependency radius of the active file.
+- **CodeLens**: Click `⚡ Explain with Graph` above any function/class to spotlight it in the visualizer canvas.
+- **Status Bar**: Click `$(flame) Blast: X files` in the bottom-right corner to inspect impact radius.
 
 ---
 

@@ -9,7 +9,7 @@
 CodeAtlas turns your codebase into a high-performance **Knowledge Graph** stored locally in an embedded SQLite database (`.atlas/atlas.db`). It equips AI coding assistants (such as **Google Antigravity**, **Claude Code**, **Cursor**, **Windsurf**, and **Copilot**) with structural codebase context—dramatically reducing irrelevant token usage, preventing architectural regressions, and grounding AI agent code generation in real dependency graphs.
 
 [![CI](https://github.com/shditz/codeatlas/actions/workflows/ci.yml/badge.svg)](https://github.com/shditz/codeatlas/actions)
-[![Tests: 155 passing](<https://img.shields.io/badge/Tests-155%20passing%20(100%25)-brightgreen.svg>)](https://github.com/shditz/codeatlas)
+[![Tests: 166 passing](<https://img.shields.io/badge/Tests-166%20passing%20(100%25)-brightgreen.svg>)](https://github.com/shditz/codeatlas)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-green?logo=node.js)](https://nodejs.org/)
@@ -26,36 +26,48 @@ When AI coding agents work on mid-to-large repositories, they face two core bott
 **CodeAtlas solves this with deterministic local intelligence:**
 
 - ⚡ **Local-First & 100% Private**: Everything is indexed locally into SQLite using Tree-sitter. Your code never leaves your machine.
-- 🔒 **Automated Secret Redaction**: Built-in `SecretScanner` automatically redacts Cloud API keys (Anthropic, OpenAI, AWS, GCP, GitHub), JWTs, and database passwords before they touch search databases or LLM responses.
+- 🌡️ **7-Mode Architecture Heatmap**: Interactive 2D/3D visualizer with live metrics for Language, Clusters, Git Churn, Fragility, Blast Radius Impact, Debt Hotspots, and Code Size.
+- 🔥 **Live "Blast Radius" Impact Analysis**: Real-time status bar telemetry and QuickPick impact analysis calculating direct and cascading breakages with 1-click prompt export for AI.
+- 🔄 **Automated AI Rules & Live Architecture Sync**: Automatically generates and injects synchronized architecture DAG maps into `.cursorrules`, `CLAUDE.md`, `AGENTS.md`, and `GEMINI.md`.
+- 🛡️ **AI Linter Guard & Auto-Repair**: Active editor diagnostics and QuickFix refactoring actions for circular dependencies and DDD layer regressions.
+- 🏢 **Multi-Repo & Microservices Global Mesh**: Aggregate monorepo packages or decentralized polyrepos into a unified service graph with automated REST/HTTP endpoint-to-client discovery.
+- 🔒 **Automated Secret Redaction**: Built-in `SecretScanner` automatically redacts Cloud API keys, JWTs, and database passwords before they touch search databases or LLM responses.
 - 🧩 **Framework-Specific Adapters**: Understands semantic idioms for React Hooks (`use*`), Next.js App Router (`page.tsx`, `layout.tsx`, `route.ts`), NestJS DI (`@Controller`, `@Injectable`, `@Module`), and Prisma Schema (`.prisma` models, enums, relations).
 - 🏛️ **True Architecture Model (DDD Layering)**: Enforces Domain-Driven Design boundaries (Presentation, Application, Domain, Infrastructure, Shared) and blocks architectural regressions with `--fail-on-architecture`.
 - 🧠 **Task-Intent Context Packing**: Dynamic retrieval tailored to task intents (`bug`, `feature`, `refactor`) with AST signature skeletonization, saving up to 92% on token budgets.
-- 📈 **Temporal Churn & Git Analytics**: Correlates structural complexity with Git change frequency to highlight fragile architectural hotspots.
 - 🔌 **16 Model Context Protocol (MCP) Tools**: Directly integrates with Antigravity, Claude Code, Cursor, and Windsurf for real-time architectural tracing (`atlas_trace_execution_path`, `atlas_security_audit`, `atlas_plan_feature`).
 
 ---
 
 ## 🌐 Language & Parser Support Matrix
 
-CodeAtlas uses native **Tree-sitter** grammars and semantic resolvers to extract syntax trees, exported symbols, call references, and import dependencies:
+CodeAtlas uses native **Tree-sitter** grammars, AST parsers, and semantic resolvers to extract syntax trees, exported symbols, call references, and import dependencies:
 
-| Tier                              | Language / Framework | File Extensions                                                         | Capabilities                                                               |
-| :-------------------------------- | :------------------- | :---------------------------------------------------------------------- | :------------------------------------------------------------------------- |
-| **Tier 1 (Full AST & Semantics)** | TypeScript / TSX     | `.ts`, `.tsx`, `.mts`, `.cts`                                           | Semantic Type Inheritance, `@/*` Path Mapping, React Hooks, Next.js Routes |
-|                                   | JavaScript / JSX     | `.js`, `.jsx`, `.mjs`, `.cjs`                                           | AST Symbols, Call Graph, Imports, Cyclomatic Complexity                    |
-|                                   | NestJS               | `.ts`                                                                   | Controller, Provider, Module Decorators & Dependency Injection             |
-|                                   | Prisma Schema        | `.prisma`                                                               | Models, Enums, Field Definitions, Cross-Model Relational Graph             |
-|                                   | Python               | `.py`                                                                   | AST Functions/Classes, Call Graph, Module Imports                          |
-|                                   | Go                   | `.go`                                                                   | AST Structs/Functions, Call Graph, Package Imports                         |
-|                                   | Rust                 | `.rs`                                                                   | AST Structs/Traits/Impl, Call Graph, Crate Imports                         |
-|                                   | PHP                  | `.php`, `.phtml`                                                        | AST Classes/Methods, Call Graph, Namespace Imports                         |
-| **Tier 2 (Symbol & Structure)**   | Java                 | `.java`                                                                 | AST Classes, Methods, Import Graph                                         |
-|                                   | C#                   | `.cs`                                                                   | AST Classes, Methods, Namespace Graph                                      |
-|                                   | C / C++              | `.c`, `.h`, `.cpp`, `.hpp`, `.cc`                                       | AST Functions, Structs, Header Includes                                    |
-|                                   | Ruby                 | `.rb`                                                                   | AST Classes, Modules, Method Definitions                                   |
-|                                   | Kotlin               | `.kt`, `.kts`                                                           | AST Classes, Functions, Import Graph                                       |
-|                                   | Swift                | `.swift`                                                                | AST Structs, Protocols, Class Definitions                                  |
-| **Tier 3 (Content & Search)**     | Data & Markup        | `.json`, `.yaml`, `.toml`, `.md`, `.html`, `.css`, `.sql`, `Dockerfile` | FTS5 Full-Text Search (BM25 ranking), Secret Redaction, Token Counting     |
+| Tier                              | Language / Framework | File Extensions                                                 | Capabilities                                                               |
+| :-------------------------------- | :------------------- | :-------------------------------------------------------------- | :------------------------------------------------------------------------- |
+| **Tier 1 (Full AST & Semantics)** | TypeScript / TSX     | `.ts`, `.tsx`, `.mts`, `.cts`                                   | Semantic Type Inheritance, `@/*` Path Mapping, React Hooks, Next.js Routes |
+|                                   | JavaScript / JSX     | `.js`, `.jsx`, `.mjs`, `.cjs`                                   | AST Symbols, Call Graph, Imports, Cyclomatic Complexity                    |
+|                                   | NestJS               | `.ts`                                                           | Controller, Provider, Module Decorators & Dependency Injection             |
+|                                   | Prisma Schema        | `.prisma`                                                       | Models, Enums, Field Definitions, Cross-Model Relational Graph             |
+|                                   | Python               | `.py`                                                           | AST Functions/Classes, Call Graph, Module Imports                          |
+|                                   | Go                   | `.go`                                                           | AST Structs/Functions, Call Graph, Package Imports                         |
+|                                   | Rust                 | `.rs`                                                           | AST Structs/Traits/Impl, Call Graph, Crate Imports                         |
+|                                   | PHP                  | `.php`, `.phtml`                                                | AST Classes/Methods, Call Graph, Namespace Imports                         |
+|                                   | Dart / Flutter       | `.dart`                                                         | Classes, Enums, Mixins, Async Functions, Package Imports                   |
+|                                   | Scala                | `.scala`, `.sc`                                                 | Case Classes, Traits, Companion Objects, Package Imports                   |
+|                                   | Lua                  | `.lua`                                                          | Modules, Functions, Methods, `require(...)` Calls                          |
+|                                   | Elixir & Erlang      | `.ex`, `.exs`, `.erl`                                           | Modules, Public/Private Functions, Includes, Aliases                       |
+|                                   | Zig                  | `.zig`                                                          | Structs, Public Functions, `@import(...)`                                  |
+|                                   | GraphQL              | `.graphql`, `.gql`                                              | Types, Inputs, Interfaces, Queries, Mutations                              |
+|                                   | Vue / Svelte / Astro | `.vue`, `.svelte`, `.astro`                                     | Script AST Extraction, Component Symbols, Relative Imports                 |
+|                                   | SQL Schemas          | `.sql`                                                          | Table Definitions, Views, Stored Procedures/Functions                      |
+| **Tier 2 (Symbol & Structure)**   | Java                 | `.java`                                                         | AST Classes, Methods, Import Graph                                         |
+|                                   | C#                   | `.cs`                                                           | AST Classes, Methods, Namespace Graph                                      |
+|                                   | C / C++              | `.c`, `.h`, `.cpp`, `.hpp`, `.cc`                               | AST Functions, Structs, Header Includes                                    |
+|                                   | Ruby                 | `.rb`                                                           | AST Classes, Modules, Method Definitions                                   |
+|                                   | Kotlin               | `.kt`, `.kts`                                                   | AST Classes, Functions, Import Graph                                       |
+|                                   | Swift                | `.swift`                                                        | AST Structs, Protocols, Class Definitions                                  |
+| **Tier 3 (Content & Search)**     | Data & Markup        | `.json`, `.yaml`, `.toml`, `.md`, `.html`, `.css`, `Dockerfile` | FTS5 Full-Text Search (BM25 ranking), Secret Redaction, Token Counting     |
 
 ---
 
@@ -116,11 +128,11 @@ CodeAtlas provides a native extension (`.vsix`) for any VS Code-compatible IDE (
 
 ### Installation Guide:
 
-1. Download or build the `codeatlas-vscode-1.5.1.vsix` file.
+1. Download or build the `codeatlas-official-2.0.0.vsix` file.
 2. Open your editor (VS Code, Antigravity, Cursor, etc.).
 3. Go to the **Extensions** view (`Ctrl+Shift+X` on Windows/Linux or `Cmd+Shift+X` on macOS).
 4. Click the **`...`** (Views and More Actions) menu at the top right of the Extensions panel.
-5. Select **"Install from VSIX..."** and choose the `codeatlas-vscode-1.5.1.vsix` file.
+5. Select **"Install from VSIX..."** and choose the `codeatlas-official-2.0.0.vsix` file.
 
 Once installed, click the **CodeAtlas map icon** in your Activity Bar to access the Architecture & Codebase Map, Analytics, AI Governance rules, and Quick Actions.
 

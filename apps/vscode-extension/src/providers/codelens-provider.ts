@@ -92,8 +92,15 @@ export class CodeAtlasCodeLensProvider implements vscode.CodeLensProvider {
     lenses.push(
       new vscode.CodeLens(fileRange, {
         title: `CodeAtlas: ⬆ ${incomingDeps.length} incoming | ⬇ ${outgoingDeps.length} imports${pageRankStr}`,
-        command: 'codeatlas.openGraphView',
-        tooltip: 'Click to open CodeAtlas Graph View',
+        command: 'codeatlas.focusInGraph',
+        arguments: [relativePath],
+        tooltip: 'Click to focus this file and view its blast radius in Architecture Graph',
+      }),
+      new vscode.CodeLens(fileRange, {
+        title: `🔍 Explain Architecture Graph`,
+        command: 'codeatlas.focusInGraph',
+        arguments: [relativePath],
+        tooltip: 'Open interactive 3D/2D architecture visualization focused on this file',
       }),
     );
 
@@ -120,10 +127,34 @@ export class CodeAtlasCodeLensProvider implements vscode.CodeLensProvider {
         lenses.push(
           new vscode.CodeLens(range, {
             title,
-            command: 'codeatlas.openGraphView',
-            tooltip: `Kind: ${sym.kind}, Exported: ${Boolean(sym.exported)}`,
+            command: 'codeatlas.focusInGraph',
+            arguments: [relativePath, sym.name],
+            tooltip: `Kind: ${sym.kind}, Exported: ${Boolean(sym.exported)} - Click to focus in graph`,
           }),
         );
+
+        if (
+          [
+            'class',
+            'function',
+            'method',
+            'interface',
+            'struct',
+            'controller',
+            'route_handler',
+            'model',
+            'module',
+          ].includes(sym.kind)
+        ) {
+          lenses.push(
+            new vscode.CodeLens(range, {
+              title: `⚡ Explain with Graph`,
+              command: 'codeatlas.focusInGraph',
+              arguments: [relativePath, sym.name],
+              tooltip: `Visualize call graph, callers, and architectural context for ${sym.name}`,
+            }),
+          );
+        }
       }
     }
 

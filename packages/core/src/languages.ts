@@ -40,6 +40,19 @@ const EXTENSION_TO_LANGUAGE: Record<string, Language> = {
   '.php': 'php',
   '.phtml': 'php',
   '.prisma': 'prisma',
+  '.dart': 'dart',
+  '.scala': 'scala',
+  '.sc': 'scala',
+  '.lua': 'lua',
+  '.ex': 'elixir',
+  '.exs': 'elixir',
+  '.erl': 'erlang',
+  '.zig': 'zig',
+  '.graphql': 'graphql',
+  '.gql': 'graphql',
+  '.vue': 'vue',
+  '.svelte': 'svelte',
+  '.astro': 'astro',
 };
 
 const FILENAME_TO_LANGUAGE: Record<string, Language> = {
@@ -124,6 +137,18 @@ const PARSEABLE_LANGUAGES: Set<Language> = new Set([
   'swift',
   'php',
   'prisma',
+  'dart',
+  'scala',
+  'lua',
+  'elixir',
+  'erlang',
+  'zig',
+  'graphql',
+  'vue',
+  'svelte',
+  'astro',
+  'sql',
+  'shell',
 ]);
 
 export function canParse(language: Language): boolean {

@@ -1,6 +1,6 @@
 {
   "name": "@codeatlas-ai/jetbrains-plugin",
-  "version": "1.5.1",
+  "version": "2.0.0",
   "private": true,
   "description": "JetBrains / IntelliJ Platform plugin for CodeAtlas context intelligence and graph querying.",
   "scripts": {

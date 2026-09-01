@@ -16,3 +16,4 @@ export {
   type VulnerabilitySeverity,
   type TaintAnalyzerOptions,
 } from './taint-analyzer.js';
+export { MultiRepoAggregator } from './multi-repo-aggregator.js';

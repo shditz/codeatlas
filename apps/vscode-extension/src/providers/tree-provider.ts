@@ -524,6 +524,19 @@ export class CodeAtlasToolsProvider implements vscode.TreeDataProvider<CodeAtlas
     scanAction.command = { command: 'codeatlas.scan', title: 'Scan' };
     items.push(scanAction);
 
+    const blastAction = new CodeAtlasTreeItem(
+      'Analyze Blast Radius',
+      vscode.TreeItemCollapsibleState.None,
+      'tool',
+      'Live impact analysis of active file',
+      'flame',
+    );
+    blastAction.command = {
+      command: 'codeatlas.analyzeBlastRadius',
+      title: 'Analyze Blast Radius',
+    };
+    items.push(blastAction);
+
     const contextAction = new CodeAtlasTreeItem(
       'Export Context Pack',
       vscode.TreeItemCollapsibleState.None,
@@ -533,6 +546,42 @@ export class CodeAtlasToolsProvider implements vscode.TreeDataProvider<CodeAtlas
     );
     contextAction.command = { command: 'codeatlas.exportContext', title: 'Export Context' };
     items.push(contextAction);
+
+    const syncRulesAction = new CodeAtlasTreeItem(
+      'Sync AI Rules & Architecture Blueprint',
+      vscode.TreeItemCollapsibleState.None,
+      'tool',
+      'Sync live DAG map to .cursorrules/CLAUDE.md',
+      'sync',
+    );
+    syncRulesAction.command = { command: 'codeatlas.syncAIRules', title: 'Sync AI Rules' };
+    items.push(syncRulesAction);
+
+    const multiRepoAction = new CodeAtlasTreeItem(
+      'Multi-Repo & Microservices Map',
+      vscode.TreeItemCollapsibleState.None,
+      'tool',
+      'Aggregate monorepos or polyrepos into global mesh',
+      'globe',
+    );
+    multiRepoAction.command = {
+      command: 'codeatlas.openMultiRepoAggregator',
+      title: 'Multi-Repo Global Map',
+    };
+    items.push(multiRepoAction);
+
+    const exportSchemaAction = new CodeAtlasTreeItem(
+      'Export Architecture Schema',
+      vscode.TreeItemCollapsibleState.None,
+      'tool',
+      'Generate .codeatlas.json for service mesh sharing',
+      'export',
+    );
+    exportSchemaAction.command = {
+      command: 'codeatlas.exportArchitectureSchema',
+      title: 'Export Architecture Schema',
+    };
+    items.push(exportSchemaAction);
 
     const generateRulesAction = new CodeAtlasTreeItem(
       'Generate AI Rules',

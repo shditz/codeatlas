@@ -6,7 +6,7 @@ CodeAtlas is organized as a decoupled, modular TypeScript monorepo operating und
 
 ## Monorepo Architecture
 
-```
+```text
 CodeAtlas/
 ├── packages/
 │   ├── core/           Domain models, interfaces, language registry, SecretScanner
@@ -66,7 +66,7 @@ graph TD
     Infra --> Shared
 ```
 
-### Architectural Regressions Detected:
+### Architectural Regressions Detected
 
 1. **`LAYER_REGRESSION`**:
    - **Presentation Calling Infrastructure**: Bypassing the service layer (e.g. a Next.js `page.tsx` or `Controller` importing a database `Repository` directly).
@@ -125,9 +125,11 @@ Encapsulates SQLite interactions via Node 22 native `node:sqlite`. Manages WAL m
 
 The **`ArchitectureAnalyzer`** performs automatic DDD layer classification, detects layer regressions and context leaks, computes project Clean Scores, and runs SAST security taint tracking.
 
+The **`MultiRepoAggregator`** combines monorepo subpackages and decentralized polyrepo architecture schemas into a unified global mesh with automated HTTP/REST and shared package discovery.
+
 ### `@codeatlas-ai/rules`
 
-The **`RuleGenerator`** inspects project evidence (`tsconfig.json`, `package.json`, test configurations) and produces evidence-backed guidelines for Antigravity (`AGENTS.md`), Claude (`CLAUDE.md`), and Cursor (`.cursorrules`).
+The **`RuleGenerator`** inspects project evidence (`tsconfig.json`, `package.json`, test configurations) and produces evidence-backed guidelines for Antigravity (`AGENTS.md`), Claude (`CLAUDE.md`), and Cursor (`.cursorrules`), with live DAG architecture blueprint synchronization.
 
 ### `@codeatlas-ai/mcp`
 

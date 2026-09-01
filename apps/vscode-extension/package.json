@@ -1,8 +1,8 @@
 {
-  "name": "codeatlas-vscode",
+  "name": "codeatlas-official",
   "displayName": "CodeAtlas - AI Context Intelligence",
   "description": "Give AI a map of your codebase. Native VS Code integration for context intelligence, AST indexing, graph navigation, and rule management.",
-  "version": "1.5.1",
+  "version": "2.0.0",
   "private": true,
   "publisher": "shditz",
   "icon": "icon.png",
@@ -109,6 +109,36 @@
         "title": "Open Architecture Map",
         "category": "CodeAtlas",
         "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "codeatlas.focusInGraph",
+        "title": "Explain & Focus in Graph",
+        "category": "CodeAtlas",
+        "icon": "$(search)"
+      },
+      {
+        "command": "codeatlas.analyzeBlastRadius",
+        "title": "Analyze Blast Radius Impact",
+        "category": "CodeAtlas",
+        "icon": "$(flame)"
+      },
+      {
+        "command": "codeatlas.syncAIRules",
+        "title": "Sync AI Rules & Architecture Map",
+        "category": "CodeAtlas",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "codeatlas.exportArchitectureSchema",
+        "title": "Export Architecture Schema (.codeatlas.json)",
+        "category": "CodeAtlas",
+        "icon": "$(export)"
+      },
+      {
+        "command": "codeatlas.openMultiRepoAggregator",
+        "title": "Open Multi-Repo & Microservices Map",
+        "category": "CodeAtlas",
+        "icon": "$(globe)"
       },
       {
         "command": "codeatlas.generateRules",

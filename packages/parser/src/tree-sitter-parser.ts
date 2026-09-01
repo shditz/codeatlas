@@ -280,6 +280,35 @@ export async function parseFile(
         case 'prisma':
           extractPrismaSymbolsAndImports(content, filePath, symbols, imports, exportedNames);
           break;
+        case 'dart':
+          extractDartSymbolsAndImports(content, filePath, symbols, imports, exportedNames);
+          break;
+        case 'scala':
+          extractScalaSymbolsAndImports(content, filePath, symbols, imports, exportedNames);
+          break;
+        case 'lua':
+          extractLuaSymbolsAndImports(content, filePath, symbols, imports, exportedNames);
+          break;
+        case 'elixir':
+          extractElixirSymbolsAndImports(content, filePath, symbols, imports, exportedNames);
+          break;
+        case 'erlang':
+          extractErlangSymbolsAndImports(content, filePath, symbols, imports, exportedNames);
+          break;
+        case 'zig':
+          extractZigSymbolsAndImports(content, filePath, symbols, imports, exportedNames);
+          break;
+        case 'graphql':
+          extractGraphQLSymbolsAndImports(content, filePath, symbols, imports, exportedNames);
+          break;
+        case 'vue':
+        case 'svelte':
+        case 'astro':
+          extractSfcSymbolsAndImports(content, filePath, symbols, imports, exportedNames);
+          break;
+        case 'sql':
+          extractSqlSymbolsAndImports(content, filePath, symbols, imports, exportedNames);
+          break;
         default:
           break;
       }
@@ -2293,6 +2322,487 @@ function extractPrismaSymbolsAndImports(
           });
         }
       }
+    }
+  }
+}
+
+function extractDartSymbolsAndImports(
+  content: string,
+  filePath: string,
+  symbols: SymbolInfo[],
+  imports: ImportInfo[],
+  exportedNames: string[],
+): void {
+  const lines = content.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i] ?? '';
+    const line = rawLine.trim();
+    if (!line || line.startsWith('//')) continue;
+
+    const impMatch = line.match(/^import\s+['"]([^'"]+)['"]/);
+    if (impMatch && impMatch[1]) {
+      imports.push({
+        filePath,
+        importPath: impMatch[1],
+        symbols: [],
+        isDefault: true,
+        isNamespace: false,
+        isType: false,
+      });
+      continue;
+    }
+
+    const classMatch = line.match(/^(?:abstract\s+)?class\s+([A-Za-z0-9_]+)/);
+    if (classMatch && classMatch[1]) {
+      const name = classMatch[1];
+      symbols.push({
+        name,
+        kind: 'class',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: !name.startsWith('_'),
+        signature: line,
+      });
+      if (!name.startsWith('_')) exportedNames.push(name);
+      continue;
+    }
+
+    const enumMatch = line.match(/^enum\s+([A-Za-z0-9_]+)/);
+    if (enumMatch && enumMatch[1]) {
+      const name = enumMatch[1];
+      symbols.push({
+        name,
+        kind: 'enum',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: !name.startsWith('_'),
+        signature: line,
+      });
+      if (!name.startsWith('_')) exportedNames.push(name);
+      continue;
+    }
+
+    const funcMatch = line.match(
+      /^(?:void|Future<[^>]+>|[A-Za-z0-9_<>]+)\s+([A-Za-z0-9_]+)\s*\([^)]*\)\s*(?:async)?\s*[{=]/,
+    );
+    if (funcMatch && funcMatch[1]) {
+      const name = funcMatch[1];
+      symbols.push({
+        name,
+        kind: 'function',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: !name.startsWith('_'),
+        signature: line,
+      });
+      if (!name.startsWith('_')) exportedNames.push(name);
+    }
+  }
+}
+
+function extractScalaSymbolsAndImports(
+  content: string,
+  filePath: string,
+  symbols: SymbolInfo[],
+  imports: ImportInfo[],
+  exportedNames: string[],
+): void {
+  const lines = content.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i] ?? '';
+    const line = rawLine.trim();
+    if (!line || line.startsWith('//')) continue;
+
+    const impMatch = line.match(/^import\s+([A-Za-z0-9_.]+)/);
+    if (impMatch && impMatch[1]) {
+      imports.push({
+        filePath,
+        importPath: impMatch[1],
+        symbols: [],
+        isDefault: false,
+        isNamespace: false,
+        isType: false,
+      });
+      continue;
+    }
+
+    const defMatch = line.match(/^(?:case\s+)?(?:class|object|trait)\s+([A-Za-z0-9_]+)/);
+    if (defMatch && defMatch[1]) {
+      const name = defMatch[1];
+      symbols.push({
+        name,
+        kind: line.includes('trait') ? 'interface' : 'class',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: true,
+        signature: line,
+      });
+      exportedNames.push(name);
+      continue;
+    }
+
+    const funcMatch = line.match(/^def\s+([A-Za-z0-9_]+)/);
+    if (funcMatch && funcMatch[1]) {
+      const name = funcMatch[1];
+      symbols.push({
+        name,
+        kind: 'function',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: true,
+        signature: line,
+      });
+      exportedNames.push(name);
+    }
+  }
+}
+
+function extractLuaSymbolsAndImports(
+  content: string,
+  filePath: string,
+  symbols: SymbolInfo[],
+  imports: ImportInfo[],
+  exportedNames: string[],
+): void {
+  const lines = content.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i] ?? '';
+    const line = rawLine.trim();
+    if (!line || line.startsWith('--')) continue;
+
+    const reqMatch = line.match(/require\s*\(?['"]([^'"]+)['"]\)?/);
+    if (reqMatch && reqMatch[1]) {
+      imports.push({
+        filePath,
+        importPath: reqMatch[1],
+        symbols: [],
+        isDefault: true,
+        isNamespace: false,
+        isType: false,
+      });
+    }
+
+    const funcMatch = line.match(
+      /^(?:local\s+)?function\s+(?:[A-Za-z0-9_]+[:.])?([A-Za-z0-9_]+)\s*\(/,
+    );
+    if (funcMatch && funcMatch[1]) {
+      const name = funcMatch[1];
+      const isExported = !line.startsWith('local');
+      symbols.push({
+        name,
+        kind: 'function',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: isExported,
+        signature: line,
+      });
+      if (isExported) exportedNames.push(name);
+    }
+  }
+}
+
+function extractElixirSymbolsAndImports(
+  content: string,
+  filePath: string,
+  symbols: SymbolInfo[],
+  imports: ImportInfo[],
+  exportedNames: string[],
+): void {
+  const lines = content.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i] ?? '';
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) continue;
+
+    const useMatch = line.match(/^(?:alias|import|use|require)\s+([A-Za-z0-9_.]+)/);
+    if (useMatch && useMatch[1]) {
+      imports.push({
+        filePath,
+        importPath: useMatch[1],
+        symbols: [],
+        isDefault: false,
+        isNamespace: false,
+        isType: false,
+      });
+      continue;
+    }
+
+    const modMatch = line.match(/^defmodule\s+([A-Za-z0-9_.]+)/);
+    if (modMatch && modMatch[1]) {
+      const name = modMatch[1];
+      symbols.push({
+        name,
+        kind: 'class',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: true,
+        signature: line,
+      });
+      exportedNames.push(name);
+      continue;
+    }
+
+    const funcMatch = line.match(/^def(p)?\s+([A-Za-z0-9_!?]+)/);
+    if (funcMatch && funcMatch[2]) {
+      const name = funcMatch[2];
+      const isPrivate = Boolean(funcMatch[1]);
+      symbols.push({
+        name,
+        kind: 'function',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: !isPrivate,
+        signature: line,
+      });
+      if (!isPrivate) exportedNames.push(name);
+    }
+  }
+}
+
+function extractErlangSymbolsAndImports(
+  content: string,
+  filePath: string,
+  symbols: SymbolInfo[],
+  imports: ImportInfo[],
+  exportedNames: string[],
+): void {
+  const lines = content.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i] ?? '';
+    const line = rawLine.trim();
+    if (!line || line.startsWith('%')) continue;
+
+    const incMatch = line.match(/^-include(?:_lib)?\(['"]([^'"]+)['"]\)\./);
+    if (incMatch && incMatch[1]) {
+      imports.push({
+        filePath,
+        importPath: incMatch[1],
+        symbols: [],
+        isDefault: false,
+        isNamespace: false,
+        isType: false,
+      });
+      continue;
+    }
+
+    const modMatch = line.match(/^-module\(([A-Za-z0-9_]+)\)\./);
+    if (modMatch && modMatch[1]) {
+      const name = modMatch[1];
+      symbols.push({
+        name,
+        kind: 'class',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: true,
+        signature: line,
+      });
+      exportedNames.push(name);
+      continue;
+    }
+
+    const funcMatch = line.match(/^([a-z0-9_]+)\s*\([^)]*\)\s*->/);
+    if (funcMatch && funcMatch[1]) {
+      const name = funcMatch[1];
+      symbols.push({
+        name,
+        kind: 'function',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: true,
+        signature: line,
+      });
+      exportedNames.push(name);
+    }
+  }
+}
+
+function extractZigSymbolsAndImports(
+  content: string,
+  filePath: string,
+  symbols: SymbolInfo[],
+  imports: ImportInfo[],
+  exportedNames: string[],
+): void {
+  const lines = content.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i] ?? '';
+    const line = rawLine.trim();
+    if (!line || line.startsWith('//')) continue;
+
+    const impMatch = line.match(/@import\(['"]([^'"]+)['"]\)/);
+    if (impMatch && impMatch[1]) {
+      imports.push({
+        filePath,
+        importPath: impMatch[1],
+        symbols: [],
+        isDefault: false,
+        isNamespace: false,
+        isType: false,
+      });
+    }
+
+    const structMatch = line.match(
+      /^(?:pub\s+)?const\s+([A-Za-z0-9_]+)\s*=\s*(?:struct|enum|union)/,
+    );
+    if (structMatch && structMatch[1]) {
+      const name = structMatch[1];
+      const isExported = line.startsWith('pub');
+      symbols.push({
+        name,
+        kind: 'struct',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: isExported,
+        signature: line,
+      });
+      if (isExported) exportedNames.push(name);
+      continue;
+    }
+
+    const funcMatch = line.match(/^(?:pub\s+)?fn\s+([A-Za-z0-9_]+)/);
+    if (funcMatch && funcMatch[1]) {
+      const name = funcMatch[1];
+      const isExported = line.startsWith('pub');
+      symbols.push({
+        name,
+        kind: 'function',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: isExported,
+        signature: line,
+      });
+      if (isExported) exportedNames.push(name);
+    }
+  }
+}
+
+function extractGraphQLSymbolsAndImports(
+  content: string,
+  filePath: string,
+  symbols: SymbolInfo[],
+  _imports: ImportInfo[],
+  exportedNames: string[],
+): void {
+  const lines = content.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i] ?? '';
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) continue;
+
+    const typeMatch = line.match(/^(?:type|interface|input|enum|union)\s+([A-Za-z0-9_]+)/);
+    if (typeMatch && typeMatch[1]) {
+      const name = typeMatch[1];
+      symbols.push({
+        name,
+        kind: line.startsWith('interface') ? 'interface' : 'type',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: true,
+        signature: line,
+      });
+      exportedNames.push(name);
+      continue;
+    }
+
+    const opMatch = line.match(/^(?:query|mutation|subscription)\s+([A-Za-z0-9_]+)/);
+    if (opMatch && opMatch[1]) {
+      const name = opMatch[1];
+      symbols.push({
+        name,
+        kind: 'function',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: true,
+        signature: line,
+      });
+      exportedNames.push(name);
+    }
+  }
+}
+
+function extractSfcSymbolsAndImports(
+  content: string,
+  filePath: string,
+  symbols: SymbolInfo[],
+  imports: ImportInfo[],
+  exportedNames: string[],
+): void {
+  const scriptRegex = /<script\b[^>]*>([\s\S]*?)<\/script>/gi;
+  let match;
+  while ((match = scriptRegex.exec(content)) !== null) {
+    const scriptContent = match[1];
+    if (scriptContent) {
+      extractTypeScriptSymbolsAndImportsRegex(
+        scriptContent,
+        filePath,
+        symbols,
+        imports,
+        exportedNames,
+      );
+    }
+  }
+}
+
+function extractSqlSymbolsAndImports(
+  content: string,
+  filePath: string,
+  symbols: SymbolInfo[],
+  _imports: ImportInfo[],
+  exportedNames: string[],
+): void {
+  const lines = content.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i] ?? '';
+    const line = rawLine.trim();
+    if (!line || line.startsWith('--')) continue;
+
+    const tableMatch = line.match(
+      /^CREATE\s+(?:OR\s+REPLACE\s+)?(?:TABLE|VIEW)\s+(?:IF\s+NOT\s+EXISTS\s+)?([A-Za-z0-9_.]+)/i,
+    );
+    if (tableMatch && tableMatch[1]) {
+      const name = tableMatch[1];
+      symbols.push({
+        name,
+        kind: 'model',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: true,
+        signature: line,
+      });
+      exportedNames.push(name);
+      continue;
+    }
+
+    const procMatch = line.match(
+      /^CREATE\s+(?:OR\s+REPLACE\s+)?(?:PROCEDURE|FUNCTION)\s+([A-Za-z0-9_.]+)/i,
+    );
+    if (procMatch && procMatch[1]) {
+      const name = procMatch[1];
+      symbols.push({
+        name,
+        kind: 'function',
+        filePath,
+        line: i + 1,
+        column: rawLine.indexOf(name),
+        exported: true,
+        signature: line,
+      });
+      exportedNames.push(name);
     }
   }
 }

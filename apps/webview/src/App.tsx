@@ -21,31 +21,44 @@ const vscodeApi: VsCodeApi | null = (() => {
   }
 })();
 
-interface Node {
+export interface Node {
   id: string;
   name: string;
   path?: string;
   type: string;
   language?: string;
   size?: number;
+  lines?: number;
   val?: number;
   color?: string;
   communityId?: number;
+  inDegree?: number;
+  outDegree?: number;
+  instability?: number;
+  isGodObject?: boolean;
+  churnScore?: number;
+  hotspotScore?: number;
+  riskLevel?: 'critical' | 'high' | 'medium' | 'low';
+  recommendation?: string;
+  pageRank?: number;
   x?: number;
   y?: number;
   z?: number;
 }
 
-interface Link {
+export interface Link {
   source: string | Node;
   target: string | Node;
   type: string;
 }
 
-interface GraphData {
+export interface GraphData {
   nodes: Node[];
   links: Link[];
 }
+
+export type ColorMode =
+  'language' | 'cluster' | 'churn' | 'instability' | 'impact' | 'hotspot' | 'size';
 
 const dummyData: GraphData = {
   nodes: [
@@ -59,6 +72,10 @@ const dummyData: GraphData = {
       val: 6,
       color: '#c084fc',
       communityId: 0,
+      churnScore: 0,
+      inDegree: 5,
+      outDegree: 0,
+      instability: 0,
     },
     {
       id: 'src/index.ts',
@@ -67,9 +84,17 @@ const dummyData: GraphData = {
       type: 'file',
       language: 'typescript',
       size: 1200,
+      lines: 85,
       val: 4,
       color: '#38bdf8',
       communityId: 0,
+      churnScore: 12,
+      inDegree: 1,
+      outDegree: 2,
+      instability: 0.67,
+      hotspotScore: 8.5,
+      riskLevel: 'high',
+      recommendation: 'High churn component with multiple outbound calls.',
     },
     {
       id: 'src/utils.ts',
@@ -78,9 +103,16 @@ const dummyData: GraphData = {
       type: 'file',
       language: 'typescript',
       size: 850,
+      lines: 45,
       val: 3,
       color: '#38bdf8',
       communityId: 0,
+      churnScore: 3,
+      inDegree: 4,
+      outDegree: 0,
+      instability: 0,
+      hotspotScore: 1.2,
+      riskLevel: 'low',
     },
     {
       id: 'src/components',
@@ -92,6 +124,10 @@ const dummyData: GraphData = {
       val: 5,
       color: '#c084fc',
       communityId: 1,
+      churnScore: 0,
+      inDegree: 2,
+      outDegree: 0,
+      instability: 0,
     },
     {
       id: 'src/components/Graph.tsx',
@@ -100,9 +136,18 @@ const dummyData: GraphData = {
       type: 'file',
       language: 'typescript',
       size: 3400,
+      lines: 180,
       val: 5,
       color: '#38bdf8',
       communityId: 1,
+      churnScore: 18,
+      inDegree: 2,
+      outDegree: 4,
+      instability: 0.66,
+      hotspotScore: 14.2,
+      riskLevel: 'critical',
+      isGodObject: true,
+      recommendation: 'Critical technical debt: High churn combined with God Object coupling.',
     },
     {
       id: 'src/components/Sidebar.tsx',
@@ -111,9 +156,16 @@ const dummyData: GraphData = {
       type: 'file',
       language: 'typescript',
       size: 2100,
+      lines: 110,
       val: 4,
       color: '#38bdf8',
       communityId: 1,
+      churnScore: 6,
+      inDegree: 1,
+      outDegree: 1,
+      instability: 0.5,
+      hotspotScore: 4.1,
+      riskLevel: 'medium',
     },
     {
       id: 'package.json',
@@ -122,9 +174,16 @@ const dummyData: GraphData = {
       type: 'file',
       language: 'json',
       size: 650,
+      lines: 30,
       val: 3,
       color: '#e2e8f0',
       communityId: 2,
+      churnScore: 4,
+      inDegree: 0,
+      outDegree: 0,
+      instability: 0,
+      hotspotScore: 0.8,
+      riskLevel: 'low',
     },
   ],
   links: [
@@ -149,38 +208,92 @@ const CLUSTER_PALETTE = [
   '#2dd4bf',
 ];
 
-const getLanguageColor = (node: Node, colorMode: 'language' | 'cluster' = 'language'): string => {
-  if (colorMode === 'cluster' && node.type !== 'dir') {
-    return CLUSTER_PALETTE[(node.communityId ?? 0) % CLUSTER_PALETTE.length]!;
+export const getNodeColor = (node: Node, mode: ColorMode = 'language'): string => {
+  if (node.type === 'dir' && mode !== 'language' && mode !== 'cluster') {
+    return '#64748b';
   }
-  if (node.color) return node.color;
-  const ext = (node.name || '').split('.').pop()?.toLowerCase() || '';
-  const lang = (node.language || '').toLowerCase();
 
-  if (node.type === 'dir' || lang === 'directory') return '#c084fc';
-  if (lang === 'typescript' || ext === 'ts' || ext === 'tsx') return '#38bdf8';
-  if (lang === 'javascript' || ext === 'js' || ext === 'jsx') return '#facc15';
-  if (lang === 'csharp' || ext === 'cs') return '#9333ea';
-  if (lang === 'cpp' || lang === 'c' || ext === 'cpp' || ext === 'c' || ext === 'h')
-    return '#2563eb';
-  if (lang === 'java' || ext === 'java') return '#ea580c';
-  if (lang === 'ruby' || ext === 'rb') return '#e11d48';
-  if (lang === 'kotlin' || ext === 'kt') return '#7c3aed';
-  if (lang === 'swift' || ext === 'swift') return '#f97316';
-  if (lang === 'php' || ext === 'php') return '#a78bfa';
-  if (lang === 'python' || ext === 'py') return '#34d399';
-  if (ext === 'css' || ext === 'scss' || ext === 'less') return '#f43f5e';
-  if (ext === 'html' || ext === 'htm') return '#fb923c';
-  return '#e2e8f0';
+  switch (mode) {
+    case 'cluster':
+      if (node.type === 'dir') return '#c084fc';
+      return CLUSTER_PALETTE[(node.communityId ?? 0) % CLUSTER_PALETTE.length]!;
+
+    case 'churn': {
+      const churn = node.churnScore ?? 0;
+      if (churn === 0) return '#10b981'; // Stable Teal/Green
+      if (churn <= 3) return '#38bdf8'; // Low Sky Blue
+      if (churn <= 8) return '#facc15'; // Medium Amber
+      if (churn <= 15) return '#fb923c'; // High Orange
+      return '#ef4444'; // Hot Crimson
+    }
+
+    case 'instability': {
+      if (node.isGodObject) return '#dc2626'; // Red
+      const inst = node.instability ?? 0;
+      if (inst <= 0.25) return '#10b981'; // Stable
+      if (inst <= 0.5) return '#06b6d4'; // Balanced
+      if (inst <= 0.75) return '#f59e0b'; // Moderate
+      return '#ef4444'; // Fragile / High Coupling
+    }
+
+    case 'impact': {
+      const inc = node.inDegree ?? 0;
+      if (inc === 0) return '#94a3b8'; // Low impact / leaf
+      if (inc <= 2) return '#38bdf8'; // Moderate
+      if (inc <= 5) return '#a855f7'; // Strong impact
+      if (inc <= 10) return '#ec4899'; // High blast radius
+      return '#f43f5e'; // Super critical blast radius
+    }
+
+    case 'hotspot': {
+      const risk = node.riskLevel;
+      if (risk === 'critical') return '#e11d48';
+      if (risk === 'high') return '#ea580c';
+      if (risk === 'medium') return '#f59e0b';
+      return '#10b981';
+    }
+
+    case 'size': {
+      const sz = node.size ?? 0;
+      if (sz < 1000) return '#94a3b8';
+      if (sz < 4000) return '#38bdf8';
+      if (sz < 12000) return '#a855f7';
+      return '#ec4899';
+    }
+
+    case 'language':
+    default: {
+      if (node.color) return node.color;
+      const ext = (node.name || '').split('.').pop()?.toLowerCase() || '';
+      const lang = (node.language || '').toLowerCase();
+
+      if (node.type === 'dir' || lang === 'directory') return '#c084fc';
+      if (lang === 'typescript' || ext === 'ts' || ext === 'tsx') return '#38bdf8';
+      if (lang === 'javascript' || ext === 'js' || ext === 'jsx') return '#facc15';
+      if (lang === 'csharp' || ext === 'cs') return '#9333ea';
+      if (lang === 'cpp' || lang === 'c' || ext === 'cpp' || ext === 'c' || ext === 'h')
+        return '#2563eb';
+      if (lang === 'java' || ext === 'java') return '#ea580c';
+      if (lang === 'ruby' || ext === 'rb') return '#e11d48';
+      if (lang === 'kotlin' || ext === 'kt') return '#7c3aed';
+      if (lang === 'swift' || ext === 'swift') return '#f97316';
+      if (lang === 'php' || ext === 'php') return '#a78bfa';
+      if (lang === 'python' || ext === 'py') return '#34d399';
+      if (ext === 'css' || ext === 'scss' || ext === 'less') return '#f43f5e';
+      if (ext === 'html' || ext === 'htm') return '#fb923c';
+      return '#e2e8f0';
+    }
+  }
 };
 
 function App() {
   const [data, setData] = useState<GraphData>(dummyData);
   const [is3D, setIs3D] = useState(true);
-  const [colorMode, setColorMode] = useState<'language' | 'cluster'>('language');
+  const [colorMode, setColorMode] = useState<ColorMode>('language');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [hoveredNode, setHoveredNode] = useState<Node | null>(null);
+  const [focusedSymbol, setFocusedSymbol] = useState<string | null>(null);
   const [autoRotate, setAutoRotate] = useState(true);
   const [filterType, setFilterType] = useState<'all' | 'file' | 'dir'>('all');
   const [spotlightMode, setSpotlightMode] = useState(true);
@@ -247,11 +360,54 @@ function App() {
     return { highlightNodes: nodes, highlightLinks: links };
   }, [activeFocusNode, filteredData.links]);
 
+  const focusCameraOnNode = useCallback(
+    (node: Node) => {
+      setAutoRotate(false);
+      if (is3D && fg3DRef.current) {
+        const distance = 90;
+        const distRatio = 1 + distance / Math.hypot(node.x || 1, node.y || 1, node.z || 1);
+        fg3DRef.current.cameraPosition(
+          {
+            x: (node.x || 0) * distRatio,
+            y: (node.y || 0) * distRatio,
+            z: (node.z || 0) * distRatio,
+          },
+          node,
+          1800,
+        );
+      } else if (!is3D && fg2DRef.current) {
+        fg2DRef.current.centerAt(node.x, node.y, 800);
+        fg2DRef.current.zoom(2.5, 800);
+      }
+    },
+    [is3D],
+  );
+
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       const message = event.data;
       if (message.command === 'setGraphData') {
         setData(message.data);
+      } else if (message.command === 'focusNode') {
+        const targetId = message.nodeId;
+        const targetSym = message.symbolName;
+        setFocusedSymbol(targetSym || null);
+
+        const match = data.nodes.find(
+          (n) =>
+            n.id === targetId ||
+            n.path === targetId ||
+            (n.path && targetId.endsWith(n.path)) ||
+            (n.id && targetId.endsWith(n.id)),
+        );
+
+        if (match) {
+          setSelectedNode(match);
+          setSpotlightMode(true);
+          setTimeout(() => {
+            focusCameraOnNode(match);
+          }, 300);
+        }
       }
     };
 
@@ -264,7 +420,7 @@ function App() {
     return () => {
       window.removeEventListener('message', handleMessage);
     };
-  }, []);
+  }, [data.nodes, focusCameraOnNode]);
 
   useEffect(() => {
     if (is3D && fg3DRef.current) {
@@ -346,7 +502,7 @@ function App() {
   const nodeThreeObject = useCallback(
     (node: Node) => {
       const isDir = node.type === 'dir';
-      const baseColor = getLanguageColor(node, colorMode);
+      const baseColor = getNodeColor(node, colorMode);
       const isHighlighted = !spotlightActive || highlightNodes.has(node.id);
       const isFocus = activeFocusNode?.id === node.id;
 
@@ -357,7 +513,7 @@ function App() {
       const sphereMaterial = new THREE.MeshStandardMaterial({
         color: isFocus ? 0xffffff : new THREE.Color(baseColor),
         emissive: new THREE.Color(baseColor),
-        emissiveIntensity: isFocus ? 0.9 : isHighlighted ? 0.45 : 0.05,
+        emissiveIntensity: isFocus ? 0.95 : isHighlighted ? 0.5 : 0.05,
         roughness: 0.2,
         metalness: 0.5,
         transparent: true,
@@ -388,26 +544,9 @@ function App() {
   const onNodeClick = useCallback(
     (node: Node) => {
       setSelectedNode(node);
-      setAutoRotate(false);
-
-      if (is3D && fg3DRef.current) {
-        const distance = 80;
-        const distRatio = 1 + distance / Math.hypot(node.x || 1, node.y || 1, node.z || 1);
-        fg3DRef.current.cameraPosition(
-          {
-            x: (node.x || 0) * distRatio,
-            y: (node.y || 0) * distRatio,
-            z: (node.z || 0) * distRatio,
-          },
-          node,
-          1800,
-        );
-      } else if (!is3D && fg2DRef.current) {
-        fg2DRef.current.centerAt(node.x, node.y, 800);
-        fg2DRef.current.zoom(2.5, 800);
-      }
+      focusCameraOnNode(node);
     },
-    [is3D],
+    [focusCameraOnNode],
   );
 
   const handleOpenFile = (path?: string) => {
@@ -419,6 +558,7 @@ function App() {
 
   const handleResetView = () => {
     setSelectedNode(null);
+    setFocusedSymbol(null);
     setAutoRotate(true);
     if (is3D && fg3DRef.current) {
       fg3DRef.current.cameraPosition({ x: 0, y: 0, z: 400 }, { x: 0, y: 0, z: 0 }, 1500);
@@ -442,7 +582,7 @@ function App() {
       const isSearchMatch = isMatch(node);
       const isHighlighted = !spotlightActive || highlightNodes.has(node.id) || isSearchMatch;
 
-      const baseColor = getLanguageColor(node, colorMode);
+      const baseColor = getNodeColor(node, colorMode);
       const r = Math.max(2.5, (node.val || 4) * 0.9);
       const alpha = isHighlighted ? 1 : 0.15;
 
@@ -508,7 +648,7 @@ function App() {
           <div className="pulse-indicator"></div>
           <div>
             <h2>CodeAtlas Map</h2>
-            <p className="subtitle">Interactive Dependency Graph</p>
+            <p className="subtitle">Architecture & Heatmap Intelligence</p>
           </div>
         </div>
 
@@ -562,7 +702,24 @@ function App() {
           </div>
         </div>
 
-        <div className="toggle-container">
+        <div className="mode-section-title">VISUALIZATION MODE</div>
+        <div className="mode-select-wrapper">
+          <select
+            className="mode-select"
+            value={colorMode}
+            onChange={(e) => setColorMode(e.target.value as ColorMode)}
+          >
+            <option value="language">🎨 Language & File Types</option>
+            <option value="cluster">🌐 Graph Communities & Clusters</option>
+            <option value="churn">🔥 Heatmap: Git Churn (Edit Frequency)</option>
+            <option value="instability">⚡ Heatmap: Instability & Coupling</option>
+            <option value="impact">🎯 Heatmap: Blast Radius & Impact</option>
+            <option value="hotspot">🏆 Heatmap: Technical Debt Risk</option>
+            <option value="size">📐 Heatmap: Code Size / Volume</option>
+          </select>
+        </div>
+
+        <div className="toggle-container" style={{ marginTop: '10px' }}>
           <button
             className={`toggle-btn ${!is3D ? 'active' : ''}`}
             onClick={() => {
@@ -577,26 +734,11 @@ function App() {
           </button>
         </div>
 
-        <div className="toggle-container" style={{ marginTop: '6px' }}>
-          <button
-            className={`toggle-btn ${colorMode === 'language' ? 'active' : ''}`}
-            onClick={() => setColorMode('language')}
-          >
-            Languages
-          </button>
-          <button
-            className={`toggle-btn ${colorMode === 'cluster' ? 'active' : ''}`}
-            onClick={() => setColorMode('cluster')}
-          >
-            Clusters
-          </button>
-        </div>
-
-        <div className="action-row">
+        <div className="action-row" style={{ marginTop: '8px' }}>
           <button
             className={`action-btn ${spotlightMode ? 'active' : ''}`}
             onClick={() => setSpotlightMode(!spotlightMode)}
-            title="Highlight connected path & dim unrelated nodes on hover/click"
+            title="Highlight connected path & dim unrelated nodes"
           >
             {spotlightMode ? 'Spotlight: ON' : 'Spotlight: OFF'}
           </button>
@@ -612,22 +754,29 @@ function App() {
 
         <div className="action-row" style={{ marginTop: '8px' }}>
           <button className="action-btn" onClick={handleResetView} style={{ width: '100%' }}>
-            Reset Camera
+            Reset Camera & Focus
           </button>
         </div>
 
         <div className="legend-box">
           <div className="legend-title">
-            {colorMode === 'cluster' ? 'Community Clusters' : 'Languages & Types'}
+            {colorMode === 'language' && 'Languages & File Types'}
+            {colorMode === 'cluster' && 'Graph Communities'}
+            {colorMode === 'churn' && '🔥 Git Churn Heatmap'}
+            {colorMode === 'instability' && '⚡ Architectural Instability'}
+            {colorMode === 'impact' && '🎯 Blast Radius (Dependents)'}
+            {colorMode === 'hotspot' && '🏆 Technical Debt Risk'}
+            {colorMode === 'size' && '📐 Code Size / Complexity'}
           </div>
           <div className="legend-items">
-            {colorMode === 'cluster' ? (
+            {colorMode === 'cluster' &&
               CLUSTER_PALETTE.slice(0, 6).map((color, idx) => (
                 <div className="legend-item" key={color}>
                   <span className="dot" style={{ backgroundColor: color }}></span>Cluster {idx + 1}
                 </div>
-              ))
-            ) : (
+              ))}
+
+            {colorMode === 'language' && (
               <>
                 <div className="legend-item">
                   <span className="dot" style={{ backgroundColor: '#c084fc' }}></span>Folder
@@ -649,6 +798,94 @@ function App() {
                 </div>
               </>
             )}
+
+            {colorMode === 'churn' && (
+              <>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#10b981' }}></span>Stable (0-1
+                  edits)
+                </div>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#38bdf8' }}></span>Low (2-3)
+                </div>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#facc15' }}></span>Med (4-8)
+                </div>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#ef4444' }}></span>Hot (15+)
+                </div>
+              </>
+            )}
+
+            {colorMode === 'instability' && (
+              <>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#10b981' }}></span>Stable
+                  (&le;0.25)
+                </div>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#06b6d4' }}></span>Balanced (0.5)
+                </div>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#f59e0b' }}></span>Coupled (0.75)
+                </div>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#ef4444' }}></span>Fragile / God
+                  Obj
+                </div>
+              </>
+            )}
+
+            {colorMode === 'impact' && (
+              <>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#94a3b8' }}></span>Leaf (0 deps)
+                </div>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#38bdf8' }}></span>Low (1-2)
+                </div>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#a855f7' }}></span>High (3-5)
+                </div>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#f43f5e' }}></span>Critical (10+)
+                </div>
+              </>
+            )}
+
+            {colorMode === 'hotspot' && (
+              <>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#10b981' }}></span>Low Risk
+                </div>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#f59e0b' }}></span>Medium Risk
+                </div>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#ea580c' }}></span>High Risk
+                </div>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#e11d48' }}></span>Critical Debt
+                </div>
+              </>
+            )}
+
+            {colorMode === 'size' && (
+              <>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#94a3b8' }}></span>&lt;1 KB
+                </div>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#38bdf8' }}></span>1-4 KB
+                </div>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#a855f7' }}></span>4-12 KB
+                </div>
+                <div className="legend-item">
+                  <span className="dot" style={{ backgroundColor: '#ec4899' }}></span>&gt;12 KB
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -659,8 +896,8 @@ function App() {
             <div
               className="inspector-badge"
               style={{
-                backgroundColor: `${getLanguageColor(selectedNode)}33`,
-                color: getLanguageColor(selectedNode),
+                backgroundColor: `${getNodeColor(selectedNode, colorMode)}33`,
+                color: getNodeColor(selectedNode, colorMode),
               }}
             >
               {selectedNode.type.toUpperCase()} • {selectedNode.language || 'FILE'}
@@ -669,10 +906,27 @@ function App() {
               ×
             </button>
           </div>
-          <h3 className="inspector-title" style={{ color: getLanguageColor(selectedNode) }}>
+
+          <h3 className="inspector-title" style={{ color: getNodeColor(selectedNode, colorMode) }}>
             {selectedNode.name}
           </h3>
           <div className="inspector-path">{selectedNode.path || selectedNode.id}</div>
+
+          {focusedSymbol && (
+            <div className="symbol-focus-card">
+              <div className="symbol-focus-header">
+                <span className="symbol-focus-icon">⚡</span>
+                <div>
+                  <div className="symbol-focus-title">Explain with Graph</div>
+                  <div className="symbol-focus-name">{focusedSymbol}</div>
+                </div>
+              </div>
+              <p className="symbol-focus-desc">
+                Focusing on call hierarchy, dependencies, and immediate blast radius for{' '}
+                <code>{focusedSymbol}</code>.
+              </p>
+            </div>
+          )}
 
           <div className="inspector-details">
             <div className="detail-row">
@@ -681,7 +935,7 @@ function App() {
             </div>
             {selectedNode.size !== undefined && selectedNode.size > 0 && (
               <div className="detail-row">
-                <span>Size:</span>
+                <span>File Size:</span>
                 <strong>{(selectedNode.size / 1024).toFixed(1)} KB</strong>
               </div>
             )}
@@ -689,7 +943,48 @@ function App() {
               <span>Connected Nodes:</span>
               <strong>{highlightNodes.size > 0 ? highlightNodes.size - 1 : 0}</strong>
             </div>
+            {selectedNode.inDegree !== undefined && (
+              <div className="detail-row">
+                <span>Incoming Dependents (Blast Radius):</span>
+                <strong style={{ color: selectedNode.inDegree > 4 ? '#f43f5e' : '#38bdf8' }}>
+                  ⬆ {selectedNode.inDegree}
+                </strong>
+              </div>
+            )}
+            {selectedNode.outDegree !== undefined && (
+              <div className="detail-row">
+                <span>Outbound Imports:</span>
+                <strong>⬇ {selectedNode.outDegree}</strong>
+              </div>
+            )}
+            {selectedNode.instability !== undefined && (
+              <div className="detail-row">
+                <span>Instability Metric:</span>
+                <strong>{(selectedNode.instability * 100).toFixed(0)}%</strong>
+              </div>
+            )}
+            {selectedNode.churnScore !== undefined && selectedNode.churnScore > 0 && (
+              <div className="detail-row">
+                <span>Git Churn (Modifications):</span>
+                <strong style={{ color: '#fb923c' }}>🔥 {selectedNode.churnScore} commits</strong>
+              </div>
+            )}
+            {selectedNode.hotspotScore !== undefined && selectedNode.hotspotScore > 0 && (
+              <div className="detail-row">
+                <span>Hotspot Risk:</span>
+                <span className={`risk-badge risk-${selectedNode.riskLevel || 'low'}`}>
+                  {(selectedNode.riskLevel || 'low').toUpperCase()} ({selectedNode.hotspotScore})
+                </span>
+              </div>
+            )}
           </div>
+
+          {selectedNode.recommendation && (
+            <div className="recommendation-box">
+              <div className="rec-title">💡 Architecture Recommendation</div>
+              <div className="rec-text">{selectedNode.recommendation}</div>
+            </div>
+          )}
 
           <div className="inspector-actions">
             {selectedNode.type === 'file' && (
@@ -714,9 +1009,11 @@ function App() {
           nodeThreeObject={nodeThreeObject}
           nodeLabel={(n: any) => `
             <div class="node-tooltip">
-              <div class="tt-title" style="color:${getLanguageColor(n)}">${n.name}</div>
+              <div class="tt-title" style="color:${getNodeColor(n, colorMode)}">${n.name}</div>
               <div class="tt-sub">${n.path || n.id}</div>
-              <div class="tt-meta">${n.type} • ${n.language || ''}</div>
+              <div class="tt-meta">${n.type} • ${n.language || ''} ${
+                n.churnScore ? `• 🔥 ${n.churnScore} edits` : ''
+              } ${n.inDegree ? `• ⬆ ${n.inDegree} deps` : ''}</div>
             </div>
           `}
           linkColor={(l: any) => {
