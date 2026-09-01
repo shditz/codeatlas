@@ -4,303 +4,229 @@
 
 # CodeAtlas 🗺️
 
-> **The Local-First Context Intelligence & Architecture Engine for AI Coding Agents**
+> **Deterministic Context Intelligence & Architecture Graph Engine for AI Coding Agents**
 
-CodeAtlas turns your codebase into a high-performance **Knowledge Graph** stored locally in an embedded SQLite database (`.atlas/atlas.db`). It equips AI coding assistants (such as **Google Antigravity**, **Claude Code**, **Cursor**, **Windsurf**, and **Copilot**) with structural codebase context—dramatically reducing irrelevant token usage, preventing architectural regressions, and grounding AI agent code generation in real dependency graphs.
+CodeAtlas turns any codebase into a high-performance **Knowledge Graph** stored locally in SQLite (`.atlas/atlas.db`). It equips AI coding assistants (**Google Antigravity**, **Claude Code**, **Cursor**, **Windsurf**, **Copilot**) with precise architectural context—preventing hallucinated imports, blocking structural regressions, and grounding code generation in live dependency trees.
 
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/shditz.codeatlas-official?logo=visual-studio-code&label=VS%20Code%20Marketplace&color=blue)](https://marketplace.visualstudio.com/items?itemName=shditz.codeatlas-official)
 [![CI](https://github.com/shditz/codeatlas/actions/workflows/ci.yml/badge.svg)](https://github.com/shditz/codeatlas/actions)
 [![Tests: 166 passing](<https://img.shields.io/badge/Tests-166%20passing%20(100%25)-brightgreen.svg>)](https://github.com/shditz/codeatlas)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-green?logo=node.js)](https://nodejs.org/)
+[![TypeScript 5.x](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Node.js >=20](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-green?logo=node.js)](https://nodejs.org/)
 
 ---
 
-## 🚀 Why CodeAtlas?
+## ⚡ Quick Install
 
-When AI coding agents work on mid-to-large repositories, they face two core bottlenecks:
+### 1. VS Code / Cursor / Windsurf Extension (1-Click Install)
 
-1. **Context Blindness**: LLMs lack an architectural map of which modules depend on what, leading to hallucinated imports, broken contracts, and silent regressions.
-2. **Context Window Waste**: Dumping raw, entire files into an LLM context window burns token budgets and dilutes prompt attention.
+Install directly from the official **Visual Studio Marketplace**:
 
-**CodeAtlas solves this with deterministic local intelligence:**
+- **Via Marketplace:** Search for [**`CodeAtlas`**](https://marketplace.visualstudio.com/items?itemName=shditz.codeatlas-official) (`shditz.codeatlas-official`) in your editor's Extensions tab (`Ctrl+Shift+X` / `Cmd+Shift+X`).
+- **Via Terminal:**
+  ```bash
+  code --install-extension shditz.codeatlas-official
+  ```
+  _(For Cursor: `cursor --install-extension shditz.codeatlas-official`)_
 
-- ⚡ **Local-First & 100% Private**: Everything is indexed locally into SQLite using Tree-sitter. Your code never leaves your machine.
-- 🌡️ **7-Mode Architecture Heatmap**: Interactive 2D/3D visualizer with live metrics for Language, Clusters, Git Churn, Fragility, Blast Radius Impact, Debt Hotspots, and Code Size.
-- 🔥 **Live "Blast Radius" Impact Analysis**: Real-time status bar telemetry and QuickPick impact analysis calculating direct and cascading breakages with 1-click prompt export for AI.
-- 🔄 **Automated AI Rules & Live Architecture Sync**: Automatically generates and injects synchronized architecture DAG maps into `.cursorrules`, `CLAUDE.md`, `AGENTS.md`, and `GEMINI.md`.
-- 🛡️ **AI Linter Guard & Auto-Repair**: Active editor diagnostics and QuickFix refactoring actions for circular dependencies and DDD layer regressions.
-- 🏢 **Multi-Repo & Microservices Global Mesh**: Aggregate monorepo packages or decentralized polyrepos into a unified service graph with automated REST/HTTP endpoint-to-client discovery.
-- 🔒 **Automated Secret Redaction**: Built-in `SecretScanner` automatically redacts Cloud API keys, JWTs, and database passwords before they touch search databases or LLM responses.
-- 🧩 **Framework-Specific Adapters**: Understands semantic idioms for React Hooks (`use*`), Next.js App Router (`page.tsx`, `layout.tsx`, `route.ts`), NestJS DI (`@Controller`, `@Injectable`, `@Module`), and Prisma Schema (`.prisma` models, enums, relations).
-- 🏛️ **True Architecture Model (DDD Layering)**: Enforces Domain-Driven Design boundaries (Presentation, Application, Domain, Infrastructure, Shared) and blocks architectural regressions with `--fail-on-architecture`.
-- 🧠 **Task-Intent Context Packing**: Dynamic retrieval tailored to task intents (`bug`, `feature`, `refactor`) with AST signature skeletonization, saving up to 92% on token budgets.
-- 🔌 **16 Model Context Protocol (MCP) Tools**: Directly integrates with Antigravity, Claude Code, Cursor, and Windsurf for real-time architectural tracing (`atlas_trace_execution_path`, `atlas_security_audit`, `atlas_plan_feature`).
-
----
-
-## 🌐 Language & Parser Support Matrix
-
-CodeAtlas uses native **Tree-sitter** grammars, AST parsers, and semantic resolvers to extract syntax trees, exported symbols, call references, and import dependencies:
-
-| Tier                              | Language / Framework | File Extensions                                                 | Capabilities                                                               |
-| :-------------------------------- | :------------------- | :-------------------------------------------------------------- | :------------------------------------------------------------------------- |
-| **Tier 1 (Full AST & Semantics)** | TypeScript / TSX     | `.ts`, `.tsx`, `.mts`, `.cts`                                   | Semantic Type Inheritance, `@/*` Path Mapping, React Hooks, Next.js Routes |
-|                                   | JavaScript / JSX     | `.js`, `.jsx`, `.mjs`, `.cjs`                                   | AST Symbols, Call Graph, Imports, Cyclomatic Complexity                    |
-|                                   | NestJS               | `.ts`                                                           | Controller, Provider, Module Decorators & Dependency Injection             |
-|                                   | Prisma Schema        | `.prisma`                                                       | Models, Enums, Field Definitions, Cross-Model Relational Graph             |
-|                                   | Python               | `.py`                                                           | AST Functions/Classes, Call Graph, Module Imports                          |
-|                                   | Go                   | `.go`                                                           | AST Structs/Functions, Call Graph, Package Imports                         |
-|                                   | Rust                 | `.rs`                                                           | AST Structs/Traits/Impl, Call Graph, Crate Imports                         |
-|                                   | PHP                  | `.php`, `.phtml`                                                | AST Classes/Methods, Call Graph, Namespace Imports                         |
-|                                   | Dart / Flutter       | `.dart`                                                         | Classes, Enums, Mixins, Async Functions, Package Imports                   |
-|                                   | Scala                | `.scala`, `.sc`                                                 | Case Classes, Traits, Companion Objects, Package Imports                   |
-|                                   | Lua                  | `.lua`                                                          | Modules, Functions, Methods, `require(...)` Calls                          |
-|                                   | Elixir & Erlang      | `.ex`, `.exs`, `.erl`                                           | Modules, Public/Private Functions, Includes, Aliases                       |
-|                                   | Zig                  | `.zig`                                                          | Structs, Public Functions, `@import(...)`                                  |
-|                                   | GraphQL              | `.graphql`, `.gql`                                              | Types, Inputs, Interfaces, Queries, Mutations                              |
-|                                   | Vue / Svelte / Astro | `.vue`, `.svelte`, `.astro`                                     | Script AST Extraction, Component Symbols, Relative Imports                 |
-|                                   | SQL Schemas          | `.sql`                                                          | Table Definitions, Views, Stored Procedures/Functions                      |
-| **Tier 2 (Symbol & Structure)**   | Java                 | `.java`                                                         | AST Classes, Methods, Import Graph                                         |
-|                                   | C#                   | `.cs`                                                           | AST Classes, Methods, Namespace Graph                                      |
-|                                   | C / C++              | `.c`, `.h`, `.cpp`, `.hpp`, `.cc`                               | AST Functions, Structs, Header Includes                                    |
-|                                   | Ruby                 | `.rb`                                                           | AST Classes, Modules, Method Definitions                                   |
-|                                   | Kotlin               | `.kt`, `.kts`                                                   | AST Classes, Functions, Import Graph                                       |
-|                                   | Swift                | `.swift`                                                        | AST Structs, Protocols, Class Definitions                                  |
-| **Tier 3 (Content & Search)**     | Data & Markup        | `.json`, `.yaml`, `.toml`, `.md`, `.html`, `.css`, `Dockerfile` | FTS5 Full-Text Search (BM25 ranking), Secret Redaction, Token Counting     |
-
----
-
-## 📊 Empirical Benchmarks (Verified on Real-World Repos)
-
-CodeAtlas includes an automated **Benchmark Suite** (`pnpm run benchmark`) evaluated against real-world open-source repositories to measure context accuracy, retrieval recall, and token reduction:
-
-### 📦 Dataset: `expressjs/express` (96 files, 71k raw tokens)
-
-| Task Scenario                       | Target Ground Truth                                    | Retrieval Recall | Context Tokens | Token Savings   | Latency  |
-| :---------------------------------- | :----------------------------------------------------- | :--------------- | :------------- | :-------------- | :------- |
-| **Routing & Dispatching**           | `lib/application.js`, `lib/express.js`                 | **100%**         | 6,364          | **91%**         | 26ms     |
-| **Server Bootstrap (`app.listen`)** | `lib/application.js`, `lib/express.js`                 | **50%**          | 4,555          | **94%**         | 32ms     |
-| **JSON Response Serialization**     | `lib/response.js`                                      | **100%**         | 5,124          | **93%**         | 56ms     |
-| **Request Cookie & Header Parsing** | `lib/request.js`                                       | **100%**         | 6,285          | **91%**         | 17ms     |
-| **View Engine Template Resolution** | `lib/view.js`, `lib/application.js`, `lib/response.js` | **67%**          | 6,344          | **91%**         | 59ms     |
-| **Overall Empirical Average**       | —                                                      | **83% Recall**   | —              | **92% Savings** | **38ms** |
-
----
-
-## 📦 Quick Start in 3 Minutes
-
-### 1. Install Globally
+### 2. Global CLI Installation
 
 ```bash
 npm install -g @codeatlas-ai/cli
 ```
 
-_(Or build locally from source with `pnpm install && pnpm build && pnpm --filter @codeatlas-ai/cli link --global`)_
+### 3. Connect to Your AI Assistant (1-Click MCP Setup)
 
-### 2. Initialize in Your Project
-
-Navigate to any project directory and initialize CodeAtlas:
+In your project directory, automatically wire CodeAtlas to Cursor, Claude, Antigravity, and Windsurf:
 
 ```bash
-# Auto-detects stack and creates local .atlas/ intelligence database
-atlas init
-
-# Parse AST structures, calculate complexity, and build the dependency graph
-atlas index
-```
-
-### 3. Generate Evidence-Based AI Guidelines
-
-Auto-generate architecture rules customized for your AI assistant with empirical codebase evidence:
-
-```bash
-# Generate rules proposal for review
-atlas rules generate --proposal
-
-# Or generate directly for Antigravity (AGENTS.md), Claude (CLAUDE.md), Cursor (.cursorrules)
-atlas rules generate all -y
-```
-
-## 🧩 IDE Extension (VS Code, Antigravity, Cursor)
-
-CodeAtlas provides a native extension (`.vsix`) for any VS Code-compatible IDE (such as **Google Antigravity**, **Cursor**, **Windsurf**, and **VS Code**). This extension gives you a beautiful **Sidebar Panel** and an interactive **2D/3D Graph Canvas** right inside your editor.
-
-### Installation Guide:
-
-1. Download or build the `codeatlas-official-2.0.0.vsix` file.
-2. Open your editor (VS Code, Antigravity, Cursor, etc.).
-3. Go to the **Extensions** view (`Ctrl+Shift+X` on Windows/Linux or `Cmd+Shift+X` on macOS).
-4. Click the **`...`** (Views and More Actions) menu at the top right of the Extensions panel.
-5. Select **"Install from VSIX..."** and choose the `codeatlas-official-2.0.0.vsix` file.
-
-Once installed, click the **CodeAtlas map icon** in your Activity Bar to access the Architecture & Codebase Map, Analytics, AI Governance rules, and Quick Actions.
-
----
-
-## 🛠️ CLI Commands Cheat Sheet
-
-| Command                | Category        | Description                                                                                   |
-| :--------------------- | :-------------- | :-------------------------------------------------------------------------------------------- |
-| `atlas init`           | **Setup**       | Auto-detects project stack and initializes `.atlas/` folder, `.atlasignore`, and config.      |
-| `atlas scan`           | **Setup**       | Fast scan detecting languages, frameworks, workspaces, and monorepo structure.                |
-| `atlas index`          | **Core**        | Parses AST with Tree-sitter, computes complexity, and audits code health (Dead code/DAG).     |
-| `atlas watch`          | **Realtime**    | Watches directory for file changes and updates the graph incrementally in real time.          |
-| `atlas context`        | **AI Context**  | Extracts token-budgeted prompt packs with intent routing (`--intent bug\|feature\|refactor`). |
-| `atlas export`         | **AI Context**  | Exports context packs into Markdown files for manual LLM chat sessions.                       |
-| `atlas diff`           | **Quality**     | Calculates Semantic Blast Radius and severity ratings from Git diffs.                         |
-| `atlas analyze`        | **Quality**     | Audits DDD layer regressions (`--architecture`), dead code, circular dependencies, & churn.   |
-| `atlas doctor`         | **Quality**     | Runs repository health checks and provides a readiness score.                                 |
-| `atlas pr`             | **Quality**     | Generates an architectural PR summary for AI Code Reviews.                                    |
-| `atlas search`         | **Search**      | Semantic & Full-text search with synonym query expansion via SQLite FTS5 (BM25 ranking).      |
-| `atlas query`          | **Search**      | Natural language (NL2Cypher) or Cypher graph queries.                                         |
-| `atlas map`            | **Visual**      | Displays an ASCII tree map of directories and exported symbols.                               |
-| `atlas rules list`     | **Rules**       | Lists all discovered AI rule files.                                                           |
-| `atlas rules validate` | **Rules**       | Checks for rule conflicts and consistency.                                                    |
-| `atlas rules generate` | **Rules**       | Generates evidence-backed guidelines (`--proposal`, `-y`, `antigravity`, `claude`, `cursor`). |
-| `atlas clean`          | **Maintenance** | Cleans local cache, database, and snapshots.                                                  |
-| `atlas mcp`            | **Integration** | Starts the official Model Context Protocol (MCP) server with 16 tools over `stdio`.           |
-
----
-
-## 🤖 Model Context Protocol (MCP) Integration
-
-Connect CodeAtlas directly to your AI Coding Assistant so it can query the codebase on-demand with **16 native tools**.
-
-### ⚡ 1-Click Automated Setup (Recommended)
-
-Run the interactive auto-configurator in your project directory:
-
-```bash
-atlas mcp setup
-```
-
-Or configure specific assistants non-interactively:
-
-```bash
-# Configure all detected AI assistants automatically
 atlas mcp setup --all
-
-# Or specify your preferred assistants
-atlas mcp setup --target cursor antigravity claude-desktop windsurf roo trae
-```
-
-To see all 14+ supported AI coding assistants and their detection status:
-
-```bash
-atlas mcp list-targets
 ```
 
 ---
 
-### 📝 Manual Configuration Reference
+## 🚀 Why Developers & AI Agents Need CodeAtlas
 
-If you prefer manual setup, add the following to your AI assistant's configuration file:
+When AI coding agents edit complex repositories, they hit two major walls:
 
-#### Google Antigravity & Codex
+1. **Context Blindness**: LLMs don't know your dependency graph, leading to wrong imports, circular dependencies, and breaking changes in distant files.
+2. **Context Window Saturation**: Stuffing raw, full files into LLM prompts wastes 80–90% of token budgets on irrelevant boilerplate and dilutes attention.
 
-Add to `.agents/mcp_config.json` (workspace) or `~/.gemini/config/mcp_config.json` (global):
-
-```json
-{
-  "mcpServers": {
-    "codeatlas": {
-      "command": "atlas",
-      "args": ["mcp"]
-    }
-  }
-}
+```
+┌─────────────────┐       AST & Semantics       ┌────────────────────────┐
+│  Source Code    │ ──────────────────────────> │   CodeAtlas Engine     │
+│  (Disk / Git)   │ <────────────────────────── │ (.atlas/atlas.db)      │
+└─────────────────┘   Auto Linter & QuickFix    └───────────┬────────────┘
+                                                            │
+                            ┌───────────────────────────────┴───────────────────────────────┐
+                            ▼                                                               ▼
+             ┌─────────────────────────────┐                                 ┌─────────────────────────────┐
+             │    VS Code / Cursor IDE     │                                 │     AI Coding Assistants    │
+             │  • 2D/3D WebGL Canvas       │                                 │  • 16 Native MCP Tools      │
+             │  • 7-Mode Architecture Map  │                                 │  • Live DAG Rules Sync      │
+             │  • Live Blast Radius Status │                                 │  • Skeletonized AST Prompts │
+             │  • CodeLens Graph Spotlight │                                 │  • 92% Token Savings        │
+             └─────────────────────────────┘                                 └─────────────────────────────┘
 ```
 
-#### Cursor
+---
 
-Add to `.cursor/mcp.json` in your workspace root:
+## 🌟 Key Capabilities
 
-```json
-{
-  "mcpServers": {
-    "codeatlas": {
-      "command": "atlas",
-      "args": ["mcp"]
-    }
-  }
-}
+### 🎨 1. Interactive 2D/3D WebGL Architecture Visualizer
+
+Launch a high-performance force-directed canvas directly in your editor sidebar or main tab with **7 specialized heatmap modes**:
+
+- 🔤 **Language:** Syntax distribution across your monorepo.
+- 📦 **Cluster:** Modular domain boundaries derived from Louvain graph clustering.
+- 📈 **Git Churn:** Identify files with frequent commits and high turbulence.
+- ⚠️ **Instability:** Robert C. Martin's instability metric ($I = \frac{C_e}{C_a + C_e}$) highlighting fragile modules.
+- 🔥 **Blast Radius:** Highlight caller cascades and downstream impact severity.
+- 💣 **Debt Hotspot:** Multi-factor metric combining cyclomatic complexity, churn, and instability.
+- 📏 **Lines of Code:** Spot monolithic god-files instantly.
+
+### ⚡ 2. CodeLens "Explain with Graph" & Live Blast Radius
+
+- **CodeLens Spotlight:** Click `⚡ Explain with Graph` above any function, class, or interface to zoom the 3D canvas straight into its local call graph.
+- **Real-time Status Bar Telemetry:** Instant `$(flame) Blast: X files (RISK)` badge in the status bar. Click for a detailed QuickPick breakdown and 1-click copyable prompt for AI agents.
+
+### 🔄 3. Automated AI Rules & Architecture Blueprint Sync
+
+CodeAtlas injects a live topological blueprint of your codebase between marker comments in `.cursorrules`, `CLAUDE.md`, `AGENTS.md`, and `GEMINI.md`:
+
+```markdown
+<!-- CODEATLAS:START_ARCHITECTURE_MAP -->
+
+# 🗺️ Codebase Architecture & Domain Blueprint (Auto-generated by CodeAtlas)
+
+- Total Files: 285 | Total Symbols: 1027 | Dependencies: 590
+- Circular Dependency Health: Clean (0 cycles)
+- Top Core Hubs (PageRank): packages/core, packages/storage, packages/parser
+  ...
+
+<!-- CODEATLAS:END_ARCHITECTURE_MAP -->
 ```
 
-#### Claude Code CLI
+Run `CodeAtlas: Sync AI Rules & Architecture Map` to update this blueprint automatically without overwriting custom prompt instructions.
+
+### 🛡️ 4. AI Linter Guard & Auto-Repair QuickFix
+
+- Detects circular import cycles (via Tarjan's SCC algorithm) and Domain-Driven Design (DDD) layer regressions in real time.
+- Provides QuickFix suggestions (`Ctrl+.`) with automated interface extraction recommendations.
+
+### 🏢 5. Multi-Repo & Microservices Global Mesh Aggregator
+
+- Aggregates monorepo subpackages and polyrepos into a unified global mesh.
+- Automatically links backend HTTP endpoints (e.g. `GET /api/users/:id`) to client fetch/axios callers across separate repositories.
+
+### 🔒 6. Zero-Leak Security & Automatic Secret Redaction
+
+- Built-in `SecretScanner` intercepts file buffers before indexing.
+- Cloud credentials (AWS, GCP, Azure, OpenAI), JWT tokens, and database connection strings are replaced with safe masks (`[REDACTED_SECRET]`) before touching SQLite or MCP context payloads.
+
+---
+
+## 🌐 Universal Language & Parser Matrix
+
+CodeAtlas uses native **Tree-sitter** grammars and semantic resolver pipelines:
+
+| Tier                         | Language / Framework     | Extensions                       | Extracted Entities & Graph Semantics                                        |
+| :--------------------------- | :----------------------- | :------------------------------- | :-------------------------------------------------------------------------- |
+| **Tier 1 (AST & Semantics)** | **TypeScript / TSX**     | `.ts`, `.tsx`, `.mts`, `.cts`    | Type Inheritance, `@/*` Path Mappings, React Hooks, Next.js App Router      |
+|                              | **JavaScript / JSX**     | `.js`, `.jsx`, `.mjs`, `.cjs`    | ES Imports, CommonJS, Functions, Classes, JSX Components                    |
+|                              | **NestJS**               | `.ts`                            | Controllers (`@Controller`), Providers (`@Injectable`), Modules (`@Module`) |
+|                              | **Prisma**               | `.prisma`                        | Models, Relations, Enums, Database Foreign Key Graph                        |
+|                              | **Python**               | `.py`                            | Classes, Methods, Functions, Module Imports (`from x import y`)             |
+|                              | **Go**                   | `.go`                            | Structs, Interfaces, Methods, Functions, Package Imports                    |
+|                              | **Rust**                 | `.rs`                            | Structs, Enums, Traits, `impl` blocks, `use` declarations                   |
+|                              | **Dart / Flutter**       | `.dart`                          | Classes, Mixins, Async Methods, Package Imports                             |
+|                              | **Scala**                | `.scala`, `.sc`                  | Case Classes, Traits, Companion Objects, Package Imports                    |
+|                              | **Lua**                  | `.lua`                           | Modules, Functions, Methods, `require(...)` Calls                           |
+|                              | **Elixir & Erlang**      | `.ex`, `.exs`, `.erl`            | Modules, Functions, Includes, Aliases                                       |
+|                              | **Zig**                  | `.zig`                           | Structs, Public Functions, `@import(...)`                                   |
+|                              | **GraphQL**              | `.graphql`, `.gql`               | Types, Inputs, Interfaces, Queries, Mutations                               |
+|                              | **Vue / Svelte / Astro** | `.vue`, `.svelte`, `.astro`      | Script AST Extraction, Component Symbols, Relative Imports                  |
+|                              | **SQL Schemas**          | `.sql`                           | Table Definitions, Views, Stored Procedures                                 |
+| **Tier 2 (Structural)**      | **Java & C#**            | `.java`, `.cs`                   | Classes, Interfaces, Methods, Namespaces, Imports                           |
+|                              | **C / C++**              | `.c`, `.cpp`, `.h`, `.hpp`       | Functions, Structs, Classes, Header Includes                                |
+|                              | **PHP / Ruby / Kotlin**  | `.php`, `.rb`, `.kt`             | Classes, Modules, Functions, Namespaces                                     |
+| **Tier 3 (Search & Data)**   | **Config & Docs**        | `.json`, `.yaml`, `.toml`, `.md` | SQLite FTS5 BM25 Full-Text Search & Token Counting                          |
+
+---
+
+## 📊 Empirical Benchmarks
+
+Tested on open-source repositories to measure context accuracy, recall, and token reduction:
+
+### 📦 Dataset: `expressjs/express` (96 files, 71k raw tokens)
+
+| Task Scenario                       | Target Ground Truth                                    | Retrieval Recall | Context Tokens |  Token Savings  | Latency  |
+| :---------------------------------- | :----------------------------------------------------- | :--------------: | :------------: | :-------------: | :------: |
+| **Routing & Dispatching**           | `lib/application.js`, `lib/express.js`                 |     **100%**     |     6,364      |     **91%**     |   26ms   |
+| **Server Bootstrap (`app.listen`)** | `lib/application.js`, `lib/express.js`                 |     **50%**      |     4,555      |     **94%**     |   32ms   |
+| **JSON Response Serialization**     | `lib/response.js`                                      |     **100%**     |     5,124      |     **93%**     |   56ms   |
+| **Request Cookie & Header Parsing** | `lib/request.js`                                       |     **100%**     |     6,285      |     **91%**     |   17ms   |
+| **View Engine Resolution**          | `lib/view.js`, `lib/application.js`, `lib/response.js` |     **67%**      |     6,344      |     **91%**     |   59ms   |
+| **Overall Empirical Average**       | —                                                      |  **83% Recall**  |       —        | **92% Savings** | **38ms** |
+
+---
+
+## 🛠️ CLI Reference
 
 ```bash
-claude mcp add codeatlas atlas -- mcp
-```
+# Initialize and index your project
+atlas init                     # Auto-detects stack and creates .atlas/ folder
+atlas index                    # Builds AST symbols, dependencies, and graph in SQLite
+atlas watch                    # Incremental real-time graph watcher
 
-#### Claude Desktop
+# Quality & Architecture Audits
+atlas analyze --architecture   # Validates DDD layers and circular dependencies
+atlas diff                     # Computes semantic blast radius from current Git diff
+atlas doctor                   # Runs repository health checks
 
-Add to `%APPDATA%\Claude\claude_desktop_config.json` (Windows) or `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
+# AI Guidelines & Context
+atlas rules generate all -y    # Generates AGENTS.md, CLAUDE.md, .cursorrules
+atlas context --intent bug     # Builds token-budgeted prompt pack skeleton
+atlas export                   # Exports context packs for manual LLM sessions
 
-```json
-{
-  "mcpServers": {
-    "codeatlas": {
-      "command": "atlas",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
-#### Windsurf (Cascade)
-
-Add to `~/.codeium/windsurf/mcp_config.json` or `.windsurf/mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "codeatlas": {
-      "command": "atlas",
-      "args": ["mcp"]
-    }
-  }
-}
+# Model Context Protocol (MCP)
+atlas mcp setup --all          # 1-click config for all detected AI assistants
+atlas mcp                      # Runs stdio MCP server with 16 tools
 ```
 
 ---
 
 ## 🧰 The 16 CodeAtlas MCP Tools
 
-| Tool Name                        | Category        | Description                                                            |
-| :------------------------------- | :-------------- | :--------------------------------------------------------------------- |
-| `atlas_scan`                     | Exploration     | Scans workspace metadata, languages, and monorepo structure.           |
-| `atlas_index`                    | Core            | Updates local AST symbols, dependencies, and temporal git metrics.     |
-| `atlas_search`                   | Search          | Full-text FTS5 BM25 search across symbols and files (secret-redacted). |
-| `atlas_get_context`              | Context Packing | Task-intent (`bug`/`feature`/`refactor`) token-budgeted context pack.  |
-| `atlas_graph_query`              | Graph           | Executes Cypher graph traversal queries across code dependencies.      |
-| `atlas_pr_diff`                  | Impact Analysis | Analyzes git diffs, calculates blast radius, and flags breaking edits. |
-| `atlas_compress`                 | Token Saving    | Compresses source code into AST signature skeletons with redaction.    |
-| `atlas_get_map`                  | Visual          | Returns hierarchical directory tree and exported symbols.              |
-| `atlas_get_rules`                | Rules           | Discovers and validates project AI coding rules.                       |
-| `atlas_doctor`                   | Health          | Runs repository health checks and SQLite index verification.           |
-| `atlas_analyze`                  | Architecture    | Audits DDD layer regressions, circular imports, and dead code.         |
-| `atlas_trace_execution_path`     | Deep Tracing    | Traces call chains upwards to entry points or downwards to leaves.     |
-| `atlas_find_entry_points`        | Architecture    | Identifies controllers, routes, CLI handlers, and root exports.        |
-| `atlas_calculate_change_surface` | Impact Analysis | Computes downstream blast radius for proposed symbol modifications.    |
-| `atlas_security_audit`           | Security        | SAST audit detecting potential vulnerabilities and sensitive secrets.  |
-| `atlas_plan_feature`             | AI Blueprint    | Generates step-by-step implementation blueprints and context files.    |
+AI assistants equipped with CodeAtlas can autonomously call these tools:
 
----
-
-## 🏛️ Architecture & Deep Design
-
-For an in-depth look at CodeAtlas's monorepo layout, C4 container relationships, SQLite schema, and AST data pipelines, see [**ARCHITECTURE.md**](ARCHITECTURE.md).
+| Tool Name                        | Purpose                                                                       |
+| :------------------------------- | :---------------------------------------------------------------------------- |
+| `atlas_trace_execution_path`     | Traces call chains upwards to entry points or downwards to leaf dependencies. |
+| `atlas_calculate_change_surface` | Calculates cascading blast radius before making risky modifications.          |
+| `atlas_plan_feature`             | Produces an evidence-based multi-file implementation roadmap.                 |
+| `atlas_security_audit`           | Runs SAST security taint analysis and secret detection.                       |
+| `atlas_analyze`                  | Audits DDD layer regressions, circular imports, and dead code.                |
+| `atlas_get_context`              | Delivers intent-tailored, token-optimized context packs.                      |
+| `atlas_compress`                 | Generates token-compressed AST skeletons with redacted secrets.               |
+| `atlas_graph_query`              | Traverses the dependency graph using Cypher / graph queries.                  |
+| `atlas_search`                   | BM25 full-text search with synonym query expansion.                           |
+| `atlas_pr_diff`                  | Evaluates Git diffs and outputs PR architectural impact reports.              |
+| `atlas_find_entry_points`        | Discovers controllers, routes, CLI handlers, and public APIs.                 |
+| `atlas_get_map`                  | Returns an ASCII directory and exported symbol tree.                          |
+| `atlas_get_rules`                | Discovers and validates active AI coding rules.                               |
+| `atlas_doctor`                   | Checks SQLite database integrity and repository readiness.                    |
+| `atlas_scan`                     | Quick workspace metadata scan without indexing.                               |
+| `atlas_index`                    | Triggers background AST indexing and graph updates.                           |
 
 ---
 
 ## ⚙️ Configuration (`.atlas/config.toml`)
 
-CodeAtlas configuration is stored in `.atlas/config.toml` in clean TOML format:
-
 ```toml
 [project]
-name = "MyAwesomeProject"
+name = "MyProject"
 
 [index]
 follow_symlinks = false
@@ -309,7 +235,7 @@ max_file_size = 1048576
 
 [context]
 max_tokens = 12000
-default_mode = "full" # "full", "signature", "summary", or "digest"
+default_mode = "full" # "full", "signature", "summary", "digest"
 
 [security]
 scan_secrets = true
@@ -324,13 +250,13 @@ exclude_patterns = [".env", "*.pem", "*.key"]
 
 ## 📖 Web Documentation
 
-To run the interactive documentation portal locally:
+To run the interactive VitePress documentation portal locally:
 
 ```bash
 pnpm --filter @codeatlas-ai/docs docs:dev
 ```
 
-Then visit [http://localhost:5173](http://localhost:5173) in your browser.
+Visit [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
