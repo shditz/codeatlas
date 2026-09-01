@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import path from 'node:path';
 import type { AtlasDatabase } from '@codeatlas-ai/storage';
-import { DependencyRepository, FileRepository } from '@codeatlas-ai/storage';
+import { DependencyRepository } from '@codeatlas-ai/storage';
 import { DependencyGraph } from '@codeatlas-ai/graph';
 import { normalizePath } from '@codeatlas-ai/shared';
 
@@ -17,7 +17,6 @@ export interface BlastRadiusResult {
 export class BlastRadiusProvider {
   private statusBarItem: vscode.StatusBarItem;
   private depRepo: DependencyRepository | null = null;
-  private fileRepo: FileRepository | null = null;
   private graph: DependencyGraph | null = null;
   private disposables: vscode.Disposable[] = [];
 
@@ -49,7 +48,6 @@ export class BlastRadiusProvider {
   private updateRepos(): void {
     if (this.db) {
       this.depRepo = new DependencyRepository(this.db);
-      this.fileRepo = new FileRepository(this.db);
       try {
         const deps = this.depRepo.getAll(this.projectId);
         this.graph = new DependencyGraph();
@@ -59,7 +57,6 @@ export class BlastRadiusProvider {
       }
     } else {
       this.depRepo = null;
-      this.fileRepo = null;
       this.graph = null;
     }
   }
