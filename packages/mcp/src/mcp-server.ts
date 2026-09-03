@@ -499,6 +499,56 @@ export class McpServer {
     ];
   }
 
+  public exportSchemas(targetDir: string): { exportedCount: number; files: string[] } {
+    const resolvedDir = path.resolve(targetDir);
+    if (!fs.existsSync(resolvedDir)) {
+      fs.mkdirSync(resolvedDir, { recursive: true });
+    }
+
+    const tools = this.getTools();
+    const files: string[] = [];
+
+    for (const tool of tools) {
+      const schemaPath = path.join(resolvedDir, `${tool.name}.json`);
+      const schemaData = {
+        name: tool.name,
+        description: tool.description,
+        parameters: tool.inputSchema,
+      };
+      fs.writeFileSync(schemaPath, JSON.stringify(schemaData, null, 2), 'utf-8');
+      files.push(schemaPath);
+    }
+
+    const instructionsPath = path.join(resolvedDir, 'instructions.md');
+    const instructions = `# CodeAtlas MCP Server Integration Instructions
+
+CodeAtlas provides structural codebase intelligence, AST symbol maps, dependency graph queries, and token-efficient context packs for AI coding assistants.
+
+## Tool Selection & Workflow Guidance:
+
+1. **Before Editing or Refactoring Code**:
+   - Call \`atlas_calculate_change_surface\` with the target file path to compute blast radius, downstream dependents, and unaffected modules before making changes.
+   - Call \`atlas_get_context\` with \`intent: "refactor"\` or \`intent: "feature"\` to retrieve targeted AST symbols and skeleton definitions without flooding your context window.
+
+2. **Exploring Codebase Architecture & Dependencies**:
+   - Call \`atlas_find_entry_points\` to detect HTTP APIs, CLI commands, and background event listeners.
+   - Call \`atlas_trace_execution_path\` to trace call graphs from an entry point down to leaf database/utility calls.
+   - Call \`atlas_graph_query\` to query raw incoming and outgoing dependency edges.
+   - Call \`atlas_analyze\` to audit architectural layers and check for DDD layer boundary violations.
+
+3. **Searching Code & Symbols**:
+   - Call \`atlas_search\` with query keywords for high-speed BM25 FTS5 and vector embedding search.
+
+4. **Repository Health & Maintenance**:
+   - If the index is missing or outdated, run \`atlas_index\` or \`atlas_scan\`.
+   - Run \`atlas_doctor\` to verify SQLite database integrity and coverage score.
+`;
+    fs.writeFileSync(instructionsPath, instructions, 'utf-8');
+    files.push(instructionsPath);
+
+    return { exportedCount: tools.length, files };
+  }
+
   public async handleMessage(req: JsonRpcRequest): Promise<JsonRpcResponse | null> {
     const id = req.id ?? null;
 
@@ -518,7 +568,7 @@ export class McpServer {
               },
               serverInfo: {
                 name: 'codeatlas-mcp',
-                version: '1.1.0',
+                version: '2.1.0',
               },
             },
           };
@@ -1524,6 +1574,15 @@ export class McpServer {
   }
 
   public startStdioServer(): void {
+    // In Stdio mode, stdout is strictly reserved for JSON-RPC messages.
+    // Redirect any console.log / console.info calls to stderr to prevent stream corruption.
+    console.log = (...args: unknown[]) => {
+      console.error(...args);
+    };
+    console.info = (...args: unknown[]) => {
+      console.error(...args);
+    };
+
     process.stderr.write('[mcp] Starting CodeAtlas MCP Stdio Server...\n');
 
     const rl = readline.createInterface({
@@ -1554,8 +1613,13 @@ export class McpServer {
       }
     });
 
-    process.on('SIGINT', () => {
+    const cleanupAndExit = () => {
+      this.close();
       process.exit(0);
-    });
+    };
+
+    rl.on('close', cleanupAndExit);
+    process.on('SIGINT', cleanupAndExit);
+    process.on('SIGTERM', cleanupAndExit);
   }
 }

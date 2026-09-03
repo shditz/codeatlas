@@ -27,6 +27,52 @@ export const MCP_TARGETS: Record<McpTargetId, McpTargetDefinition> = {
       fs.existsSync(path.join(os.homedir(), '.gemini')) ||
       fs.existsSync(path.join(root, 'GEMINI.md')) ||
       fs.existsSync(path.join(root, 'AGENTS.md')),
+    postSetup: async (opts) => {
+      // 1. Auto-export schemas to ~/.gemini/antigravity-ide/mcp/codeatlas/
+      const antigravitySchemasDir = path.join(
+        os.homedir(),
+        '.gemini',
+        'antigravity-ide',
+        'mcp',
+        'codeatlas',
+      );
+      try {
+        const { McpServer } = await import('../mcp-server.js');
+        const srv = new McpServer(opts.workspaceRoot);
+        srv.exportSchemas(antigravitySchemasDir);
+      } catch {
+        // Ignore schema export in isolated/mock test environments
+      }
+
+      // 2. Also mirror to ~/.gemini/antigravity/mcp_config.json if that directory exists
+      const altGlobalDir = path.join(os.homedir(), '.gemini', 'antigravity');
+      if (fs.existsSync(altGlobalDir)) {
+        const primaryGlobalPath = path.join(os.homedir(), '.gemini', 'config', 'mcp_config.json');
+        if (fs.existsSync(primaryGlobalPath)) {
+          try {
+            fs.copyFileSync(primaryGlobalPath, path.join(altGlobalDir, 'mcp_config.json'));
+          } catch {
+            // ignore
+          }
+        }
+      }
+
+      // 3. Mirror between global ~/.gemini/config and workspace .agents if applicable
+      const globalConfigPath = path.join(os.homedir(), '.gemini', 'config', 'mcp_config.json');
+      const wsConfigPath = path.join(opts.workspaceRoot, '.agents', 'mcp_config.json');
+
+      if (
+        fs.existsSync(globalConfigPath) &&
+        fs.existsSync(path.dirname(wsConfigPath)) &&
+        !fs.existsSync(wsConfigPath)
+      ) {
+        try {
+          fs.copyFileSync(globalConfigPath, wsConfigPath);
+        } catch {
+          // ignore
+        }
+      }
+    },
   },
 
   cursor: {
@@ -223,6 +269,18 @@ export const MCP_TARGETS: Record<McpTargetId, McpTargetDefinition> = {
     format: 'standard',
     getGlobalPath: () => path.join(os.homedir(), '.aws', 'amazonq', 'mcp.json'),
     isDetected: () => fs.existsSync(path.join(os.homedir(), '.aws', 'amazonq')),
+  },
+
+  codex: {
+    id: 'codex',
+    name: 'OpenAI Codex & Custom Agents',
+    description: 'OpenAI Codex and generic agent workspace configurations',
+    scope: 'workspace',
+    format: 'standard',
+    getWorkspacePath: (root: string) => path.join(root, '.codex', 'mcp.json'),
+    getGlobalPath: () => path.join(os.homedir(), '.codex', 'mcp.json'),
+    isDetected: (root: string) =>
+      fs.existsSync(path.join(root, '.codex')) || fs.existsSync(path.join(os.homedir(), '.codex')),
   },
 
   universal: {

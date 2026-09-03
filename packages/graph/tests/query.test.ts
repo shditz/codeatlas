@@ -22,7 +22,7 @@ describe('Graph Query Engine', () => {
     const result = engine.execute('MATCH (f:File) WHERE f.name = "auth.ts" RETURN f');
 
     expect(result.count).toBe(1);
-    expect(result.rows[0]?.f.name).toBe('auth.ts');
+    expect((result.rows[0] as any)?.f.name).toBe('auth.ts');
   });
 
   it('should execute edge traversal query with type and properties', () => {

@@ -2,7 +2,7 @@
   "name": "codeatlas-official",
   "displayName": "CodeAtlas - AI Context Intelligence",
   "description": "Give AI a map of your codebase. Native VS Code integration for context intelligence, AST indexing, graph navigation, and rule management.",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "publisher": "shditz",
   "icon": "icon.png",

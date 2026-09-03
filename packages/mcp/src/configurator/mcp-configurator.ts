@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createLogger } from '@codeatlas-ai/shared';
+import { resolveMcpCommand } from './command-resolver.js';
 import { MCP_TARGETS, ALL_MCP_TARGET_IDS } from './targets.js';
 import type {
   ConfigureOptions,
@@ -11,6 +12,68 @@ import type {
 } from './types.js';
 
 const logger = createLogger('mcp:configurator');
+
+/**
+ * Strips single-line (// ...) and multi-line (/* ... *\/) comments,
+ * and trailing commas from JSON/JSONC text while preserving strings.
+ */
+export function stripJsonComments(json: string): string {
+  let insideString = false;
+  let stringChar = '';
+  let isEscaped = false;
+  let result = '';
+
+  for (let i = 0; i < json.length; i++) {
+    const char = json[i];
+    const nextChar = json[i + 1];
+
+    if (insideString) {
+      result += char;
+      if (isEscaped) {
+        isEscaped = false;
+      } else if (char === '\\') {
+        isEscaped = true;
+      } else if (char === stringChar) {
+        insideString = false;
+      }
+    } else {
+      if (char === '"' || char === "'") {
+        insideString = true;
+        stringChar = char;
+        result += char;
+      } else if (char === '/' && nextChar === '/') {
+        // Skip single line comment
+        while (i < json.length && json[i] !== '\n' && json[i] !== '\r') {
+          i++;
+        }
+        if (i < json.length) {
+          result += json[i];
+        }
+      } else if (char === '/' && nextChar === '*') {
+        // Skip multi line comment
+        i += 2;
+        while (i < json.length - 1 && !(json[i] === '*' && json[i + 1] === '/')) {
+          i++;
+        }
+        i++; // skip closing slash
+      } else {
+        result += char;
+      }
+    }
+  }
+
+  // Remove trailing commas before closing braces/brackets
+  return result.replace(/,\s*([\]}])/g, '$1');
+}
+
+export function safeParseJson(raw: string): Record<string, unknown> {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    const stripped = stripJsonComments(raw);
+    return JSON.parse(stripped);
+  }
+}
 
 export class McpConfigurator {
   private workspaceRoot: string;
@@ -72,13 +135,14 @@ export class McpConfigurator {
       };
     }
 
+    const resolved = resolveMcpCommand(this.workspaceRoot);
     const opts: ConfigureOptions = {
       workspaceRoot: this.workspaceRoot,
       force: false,
       dryRun: false,
       scope: target.scope === 'global' ? 'global' : 'workspace',
-      customCommand: 'atlas',
-      customArgs: ['mcp'],
+      customCommand: options?.customCommand ?? resolved.command,
+      customArgs: options?.customArgs ?? resolved.args,
       ...options,
     };
 
@@ -110,7 +174,7 @@ export class McpConfigurator {
       if (fileExists) {
         try {
           const raw = fs.readFileSync(targetPath, 'utf-8');
-          existingContent = JSON.parse(raw);
+          existingContent = safeParseJson(raw);
         } catch {
           if (!opts.dryRun) {
             backupPath = `${targetPath}.corrupted.bak`;
@@ -138,6 +202,14 @@ export class McpConfigurator {
 
       if (!opts.dryRun) {
         fs.writeFileSync(targetPath, JSON.stringify(mergedConfig, null, 2), 'utf-8');
+
+        if (target.postSetup) {
+          try {
+            await target.postSetup(opts);
+          } catch (postErr) {
+            logger.warn(`Post-setup hook for ${target.name} warning: ${postErr}`);
+          }
+        }
       }
 
       const status = fileExists ? 'merged' : 'created';
@@ -269,6 +341,10 @@ export class McpConfigurator {
       command,
       args,
     };
+
+    if (target.id === 'antigravity') {
+      serverEntry['$typeName'] = 'exa.cascade_plugins_pb.CascadePluginCommandTemplate';
+    }
 
     if (isRooOrCline) {
       serverEntry['disabled'] = false;

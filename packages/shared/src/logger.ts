@@ -60,7 +60,11 @@ export class Logger {
 
     const formatted = args.length > 0 ? `${message} ${args.map(String).join(' ')}` : message;
 
-    if (level === 'error') {
+    if (
+      level === 'error' ||
+      process.env.CODEATLAS_MCP === '1' ||
+      process.env.MCP_MODE === '1'
+    ) {
       console.error(`${timestamp} ${label} ${prefixStr} ${formatted}`);
     } else {
       console.log(`${timestamp} ${label} ${prefixStr} ${formatted}`);

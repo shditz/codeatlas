@@ -11,6 +11,7 @@ export type McpTargetId =
   | 'continue'
   | 'openhands'
   | 'amazonq'
+  | 'codex'
   | 'universal';
 
 export type ConfigScope = 'workspace' | 'global' | 'both';
@@ -35,6 +36,7 @@ export interface McpTargetDefinition {
   getWorkspacePath?: (workspaceRoot: string) => string | null;
   isDetected?: (workspaceRoot: string) => boolean;
   customSetup?: (options: ConfigureOptions) => Promise<ConfigureResult>;
+  postSetup?: (options: ConfigureOptions) => Promise<void>;
 }
 
 export interface ConfigureOptions {

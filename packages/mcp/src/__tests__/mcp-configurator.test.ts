@@ -2,7 +2,12 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { McpConfigurator } from '../configurator/mcp-configurator.js';
+import {
+  McpConfigurator,
+  safeParseJson,
+  stripJsonComments,
+} from '../configurator/mcp-configurator.js';
+import { resolveMcpCommand } from '../configurator/command-resolver.js';
 import { MCP_TARGETS } from '../configurator/targets.js';
 
 describe('McpConfigurator', () => {
@@ -45,10 +50,11 @@ describe('McpConfigurator', () => {
     expect(fs.existsSync(configPath)).toBe(true);
 
     const parsed = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-    expect(parsed.mcpServers.codeatlas).toEqual({
-      command: 'atlas',
-      args: ['mcp'],
-    });
+    expect(parsed.mcpServers.codeatlas.command).toBeDefined();
+    expect(parsed.mcpServers.codeatlas.args).toContain('mcp');
+    expect(parsed.mcpServers.codeatlas['$typeName']).toBe(
+      'exa.cascade_plugins_pb.CascadePluginCommandTemplate',
+    );
   });
 
   it('configures Cursor in .cursor/mcp.json', async () => {
@@ -61,7 +67,8 @@ describe('McpConfigurator', () => {
 
     const parsed = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
     expect(parsed.mcpServers.codeatlas).toBeDefined();
-    expect(parsed.mcpServers.codeatlas.command).toBe('atlas');
+    expect(parsed.mcpServers.codeatlas.command).toBeDefined();
+    expect(parsed.mcpServers.codeatlas.args).toContain('mcp');
   });
 
   it('preserves existing servers during deep merge', async () => {
@@ -93,10 +100,8 @@ describe('McpConfigurator', () => {
     const updated = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
     expect(updated.mcpServers.postgres).toBeDefined();
     expect(updated.mcpServers.github).toBeDefined();
-    expect(updated.mcpServers.codeatlas).toEqual({
-      command: 'atlas',
-      args: ['mcp'],
-    });
+    expect(updated.mcpServers.codeatlas.command).toBeDefined();
+    expect(updated.mcpServers.codeatlas.args).toContain('mcp');
   });
 
   it('formats correctly for Zed context_servers schema', async () => {
@@ -113,12 +118,8 @@ describe('McpConfigurator', () => {
 
       expect(result.status).toBe('created');
       const parsed = JSON.parse(fs.readFileSync(zedConfigPath, 'utf-8'));
-      expect(parsed.context_servers.codeatlas).toEqual({
-        command: {
-          path: 'atlas',
-          args: ['mcp'],
-        },
-      });
+      expect(parsed.context_servers.codeatlas.command.path).toBeDefined();
+      expect(parsed.context_servers.codeatlas.command.args).toContain('mcp');
     } finally {
       MCP_TARGETS.zed.getGlobalPath = originalGetGlobal;
     }
@@ -134,12 +135,23 @@ describe('McpConfigurator', () => {
 
     const parsed = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
     expect(parsed.experimental.modelContextProtocolServers).toHaveLength(1);
-    expect(parsed.experimental.modelContextProtocolServers[0]).toEqual({
-      transport: {
-        type: 'stdio',
-        command: 'atlas',
-        args: ['mcp'],
-      },
+    expect(parsed.experimental.modelContextProtocolServers[0].transport.type).toBe('stdio');
+    expect(parsed.experimental.modelContextProtocolServers[0].transport.command).toBeDefined();
+    expect(parsed.experimental.modelContextProtocolServers[0].transport.args).toContain('mcp');
+  });
+
+  it('supports explicit customCommand and customArgs override', async () => {
+    const configurator = new McpConfigurator(tempDir);
+    const result = await configurator.configureTarget('universal', {
+      customCommand: 'custom-atlas',
+      customArgs: ['mcp', '--custom-flag'],
+    });
+
+    expect(result.status).toBe('created');
+    const parsed = JSON.parse(fs.readFileSync(path.join(tempDir, '.mcp.json'), 'utf-8'));
+    expect(parsed.mcpServers.codeatlas).toEqual({
+      command: 'custom-atlas',
+      args: ['mcp', '--custom-flag'],
     });
   });
 
@@ -169,5 +181,63 @@ describe('McpConfigurator', () => {
     expect(fs.existsSync(path.join(tempDir, '.cursor', 'mcp.json'))).toBe(true);
     expect(fs.existsSync(path.join(tempDir, '.trae', 'mcp.json'))).toBe(true);
     expect(fs.existsSync(path.join(tempDir, '.mcp.json'))).toBe(true);
+  });
+
+  it('resolves cross-platform command with absolute path', () => {
+    const resolved = resolveMcpCommand(tempDir);
+    expect(resolved.command).toBeDefined();
+    expect(resolved.args).toContain('mcp');
+    expect(resolved.args).toContain('--path');
+    expect(resolved.args).toContain(path.resolve(tempDir));
+  });
+
+  it('safely strips comments and trailing commas from JSONC', () => {
+    const jsonc = `
+      // Single line comment
+      /* Multi
+         line comment */
+      {
+        "name": "test",
+        "url": "https://github.com//repo",
+        "trailing": true,
+      }
+    `;
+
+    const stripped = stripJsonComments(jsonc);
+    expect(stripped).not.toContain('// Single line');
+    expect(stripped).not.toContain('/* Multi');
+
+    const parsed = safeParseJson(jsonc);
+    expect(parsed.name).toBe('test');
+    expect(parsed.url).toBe('https://github.com//repo');
+    expect(parsed.trailing).toBe(true);
+  });
+
+  it('preserves existing settings in JSONC files without wiping user config', async () => {
+    const cursorDir = path.join(tempDir, '.cursor');
+    fs.mkdirSync(cursorDir, { recursive: true });
+    const configPath = path.join(cursorDir, 'mcp.json');
+
+    const jsoncWithComments = `// User cursor config
+{
+  "theme": "dark",
+  "mcpServers": {
+    "existing": {
+      "command": "custom",
+      "args": ["serve"],
+    },
+  },
+}
+`;
+    fs.writeFileSync(configPath, jsoncWithComments, 'utf-8');
+
+    const configurator = new McpConfigurator(tempDir);
+    const result = await configurator.configureTarget('cursor');
+
+    expect(result.status).toBe('merged');
+    const updated = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    expect(updated.theme).toBe('dark');
+    expect(updated.mcpServers.existing).toBeDefined();
+    expect(updated.mcpServers.codeatlas).toBeDefined();
   });
 });
