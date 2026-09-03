@@ -2,6 +2,14 @@
 
 All notable changes to the "CodeAtlas" extension will be documented in this file.
 
+## 2.1.0
+
+### Minor Release
+
+- **Universal MCP Server Support**: Full integration with the CodeAtlas 2.1.0 MCP server and 22 analysis tools.
+- **Enhanced Graph Telemetry & Stability**: Improved performance during live blast radius calculations and deep symbol resolutions.
+- **Packaging & Engine Optimizations**: Updated to latest bundling pipeline for minimal vsix bundle size and instant activation.
+
 ## 2.0.0
 
 ### Major Release

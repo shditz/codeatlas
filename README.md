@@ -121,7 +121,7 @@ CodeAtlas provides an official extension for VS Code, Cursor, and Windsurf featu
                             ▼                                                               ▼
              ┌─────────────────────────────┐                                 ┌─────────────────────────────┐
              │    VS Code / Cursor IDE     │                                 │     AI Coding Assistants    │
-             │  • 2D/3D WebGL Graph Canvas │                                 │  • 16 Model Context Tools   │
+             │  • 2D/3D WebGL Graph Canvas │                                 │  • 22 Model Context Tools   │
              │  • Live Blast Radius Status │                                 │  • Live Architecture Rules  │
              │  • CodeLens Navigation      │                                 │  • Skeletonized AST Prompts │
              │  • Diagnostics & QuickFix   │                                 │  • Token Budget Packing     │
@@ -131,7 +131,7 @@ CodeAtlas provides an official extension for VS Code, Cursor, and Windsurf featu
 1. **AST Extraction & Secret Redaction**: Parses source files using Tree-sitter grammars. Built-in filters redact API keys, JWTs, and credentials before data is stored or passed to context.
 2. **Semantic Resolution**: Resolves relative imports, path aliases (`@/*`), and class/interface inheritance hierarchies (`extends` / `implements`).
 3. **Graph Storage & Metrics**: Stores symbols and dependency edges in SQLite. Computes PageRank, modularity clusters, instability metrics, and circular dependency chains.
-4. **Context & MCP Delivery**: Exposes 16 Model Context Protocol (MCP) tools and updates architecture rules for `.cursor/rules/`, `CLAUDE.md`, and `AGENTS.md`.
+4. **Context & MCP Delivery**: Exposes 22 Model Context Protocol (MCP) tools and updates architecture rules for `.cursor/rules/`, `CLAUDE.md`, and `AGENTS.md`.
 
 ---
 
@@ -151,19 +151,21 @@ _For complete parser capabilities and framework adapters, see the [Language Supp
 
 ## CLI Reference
 
-| Command                | Description                                                                           |
-| :--------------------- | :------------------------------------------------------------------------------------ |
-| `atlas init`           | Initializes `.atlas/` folder and project configuration.                               |
-| `atlas index`          | Parses ASTs, computes metrics, and updates local SQLite graph.                        |
-| `atlas watch`          | Watches for file changes and updates the graph incrementally.                         |
-| `atlas diff`           | Calculates semantic blast radius and risk ratings from Git diffs.                     |
-| `atlas analyze`        | Audits Domain-Driven Design (DDD) layers, circular dependencies, and dead code.       |
-| `atlas doctor`         | Runs integrity checks on the SQLite database and repository health.                   |
-| `atlas rules generate` | Generates evidence-based guidelines (`AGENTS.md`, `CLAUDE.md`, `.cursor/rules/`).     |
-| `atlas context`        | Builds token-budgeted prompt packs tailored to intent (`bug`, `feature`, `refactor`). |
-| `atlas search`         | Performs full-text search with synonym query expansion via SQLite FTS5.               |
-| `atlas mcp setup`      | Configures detected AI coding assistants to connect to CodeAtlas MCP.                 |
-| `atlas mcp`            | Runs the Model Context Protocol (MCP) server over `stdio`.                            |
+| Command                  | Description                                                                           |
+| :----------------------- | :------------------------------------------------------------------------------------ |
+| `atlas init`             | Initializes `.atlas/` folder and project configuration.                               |
+| `atlas index`            | Parses ASTs, computes metrics, and updates local SQLite graph.                        |
+| `atlas watch`            | Watches for file changes and updates the graph incrementally.                         |
+| `atlas diff`             | Calculates semantic blast radius and risk ratings from Git diffs.                     |
+| `atlas analyze`          | Audits Domain-Driven Design (DDD) layers, circular dependencies, and dead code.       |
+| `atlas doctor`           | Runs integrity checks on the SQLite database and repository health.                   |
+| `atlas rules generate`   | Generates evidence-based guidelines (`AGENTS.md`, `CLAUDE.md`, `.cursor/rules/`).     |
+| `atlas context`          | Builds token-budgeted prompt packs tailored to intent (`bug`, `feature`, `refactor`). |
+| `atlas search`           | Performs full-text search with synonym query expansion via SQLite FTS5.               |
+| `atlas mcp setup`        | Configures detected AI coding assistants to connect to CodeAtlas MCP.                 |
+| `atlas mcp doctor`       | Tests MCP stdio handshake, protocol compatibility, and tool availability.             |
+| `atlas mcp list-targets` | Lists all supported AI coding assistant targets and their detection status.           |
+| `atlas mcp`              | Runs the Model Context Protocol (MCP) server over `stdio`.                            |
 
 _For full CLI flags and examples, see the [CLI Documentation](apps/docs/guide/cli.md)._
 
@@ -171,12 +173,14 @@ _For full CLI flags and examples, see the [CLI Documentation](apps/docs/guide/cl
 
 ## Model Context Protocol (MCP)
 
-CodeAtlas implements **16 native MCP tools** enabling AI assistants to explore codebases autonomously:
+CodeAtlas implements **22 native MCP tools** enabling AI assistants to explore codebases autonomously:
 
-- **Graph & Navigation:** `atlas_trace_execution_path`, `atlas_calculate_change_surface`, `atlas_find_entry_points`, `atlas_graph_query`
-- **Context & Optimization:** `atlas_get_context`, `atlas_compress`, `atlas_search`, `atlas_get_map`
-- **Architecture & Quality:** `atlas_analyze`, `atlas_security_audit`, `atlas_plan_feature`, `atlas_pr_diff`, `atlas_get_rules`
-- **Repository Operations:** `atlas_doctor`, `atlas_scan`, `atlas_index`
+- **Topology & Graph:** `atlas_scan`, `atlas_dependencies`, `atlas_cycles`, `atlas_query`, `atlas_architecture`
+- **Navigation & Search:** `atlas_search_symbols`, `atlas_get_map`, `atlas_trace_execution_path`, `atlas_find_entry_points`
+- **Context & Optimization:** `atlas_get_context`, `atlas_get_file_context`, `atlas_compress`, `atlas_search`
+- **Impact & Change Analysis:** `atlas_impact`, `atlas_pr_diff`, `atlas_calculate_change_surface`
+- **Health & Architecture:** `atlas_analyze`, `atlas_get_god_components`, `atlas_get_dead_code`, `atlas_get_bottlenecks`, `atlas_suggest_refactoring`
+- **Rules & Governance:** `atlas_get_rules`, `atlas_generate_rules`, `atlas_doctor`, `atlas_index`
 
 ### Manual Setup
 
@@ -231,7 +235,7 @@ codeatlas/
 │   ├── compression/    # AST skeletonization and prompt token compression
 │   ├── ranking/        # Relevance ranking and scoring algorithms
 │   ├── context/        # Context pack assembly and token budget management
-│   ├── mcp/            # Model Context Protocol server (16 tools) & configurator
+│   ├── mcp/            # Model Context Protocol server (22 tools) & configurator
 │   ├── git/            # Git service for commit churn and diff analysis
 │   ├── llm/            # LLM provider abstractions
 │   ├── shared/         # Common utilities, logger, and error types

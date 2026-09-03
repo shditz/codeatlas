@@ -142,28 +142,34 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 
 ---
 
-## 🧰 The 16 CodeAtlas MCP Tools
+## 🧰 The 22 CodeAtlas MCP Tools
 
-Once connected, your AI assistant will have access to the following 16 specialized tools:
+Once connected, your AI assistant will have access to the following 22 specialized tools:
 
-| Tool Name                        | Category        | Description & Purpose                                                                                  |
-| :------------------------------- | :-------------- | :----------------------------------------------------------------------------------------------------- |
-| `atlas_scan`                     | Exploration     | Scans workspace metadata, programming languages, and monorepo workspace package layout.                |
-| `atlas_index`                    | Core            | Updates local AST symbols, dependencies, and temporal git metrics with automatic secret redaction.     |
-| `atlas_search`                   | Search          | Full-text FTS5 BM25 search across symbols and files (secrets automatically redacted).                  |
-| `atlas_get_context`              | Context Packing | Intent-driven (`bug`/`feature`/`refactor`) token-budgeted prompt packs with directory tree structure.  |
-| `atlas_graph_query`              | Graph           | Executes Cypher graph traversal queries across code dependencies.                                      |
-| `atlas_pr_diff`                  | Impact Analysis | Analyzes git diffs, calculates downstream blast radius, and flags breaking edits.                      |
-| `atlas_compress`                 | Token Saving    | Compresses source code into AST signature skeletons with in-memory secret scrubbing.                   |
-| `atlas_get_map`                  | Visual          | Returns hierarchical directory tree and exported symbols for codebase navigation.                      |
-| `atlas_get_rules`                | Rules           | Discovers and validates project AI coding rules across all formats (`AGENTS.md`, `CLAUDE.md`, etc.).   |
-| `atlas_doctor`                   | Health          | Runs repository health checks and SQLite index integrity verification.                                 |
-| `atlas_analyze`                  | Architecture    | Audits DDD layer regressions, circular imports, dead code, and temporal git churn hotspots.            |
-| `atlas_trace_execution_path`     | Deep Tracing    | Traces call hierarchies upwards to entry points or downwards to leaf dependencies.                     |
-| `atlas_find_entry_points`        | Architecture    | Identifies controllers, Next.js route handlers, CLI commands, and root exported functions.             |
-| `atlas_calculate_change_surface` | Impact Analysis | Computes downstream blast radius for proposed symbol modifications before making changes.              |
-| `atlas_security_audit`           | Security        | SAST security audit detecting injection vulnerabilities, sensitive credentials, and exposed endpoints. |
-| `atlas_plan_feature`             | AI Blueprint    | Autonomous planning tool: generates step-by-step implementation blueprints and context files.          |
+| Tool Name                        | Category           | Description & Purpose                                                                                 |
+| :------------------------------- | :----------------- | :---------------------------------------------------------------------------------------------------- |
+| `atlas_scan`                     | Exploration        | Scans workspace metadata, programming languages, and monorepo package layout.                         |
+| `atlas_index`                    | Core Engine        | Updates local AST symbols, dependencies, and temporal git metrics with automatic secret redaction.    |
+| `atlas_search`                   | Search             | Full-text FTS5 BM25 search across symbols and files (secrets automatically redacted).                 |
+| `atlas_search_symbols`           | Search             | Fast targeted symbol lookup by name, kind, or file path across the entire codebase.                   |
+| `atlas_get_context`              | Context Packing    | Intent-driven (`bug`/`feature`/`refactor`) token-budgeted prompt packs with directory tree structure. |
+| `atlas_get_file_context`         | Context Packing    | Targeted context for a specific file, its immediate imports, and dependents.                          |
+| `atlas_dependencies`             | Graph Topology     | Direct incoming and outgoing dependency mapping for any file.                                         |
+| `atlas_cycles`                   | Graph Topology     | Detects circular import chains and dependency cycles using Tarjan's SCC algorithm.                    |
+| `atlas_impact`                   | Impact Analysis    | Computes direct and cascading blast radius if a file or symbol is modified.                           |
+| `atlas_pr_diff`                  | Impact Analysis    | Analyzes git diffs, calculates downstream blast radius, and flags breaking edits.                     |
+| `atlas_calculate_change_surface` | Impact Analysis    | Pre-PR simulation of downstream impact across all dependents before making edits.                     |
+| `atlas_graph_query`              | Graph Query        | Executes Cypher graph traversal queries across code dependencies.                                     |
+| `atlas_architecture`             | Architecture       | High-level architecture map, layer boundaries, and cluster topology.                                  |
+| `atlas_analyze`                  | Health & Linting   | Audits DDD layer regressions, circular imports, dead code, and temporal git churn hotspots.           |
+| `atlas_get_god_components`       | Health & Linting   | Identifies high-complexity, high-churn files that pose architectural risk.                            |
+| `atlas_get_dead_code`            | Health & Linting   | Detects unreachable files, orphaned functions, and unused exports.                                    |
+| `atlas_get_bottlenecks`          | Health & Linting   | Uncovers architectural bottlenecks and high-centrality bridge nodes.                                  |
+| `atlas_suggest_refactoring`      | Health & Linting   | Suggests refactoring opportunities to decouple tightly bound components.                              |
+| `atlas_compress`                 | Token Saving       | Compresses source code into AST signature skeletons with in-memory secret scrubbing.                  |
+| `atlas_get_map`                  | Visual Navigation  | Returns hierarchical directory tree and exported symbols for codebase navigation.                     |
+| `atlas_get_rules`                | Rules & Governance | Discovers and validates project AI coding rules across all formats (`AGENTS.md`, `CLAUDE.md`, etc.).  |
+| `atlas_generate_rules`           | Rules & Governance | Generates evidence-backed AI guidelines based on live DAG analysis.                                   |
 
 ---
 

@@ -25,7 +25,7 @@ Commands:
   map [options]                Display ASCII codebase tree and symbol map
   rules                        Manage and generate evidence-backed AI rules and guidelines
   clean [options]              Clean index database, cache, or snapshots
-  mcp                          Start the Model Context Protocol (MCP) server (16 tools)
+  mcp                          Model Context Protocol server (22 tools) & auto-configurator
   audit [options]              Run SAST and Data-Flow Taint Analysis
   install-hooks [options]      Install Git pre-commit hooks for auto-indexing
   link [targetPath]            Federate external repository databases
@@ -318,7 +318,10 @@ atlas mcp setup --target cursor antigravity claude-desktop windsurf roo trae
 # Preview configuration changes without writing to disk
 atlas mcp setup --dry-run
 
-# View all 14+ supported AI assistant targets and detection status
+# Run MCP server health diagnostics and handshake verification
+atlas mcp doctor
+
+# View all supported AI assistant targets and detection status
 atlas mcp list-targets
 ```
 

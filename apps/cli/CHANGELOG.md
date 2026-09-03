@@ -1,5 +1,17 @@
 # @codeatlas-ai/cli
 
+## 2.1.0
+
+### Minor Changes
+
+- Added `atlas mcp setup`: 1-click auto-configuration for 9 AI coding assistants (Cursor, Claude Desktop, Antigravity, Cline, Roo Code, Continue, Windsurf, Zed, VS Code).
+- Added `atlas mcp doctor`: Health check and handshake diagnostic suite testing stdio communication and tool registration.
+- Added `atlas mcp list-targets`: Interactive listing of all detected AI agent configuration paths and current statuses.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.1.0`.
+
 ## 2.0.0
 
 ### Major Changes

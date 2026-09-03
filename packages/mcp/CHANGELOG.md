@@ -1,5 +1,19 @@
 # @codeatlas-ai/mcp
 
+## 2.1.0
+
+### Minor Changes
+
+- Expanded tool catalog from 16 to 22 MCP tools (`atlas_search_symbols`, `atlas_get_god_components`, `atlas_get_dead_code`, `atlas_get_bottlenecks`, `atlas_calculate_change_surface`, `atlas_get_file_context`).
+- Added JSONC safe parsing to preserve comments and user settings across Cursor, Claude Desktop, Antigravity, Cline, Roo Code, Continue, Windsurf, Zed, and VS Code.
+- Added dynamic command resolver supporting NVM, FNM, Volta, ASDF, Homebrew, and local `node_modules`.
+- Added pure stdio stream isolation by redirecting all internal logging to `stderr`.
+- Added process lifecycle handlers (`rl.on('close')`, `SIGINT`, `SIGTERM`) to cleanly close SQLite databases.
+
+### Patch Changes
+
+- Updated all internal dependencies to `2.1.0`.
+
 ## 2.0.0
 
 ### Major Changes
